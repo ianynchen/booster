@@ -1,6 +1,8 @@
-# booster
+# Booster
 
+## Purpose
 
+Booster projects are based on Spring Boot project to provide additional functionality to Spring.
 
 ## Getting started
 
