@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.ld.booster.messaging.config.BoosterMessagingConfig

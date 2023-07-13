@@ -1,0 +1,17 @@
+server:
+  name: sample-app
+  port: 8080
+booster:
+  task:
+    threads:
+      settings:
+    circuit-breaker:
+      settings:
+    retry:
+      settings:
+  http:
+    client:
+      connection:
+        settings:
+          def:
+            baseUrl: "http://abc.com"
