@@ -224,5 +224,7 @@ local.properties
 hs_err_pid*
 replay_pid*
 .idea/
+booster-base-pom.iml
+booster-spring-parent/booster-http-client/booster-http-client.iml
 booster-task/booster-task.iml
 

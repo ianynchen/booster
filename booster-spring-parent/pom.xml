@@ -97,5 +97,8 @@
     </dependencyManagement>
 
     <modules>
+        <module>booster-http-client</module>
+        <module>booster-web</module>
+        <module>booster-web-starter</module>
     </modules>
 </project>

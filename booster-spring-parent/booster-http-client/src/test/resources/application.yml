@@ -1,0 +1,10 @@
+server:
+  name: sample-app
+  port: 8080
+booster:
+  http:
+    client:
+      connection:
+        settings:
+          test:
+            baseUrl: "http://abc.com"

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Object pool that allows objects to be retrieved by names.
@@ -31,6 +32,12 @@ public abstract class NamedObjectPool<T> {
     public Option<T> getOption(String name) {
         LOG.debug("booster-commons - get optional for: [{}]", name);
         return Option.fromNullable(this.get(name));
+    }
+
+    protected Set<String> getKeys() {
+        synchronized (this.cachedObjects) {
+            return this.cachedObjects.keySet();
+        }
     }
 
     /**
