@@ -220,7 +220,7 @@ class TaskFactoryTest {
         StepVerifier.create(task.execute(context))
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), is(true));
-                    GreetingResponse response = either.orNull().getBody();
+                    GreetingResponse response = either.getOrNull().getBody();
                     assertThat(response, notNullValue());
                     assertThat(response.getFrom(), is("server"));
                     assertThat(response.getGreeting(), is("hola"));
