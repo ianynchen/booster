@@ -1,6 +1,7 @@
 package io.github.booster.messaging.publisher.kafka;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.util.EitherUtil;
@@ -10,9 +11,10 @@ import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.publisher.MessagePublisher;
 import io.github.booster.messaging.publisher.PublisherRecord;
 import io.github.booster.messaging.util.FutureHelper;
+import io.github.booster.messaging.util.MetricsHelper;
+import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -98,7 +100,7 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      */
     @Override
     public Mono<Either<Throwable, PublisherRecord>> publish(String topic, KafkaRecord<T> message) {
-        val sample = this.registry.startSample();
+        Option<Timer.Sample> sample = this.registry.startSample();
 
         log.debug("booster-messaging - kafka publisher[{}] published to Kafka topic {}", this.name, topic);
         ProducerRecord<String, T> producerRecord = this.createProducerRecord(topic, message);
@@ -114,13 +116,14 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
                 .subscribeOn(Schedulers.fromExecutorService(this.executorService))
                 .map(sendResult -> {
                     log.debug("booster-messaging - kafka publisher[{}] published to Kafka with result: {}", this.name, sendResult);
-                    this.registry.incrementCounter(
+                    MetricsHelper.recordMessagePublishCount(
+                            this.registry,
                             MessagingMetricsConstants.SEND_COUNT,
-                            MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.KAFKA,
-                            MessagingMetricsConstants.NAME, this.name,
-                            MessagingMetricsConstants.TOPIC, topic,
-                            MessagingMetricsConstants.STATUS, MessagingMetricsConstants.SUCCESS_STATUS,
-                            MessagingMetricsConstants.REASON, MessagingMetricsConstants.SUCCESS_STATUS
+                            MessagingMetricsConstants.KAFKA,
+                            this.name,
+                            topic,
+                            MessagingMetricsConstants.SUCCESS_STATUS,
+                            MessagingMetricsConstants.SUCCESS_STATUS
                     );
                     return EitherUtil.convertData(
                             PublisherRecord.builder()
@@ -134,22 +137,24 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
                     );
                 }).onErrorResume(throwable -> {
                     log.error("booster-messaging - kafka publisher[{}] error publishing to kafka topic: {}", this.name, topic, throwable);
-                    this.registry.incrementCounter(
+                    MetricsHelper.recordMessagePublishCount(
+                            this.registry,
                             MessagingMetricsConstants.SEND_COUNT,
-                            MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.KAFKA,
-                            MessagingMetricsConstants.NAME, this.name,
-                            MessagingMetricsConstants.TOPIC, topic,
-                            MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                            MessagingMetricsConstants.REASON, throwable.getClass().getSimpleName()
+                            MessagingMetricsConstants.KAFKA,
+                            this.name,
+                            topic,
+                            MessagingMetricsConstants.FAILURE_STATUS,
+                            throwable.getClass().getSimpleName()
                     );
                     return Mono.just(EitherUtil.convertThrowable(throwable));
                 }).doOnTerminate(() -> {
                     log.debug("booster-messaging - kafka publisher[{}] message send terminated", this.name);
-                    this.registry.endSample(
+                    MetricsHelper.recordProcessingTime(
+                            this.registry,
                             sample,
                             MessagingMetricsConstants.SEND_TIME,
-                            MessagingMetricsConstants.NAME, this.name,
-                            MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.KAFKA
+                            MessagingMetricsConstants.KAFKA,
+                            this.name
                     );
                 });
     }

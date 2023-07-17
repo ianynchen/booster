@@ -12,6 +12,7 @@ import io.github.booster.messaging.config.GcpPubSubSubscriberSetting;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.subscriber.BatchSubscriberFlow;
 import io.github.booster.messaging.subscriber.SubscriberFlow;
+import io.github.booster.messaging.util.MetricsHelper;
 import io.github.booster.messaging.util.TraceHelper;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.ContextKey;
@@ -108,22 +109,33 @@ public class GcpPubSubPullSubscriber
                     this.gcpPubSubSubscriberSetting.getMaxRecords(),
                     true
             );
-            this.registry.endSample(
+            MetricsHelper.recordProcessingTime(
+                    this.registry,
                     sampleOption,
                     MessagingMetricsConstants.SUBSCRIBER_PULL_TIME,
-                    MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.GCP_PUBSUB,
-                    MessagingMetricsConstants.NAME, this.name
+                    MessagingMetricsConstants.GCP_PUBSUB,
+                    this.name
+            );
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
+                    MessagingMetricsConstants.SUBSCRIBER_PULL_COUNT,
+                    records.size(),
+                    MessagingMetricsConstants.GCP_PUBSUB,
+                    this.name,
+                    MessagingMetricsConstants.SUCCESS_STATUS,
+                    MessagingMetricsConstants.SUCCESS_STATUS
             );
 
             return records;
         } catch (Throwable t) {
             log.error("booster messaging - error pulling pub/sub messages in subscriber[{}]", this.name, t);
-            this.registry.incrementCounter(
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
                     MessagingMetricsConstants.SUBSCRIBER_PULL_COUNT,
-                    MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.GCP_PUBSUB,
-                    MessagingMetricsConstants.NAME, this.name,
-                    MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                    MessagingMetricsConstants.REASON, t.getClass().getSimpleName()
+                    MessagingMetricsConstants.GCP_PUBSUB,
+                    this.name,
+                    MessagingMetricsConstants.FAILURE_STATUS,
+                    t.getClass().getSimpleName()
             );
             return List.of();
         }

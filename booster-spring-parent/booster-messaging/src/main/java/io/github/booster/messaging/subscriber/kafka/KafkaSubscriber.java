@@ -8,6 +8,7 @@ import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.KafkaSubscriberConfig;
 import io.github.booster.messaging.queue.MessageQueue;
 import io.github.booster.messaging.subscriber.SubscriberFlow;
+import io.github.booster.messaging.util.MetricsHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.support.Acknowledgment;
@@ -61,12 +62,13 @@ public class KafkaSubscriber<T> implements SubscriberFlow<SubscriberRecord<T>> {
     public void push(T data, Acknowledgment ack) {
         log.debug("booster-messaging - subscriber[{}] received a message [{}], pushing to queue", this.name, data);
         this.queue.push(new SubscriberRecord<>(data, ack));
-        this.registry.incrementCounter(
+        MetricsHelper.recordMessageSubscribeCount(
+                this.registry,
                 MessagingMetricsConstants.SUBSCRIBER_PULL_COUNT,
-                MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.KAFKA,
-                MessagingMetricsConstants.NAME, this.name,
-                MessagingMetricsConstants.STATUS, MessagingMetricsConstants.SUCCESS_STATUS,
-                MessagingMetricsConstants.REASON, this.name
+                MessagingMetricsConstants.KAFKA,
+                this.name,
+                MessagingMetricsConstants.SUCCESS_STATUS,
+                MessagingMetricsConstants.SUCCESS_STATUS
         );
     }
 

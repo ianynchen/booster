@@ -8,6 +8,7 @@ import io.github.booster.commons.util.EitherUtil;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.subscriber.BatchSubscriberFlow;
+import io.github.booster.messaging.util.MetricsHelper;
 import io.github.booster.messaging.util.TraceHelper;
 import io.github.booster.task.Task;
 import io.opentelemetry.api.trace.Span;
@@ -117,13 +118,14 @@ abstract public class AbstractBatchProcessor<T> {
                         this.subscriberFlow.getName(),
                         acknowledged
                 );
-                this.registry.incrementCounter(
+                MetricsHelper.recordMessageSubscribeCount(
+                        this.registry,
                         MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
                         acknowledged,
-                        MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                        MessagingMetricsConstants.STATUS, MessagingMetricsConstants.SUCCESS_STATUS,
-                        MessagingMetricsConstants.REASON, MessagingMetricsConstants.SUCCESS_STATUS
+                        this.type,
+                        this.subscriberFlow.getName(),
+                        MessagingMetricsConstants.SUCCESS_STATUS,
+                        MessagingMetricsConstants.SUCCESS_STATUS
                 );
             }
             if (unacknowledged > 0) {
@@ -134,34 +136,37 @@ abstract public class AbstractBatchProcessor<T> {
                         this.subscriberFlow.getName(),
                         unacknowledged
                 );
-                this.registry.incrementCounter(
+                MetricsHelper.recordMessageSubscribeCount(
+                        this.registry,
                         MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
                         unacknowledged,
-                        MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                        MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                        MessagingMetricsConstants.REASON, ACK_FAILURE
+                        this.type,
+                        this.subscriberFlow.getName(),
+                        MessagingMetricsConstants.FAILURE_STATUS,
+                        ACK_FAILURE
                 );
             }
 
             if (size > 0) {
-                this.registry.incrementCounter(
+                MetricsHelper.recordMessageSubscribeCount(
+                        this.registry,
                         MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
                         size,
-                        MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                        MessagingMetricsConstants.STATUS, MessagingMetricsConstants.SUCCESS_STATUS,
-                        MessagingMetricsConstants.REASON, MessagingMetricsConstants.SUCCESS_STATUS
+                        this.type,
+                        this.subscriberFlow.getName(),
+                        MessagingMetricsConstants.SUCCESS_STATUS,
+                        MessagingMetricsConstants.SUCCESS_STATUS
                 );
             }
             if (failed > 0) {
-                this.registry.incrementCounter(
+                MetricsHelper.recordMessageSubscribeCount(
+                        this.registry,
                         MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
                         failed,
-                        MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                        MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                        MessagingMetricsConstants.REASON, MessagingMetricsConstants.FAILURE_STATUS
+                        this.type,
+                        this.subscriberFlow.getName(),
+                        MessagingMetricsConstants.FAILURE_STATUS,
+                        MessagingMetricsConstants.FAILURE_STATUS
                 );
             }
             return EitherUtil.convertData(
@@ -182,13 +187,14 @@ abstract public class AbstractBatchProcessor<T> {
                     t
             );
             // record all records as failed to process.
-            this.registry.incrementCounter(
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
                     MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
                     totalSize,
-                    MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                    MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                    MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                    MessagingMetricsConstants.REASON, t.getClass().getSimpleName()
+                    this.type,
+                    this.subscriberFlow.getName(),
+                    MessagingMetricsConstants.FAILURE_STATUS,
+                    t.getClass().getSimpleName()
             );
             // since all records failed processing, there's no need to record
             // acknowledged or unacknowledged.

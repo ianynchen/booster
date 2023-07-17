@@ -7,6 +7,7 @@ import io.github.booster.commons.util.EitherUtil;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.subscriber.SubscriberFlow;
+import io.github.booster.messaging.util.MetricsHelper;
 import io.github.booster.messaging.util.TraceHelper;
 import io.github.booster.task.Task;
 import io.opentelemetry.api.trace.Span;
@@ -130,22 +131,26 @@ abstract public class AbstractProcessor<T> {
         if (either.isRight()) {
             Either<Throwable, ProcessResult<T>> processResult = null;
             if (this.acknowledge(either.getOrNull())) {
-                this.registry.incrementCounter(
+                MetricsHelper.recordMessageSubscribeCount(
+                        this.registry,
                         MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
-                        MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                        MessagingMetricsConstants.STATUS, MessagingMetricsConstants.SUCCESS_STATUS,
-                        MessagingMetricsConstants.REASON, MessagingMetricsConstants.SUCCESS_STATUS
+                        1,
+                        this.type,
+                        this.subscriberFlow.getName(),
+                        MessagingMetricsConstants.SUCCESS_STATUS,
+                        MessagingMetricsConstants.SUCCESS_STATUS
                 );
                 log.debug("booster messaging - ack result: true, message: [{}]", either.getOrNull());
                 processResult = EitherUtil.convertData(new ProcessResult<>(either.getOrNull(), true));
             } else {
-                this.registry.incrementCounter(
+                MetricsHelper.recordMessageSubscribeCount(
+                        this.registry,
                         MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
-                        MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                        MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                        MessagingMetricsConstants.REASON, ACK_FAILURE
+                        1,
+                        this.type,
+                        this.subscriberFlow.getName(),
+                        MessagingMetricsConstants.FAILURE_STATUS,
+                        ACK_FAILURE
                 );
                 log.warn("booster messaging - ack result: false, message: [{}]", either.getOrNull());
                 processResult = EitherUtil.convertData(new ProcessResult<>(either.getOrNull(), false));
@@ -156,12 +161,14 @@ abstract public class AbstractProcessor<T> {
                     this.subscriberFlow.getName(),
                     either.getOrNull()
             );
-            this.registry.incrementCounter(
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
                     MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
-                    MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                    MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                    MessagingMetricsConstants.STATUS, MessagingMetricsConstants.SUCCESS_STATUS,
-                    MessagingMetricsConstants.REASON, MessagingMetricsConstants.SUCCESS_STATUS
+                    1,
+                    this.type,
+                    this.subscriberFlow.getName(),
+                    MessagingMetricsConstants.SUCCESS_STATUS,
+                    MessagingMetricsConstants.SUCCESS_STATUS
             );
             return processResult;
         } else {
@@ -172,12 +179,14 @@ abstract public class AbstractProcessor<T> {
                     this.subscriberFlow.getName(),
                     t
             );
-            this.registry.incrementCounter(
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
                     MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
-                    MessagingMetricsConstants.NAME, this.subscriberFlow.getName(),
-                    MessagingMetricsConstants.MESSAGING_TYPE, this.type,
-                    MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                    MessagingMetricsConstants.REASON, t.getClass().getSimpleName()
+                    1,
+                    this.type,
+                    this.subscriberFlow.getName(),
+                    MessagingMetricsConstants.FAILURE_STATUS,
+                    t.getClass().getSimpleName()
             );
             return EitherUtil.convertThrowable(t);
         }

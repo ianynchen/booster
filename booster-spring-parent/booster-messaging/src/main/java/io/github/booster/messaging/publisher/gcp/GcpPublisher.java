@@ -12,6 +12,7 @@ import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.publisher.PublisherRecord;
 import io.github.booster.messaging.publisher.MessagePublisher;
 import io.github.booster.messaging.util.FutureHelper;
+import io.github.booster.messaging.util.MetricsHelper;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -109,35 +110,38 @@ public class GcpPublisher<T> implements MessagePublisher<PubsubRecord<T>> {
 
         return publishMono.map(string -> {
                     log.debug("booster-messaging - gcp publisher[{}] send successful", this.name);
-                    this.registry.incrementCounter(
+                    MetricsHelper.recordMessagePublishCount(
+                            this.registry,
                             MessagingMetricsConstants.SEND_COUNT,
-                            MessagingMetricsConstants.NAME, this.name,
-                            MessagingMetricsConstants.TOPIC, topic,
-                            MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.GCP_PUBSUB,
-                            MessagingMetricsConstants.STATUS, MessagingMetricsConstants.SUCCESS_STATUS,
-                            MessagingMetricsConstants.REASON, MessagingMetricsConstants.SUCCESS_STATUS
+                            MessagingMetricsConstants.GCP_PUBSUB,
+                            this.name,
+                            topic,
+                            MessagingMetricsConstants.SUCCESS_STATUS,
+                            MessagingMetricsConstants.SUCCESS_STATUS
                     );
                     return EitherUtil.convertData(
                             PublisherRecord.builder().topic(topic).recordId(string).build()
                     );
                 }).onErrorResume(throwable -> {
                     log.error("booster-messaging - gcp publisher[{}] send failed", this.name, throwable);
-                    this.registry.incrementCounter(
+                    MetricsHelper.recordMessagePublishCount(
+                            this.registry,
                             MessagingMetricsConstants.SEND_COUNT,
-                            MessagingMetricsConstants.NAME, this.name,
-                            MessagingMetricsConstants.TOPIC, topic,
-                            MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.GCP_PUBSUB,
-                            MessagingMetricsConstants.STATUS, MessagingMetricsConstants.FAILURE_STATUS,
-                            MessagingMetricsConstants.REASON, throwable.getClass().getSimpleName()
+                            MessagingMetricsConstants.GCP_PUBSUB,
+                            this.name,
+                            topic,
+                            MessagingMetricsConstants.FAILURE_STATUS,
+                            throwable.getClass().getSimpleName()
                     );
                     return Mono.just(EitherUtil.convertThrowable(throwable));
                 }).doOnTerminate(() -> {
                     log.debug("booster-messaging - gcp publisher[{}] message send terminated", this.name);
-                    this.registry.endSample(
+                    MetricsHelper.recordProcessingTime(
+                            this.registry,
                             sample,
                             MessagingMetricsConstants.SEND_TIME,
-                            MessagingMetricsConstants.NAME, this.name,
-                            MessagingMetricsConstants.MESSAGING_TYPE, MessagingMetricsConstants.GCP_PUBSUB
+                            MessagingMetricsConstants.GCP_PUBSUB,
+                            this.name
                     );
                 });
     }
