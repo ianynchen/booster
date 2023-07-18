@@ -15,18 +15,14 @@ class AwsMessageTest {
         assertThat(
                 AwsMessage.createMessage(
                         null,
-                        null,
-                        "test",
-                        false
+                        "test"
                 ),
                 notNullValue()
         );
         assertThat(
                 AwsMessage.createMessage(
-                        null,
                         Map.of("test", "test"),
-                        "test",
-                        false
+                        "test"
                 ),
                 notNullValue()
         );
@@ -35,31 +31,25 @@ class AwsMessageTest {
                         null,
                         null,
                         null,
-                        null,
-                        "test",
-                        false
+                        "test"
                 ),
                 notNullValue()
         );
         assertThat(
                 AwsMessage.createMessage(
-                        null,
                         null,
                         null,
                         Map.of("test", "test"),
-                        "test",
-                        false
+                        "test"
                 ),
                 notNullValue()
         );
         assertThat(
                 AwsMessage.createMessage(
-                        null,
                         "test",
                         "test",
                         Map.of("test", "test"),
-                        "test",
-                        false
+                        "test"
                 ),
                 notNullValue()
         );
@@ -70,94 +60,65 @@ class AwsMessageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> AwsMessage.createMessage(
-                        null,
                         "test",
                         null,
                         null,
-                        "test",
-                        false
+                        "test"
                 )
         );
         assertThrows(
                 IllegalArgumentException.class,
                 () -> AwsMessage.createMessage(
                         null,
-                        null,
                         "test",
                         null,
-                        "test",
-                        false
+                        "test"
                 )
         );
         assertThrows(
                 IllegalArgumentException.class,
                 () -> AwsMessage.createMessage(
-                        null,
                         "",
                         "test",
                         null,
-                        "test",
-                        false
+                        "test"
                 )
         );
         assertThrows(
                 IllegalArgumentException.class,
                 () -> AwsMessage.createMessage(
-                        null,
                         " ",
                         "test",
                         null,
-                        "test",
-                        false
+                        "test"
                 )
         );
         assertThrows(
                 IllegalArgumentException.class,
                 () -> AwsMessage.createMessage(
-                        null,
                         "test",
                         "",
                         null,
-                        "test",
-                        false
+                        "test"
                 )
         );
         assertThrows(
                 IllegalArgumentException.class,
                 () -> AwsMessage.createMessage(
-                        null,
                         "test",
                         " ",
                         null,
-                        "test",
-                        false
+                        "test"
                 )
         );
         assertThrows(
                 IllegalArgumentException.class,
                 () -> AwsMessage.createMessage(
-                        null,
                         "test",
                         "test",
                         null,
-                        null,
-                        false
+                        null
                 )
-        );
-    }
-
-    @Test
-    void shouldCreateMessage() {
-        assertThat(
-                AwsMessage.createMessage(
-                        null,
-                        "test",
-                        "test",
-                        Map.of("test", "test"),
-                        "test",
-                        false
-                ).toMessage(),
-                notNullValue()
         );
     }
 }

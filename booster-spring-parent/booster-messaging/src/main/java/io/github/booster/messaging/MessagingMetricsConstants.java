@@ -39,6 +39,8 @@ public interface MessagingMetricsConstants {
 
     String GCP_PUBSUB = "gcp_pubsub";
 
+    String AWS_SQS = "aws_sqs";
+
     String SUBSCRIBER_PROCESS_COUNT = "subscriber_process_count";
 
     String ACKNOWLEDGEMENT_COUNT = "acknowledge_count";

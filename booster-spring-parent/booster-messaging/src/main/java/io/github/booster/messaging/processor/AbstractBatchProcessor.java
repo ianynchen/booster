@@ -38,7 +38,7 @@ abstract public class AbstractBatchProcessor<T> {
 
     private final String type;
 
-    private final BatchSubscriberFlow<T> subscriberFlow;
+    protected final BatchSubscriberFlow<T> subscriberFlow;
 
     private final Task<List<T>, List<T>> processTask;
 

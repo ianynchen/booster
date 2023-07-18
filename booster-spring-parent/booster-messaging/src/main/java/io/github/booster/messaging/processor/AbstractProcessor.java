@@ -39,7 +39,7 @@ abstract public class AbstractProcessor<T> {
 
     protected final OpenTelemetryConfig openTelemetryConfig;
 
-    private final SubscriberFlow<T> subscriberFlow;
+    protected final SubscriberFlow<T> subscriberFlow;
 
     private final Task<T, T> processTask;
 
@@ -129,7 +129,7 @@ abstract public class AbstractProcessor<T> {
     @NotNull
     private Either<Throwable, ProcessResult<T>> recordMetrics(Either<Throwable, T> either) {
         if (either.isRight()) {
-            Either<Throwable, ProcessResult<T>> processResult = null;
+            Either<Throwable, ProcessResult<T>> processResult;
             if (this.acknowledge(either.getOrNull())) {
                 MetricsHelper.recordMessageSubscribeCount(
                         this.registry,
@@ -140,7 +140,7 @@ abstract public class AbstractProcessor<T> {
                         MessagingMetricsConstants.SUCCESS_STATUS,
                         MessagingMetricsConstants.SUCCESS_STATUS
                 );
-                log.debug("booster messaging - ack result: true, message: [{}]", either.getOrNull());
+                log.debug("booster-messaging - ack result: true, message: [{}]", either.getOrNull());
                 processResult = EitherUtil.convertData(new ProcessResult<>(either.getOrNull(), true));
             } else {
                 MetricsHelper.recordMessageSubscribeCount(
@@ -152,7 +152,7 @@ abstract public class AbstractProcessor<T> {
                         MessagingMetricsConstants.FAILURE_STATUS,
                         ACK_FAILURE
                 );
-                log.warn("booster messaging - ack result: false, message: [{}]", either.getOrNull());
+                log.warn("booster-messaging - ack result: false, message: [{}]", either.getOrNull());
                 processResult = EitherUtil.convertData(new ProcessResult<>(either.getOrNull(), false));
             }
             log.debug(
