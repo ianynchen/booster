@@ -8,26 +8,26 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
-class AwsMessageTest {
+class SqsRecordTest {
 
     @Test
     void shouldCreate() {
         assertThat(
-                AwsMessage.createMessage(
+                SqsRecord.createMessage(
                         null,
                         "test"
                 ),
                 notNullValue()
         );
         assertThat(
-                AwsMessage.createMessage(
+                SqsRecord.createMessage(
                         Map.of("test", "test"),
                         "test"
                 ),
                 notNullValue()
         );
         assertThat(
-                AwsMessage.createMessage(
+                SqsRecord.createMessage(
                         null,
                         null,
                         null,
@@ -36,7 +36,7 @@ class AwsMessageTest {
                 notNullValue()
         );
         assertThat(
-                AwsMessage.createMessage(
+                SqsRecord.createMessage(
                         null,
                         null,
                         Map.of("test", "test"),
@@ -45,7 +45,7 @@ class AwsMessageTest {
                 notNullValue()
         );
         assertThat(
-                AwsMessage.createMessage(
+                SqsRecord.createMessage(
                         "test",
                         "test",
                         Map.of("test", "test"),
@@ -59,7 +59,7 @@ class AwsMessageTest {
     void shouldFailCreate() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AwsMessage.createMessage(
+                () -> SqsRecord.createMessage(
                         "test",
                         null,
                         null,
@@ -68,7 +68,7 @@ class AwsMessageTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AwsMessage.createMessage(
+                () -> SqsRecord.createMessage(
                         null,
                         "test",
                         null,
@@ -77,7 +77,7 @@ class AwsMessageTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AwsMessage.createMessage(
+                () -> SqsRecord.createMessage(
                         "",
                         "test",
                         null,
@@ -86,7 +86,7 @@ class AwsMessageTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AwsMessage.createMessage(
+                () -> SqsRecord.createMessage(
                         " ",
                         "test",
                         null,
@@ -95,7 +95,7 @@ class AwsMessageTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AwsMessage.createMessage(
+                () -> SqsRecord.createMessage(
                         "test",
                         "",
                         null,
@@ -104,7 +104,7 @@ class AwsMessageTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AwsMessage.createMessage(
+                () -> SqsRecord.createMessage(
                         "test",
                         " ",
                         null,
@@ -113,7 +113,7 @@ class AwsMessageTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AwsMessage.createMessage(
+                () -> SqsRecord.createMessage(
                         "test",
                         "test",
                         null,

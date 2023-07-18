@@ -14,15 +14,15 @@ import io.opentelemetry.context.Context;
 /**
  * GCP pub/sub processor to process GCP pub/sub events coming from {@link SubscriberFlow}
  */
-public class GcpProcessor extends AbstractProcessor<AcknowledgeablePubsubMessage> {
+public class GcpPubSubProcessor extends AbstractProcessor<AcknowledgeablePubsubMessage> {
 
     /**
-     * Constructs a {@link GcpProcessor}
+     * Constructs a {@link GcpPubSubProcessor}
      * @param subscriberFlow {@link SubscriberFlow} to listen to.
      * @param processTask {@link Task} used to process GCP pub/sub events
      * @param registry metrics recording.
      */
-    public GcpProcessor(
+    public GcpPubSubProcessor(
             SubscriberFlow<AcknowledgeablePubsubMessage> subscriberFlow,
             Task<AcknowledgeablePubsubMessage, AcknowledgeablePubsubMessage> processTask,
             OpenTelemetryConfig openTelemetryConfig,

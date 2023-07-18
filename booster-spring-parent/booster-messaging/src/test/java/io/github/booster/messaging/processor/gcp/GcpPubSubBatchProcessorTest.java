@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class GcpBatchProcessorTest {
+class GcpPubSubBatchProcessorTest {
 
     Function1<List<AcknowledgeablePubsubMessage>, Mono<List<AcknowledgeablePubsubMessage>>> process =
             Mono::just;
@@ -87,7 +87,7 @@ class GcpBatchProcessorTest {
     void shouldFailCreate() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpBatchProcessor(
+                () -> new GcpPubSubBatchProcessor(
                         null,
                         task,
                         null,
@@ -97,7 +97,7 @@ class GcpBatchProcessorTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpBatchProcessor(
+                () -> new GcpPubSubBatchProcessor(
                         new MockGcpBatchSubscriberFlow("test", true),
                         null,
                         null,
@@ -110,7 +110,7 @@ class GcpBatchProcessorTest {
     @Test
     void shouldCreate() {
         assertThat(
-                new GcpBatchProcessor(
+                new GcpPubSubBatchProcessor(
                         new MockGcpBatchSubscriberFlow("test", true),
                         task,
                         null,
@@ -120,7 +120,7 @@ class GcpBatchProcessorTest {
                 notNullValue()
         );
         assertThat(
-                new GcpBatchProcessor(
+                new GcpPubSubBatchProcessor(
                         new MockGcpBatchSubscriberFlow("test", false),
                         task,
                         null,
@@ -133,7 +133,7 @@ class GcpBatchProcessorTest {
 
     @Test
     void shouldExecuteAndAcknowledge() {
-        GcpBatchProcessor processor = new GcpBatchProcessor(
+        GcpPubSubBatchProcessor processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", true),
                 task,
                 null,
@@ -158,7 +158,7 @@ class GcpBatchProcessorTest {
                     }
                 }).verifyComplete();
 
-        processor = new GcpBatchProcessor(
+        processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", true),
                 task,
                 null,
@@ -186,7 +186,7 @@ class GcpBatchProcessorTest {
 
     @Test
     void shouldExecuteAndFailAcknowledge() {
-        GcpBatchProcessor processor = new GcpBatchProcessor(
+        GcpPubSubBatchProcessor processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", false),
                 task,
                 null,
@@ -211,7 +211,7 @@ class GcpBatchProcessorTest {
                     }
                 }).verifyComplete();
 
-        processor = new GcpBatchProcessor(
+        processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", false),
                 task,
                 null,
@@ -239,7 +239,7 @@ class GcpBatchProcessorTest {
 
     @Test
     void shouldRecordFailure() {
-        GcpBatchProcessor processor = new GcpBatchProcessor(
+        GcpPubSubBatchProcessor processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", false),
                 errorTask,
                 null,
@@ -259,7 +259,7 @@ class GcpBatchProcessorTest {
                     }
                 }).verifyComplete();
 
-        processor = new GcpBatchProcessor(
+        processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", false),
                 errorTask,
                 null,
@@ -282,7 +282,7 @@ class GcpBatchProcessorTest {
 
     @Test
     void shouldHandlePartialFailure() {
-        GcpBatchProcessor processor = new GcpBatchProcessor(
+        GcpPubSubBatchProcessor processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", true),
                 partialFailureTask,
                 null,
@@ -309,7 +309,7 @@ class GcpBatchProcessorTest {
                     }
                 }).verifyComplete();
 
-        processor = new GcpBatchProcessor(
+        processor = new GcpPubSubBatchProcessor(
                 new MockGcpBatchSubscriberFlow("test", true),
                 partialFailureTask,
                 null,

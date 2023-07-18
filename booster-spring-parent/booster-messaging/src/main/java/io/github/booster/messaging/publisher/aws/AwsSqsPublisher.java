@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
-public class AwsSqsPublisher<T> implements MessagePublisher<AwsMessage<T>> {
+public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
 
     private static final Logger log = LoggerFactory.getLogger(AwsSqsPublisher.class);
     public static final String SQS_PUBLISH_TIME = "sqs_publish_time";
@@ -38,7 +38,7 @@ public class AwsSqsPublisher<T> implements MessagePublisher<AwsMessage<T>> {
 
     private final String queryUrl;
 
-    private final Task<AwsMessage<T>, PublisherRecord> publisherTask;
+    private final Task<SqsRecord<T>, PublisherRecord> publisherTask;
 
     private final MetricsRegistry registry;
 
@@ -72,7 +72,7 @@ public class AwsSqsPublisher<T> implements MessagePublisher<AwsMessage<T>> {
         );
     }
 
-    private Mono<PublisherRecord> publish(AwsMessage<T> message) {
+    private Mono<PublisherRecord> publish(SqsRecord<T> message) {
         Option<Timer.Sample> sample = this.registry.startSample();
         Either<Throwable, SendMessageRequest> either = message.createRequest(
                 this.queryUrl,
@@ -154,7 +154,7 @@ public class AwsSqsPublisher<T> implements MessagePublisher<AwsMessage<T>> {
     }
 
     @Override
-    public Mono<Either<Throwable, PublisherRecord>> publish(String topic, AwsMessage<T> message) {
+    public Mono<Either<Throwable, PublisherRecord>> publish(String topic, SqsRecord<T> message) {
         return this.publisherTask.execute(message);
     }
 }

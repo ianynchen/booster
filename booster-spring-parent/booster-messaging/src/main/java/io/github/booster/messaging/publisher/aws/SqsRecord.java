@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class AwsMessage<T> {
+public class SqsRecord<T> {
 
     public static class SQSTextMapperSetter implements TextMapSetter<Map<String, String>> {
 
@@ -48,14 +48,14 @@ public class AwsMessage<T> {
 
     private final T body;
 
-    protected AwsMessage(
+    protected SqsRecord(
             Map<String, String> headers,
             T body
     ) {
         this(null, null, headers, body);
     }
 
-    protected AwsMessage(
+    protected SqsRecord(
             String groupId,
             String deduplicationId,
             Map<String, String> headers,
@@ -79,7 +79,7 @@ public class AwsMessage<T> {
         this.traces = new HashMap<>();
     }
 
-    public static <T> AwsMessage<T> createMessage(
+    public static <T> SqsRecord<T> createMessage(
             Map<String, String> headers,
             T body
     ) {
@@ -91,13 +91,13 @@ public class AwsMessage<T> {
         );
     }
 
-    public static <T> AwsMessage<T> createMessage(
+    public static <T> SqsRecord<T> createMessage(
             String groupId,
             String deduplicationId,
             Map<String, String> headers,
             T body
     ) {
-        return new AwsMessage<>(groupId, deduplicationId, headers, body);
+        return new SqsRecord<>(groupId, deduplicationId, headers, body);
     }
 
     public Either<Throwable, SendMessageRequest> createRequest(

@@ -34,7 +34,7 @@ public class AwsSqsBatchProcessor extends AbstractBatchProcessor<Message> {
      * @param processTask         {@link Task} used to process events.
      * @param openTelemetryConfig
      * @param registry            metrics recording.
-     * @param manuallyInjectTrace
+     * @param manuallyInjectTrace whether to inject trace from booster code.
      */
     public AwsSqsBatchProcessor(
             String type,

@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutorService;
  * GCO pub/sub publisher
  * @param <T> type of actual payload to be sent.
  */
-public class GcpPublisher<T> implements MessagePublisher<PubsubRecord<T>> {
+public class GcpPubSubPublisher<T> implements MessagePublisher<PubsubRecord<T>> {
 
     protected static class GcpPubSubTextMapSetter implements TextMapSetter<Map<String, String>> {
 
@@ -45,7 +45,7 @@ public class GcpPublisher<T> implements MessagePublisher<PubsubRecord<T>> {
         }
     }
 
-    private static final Logger log = LoggerFactory.getLogger(GcpPublisher.class);
+    private static final Logger log = LoggerFactory.getLogger(GcpPubSubPublisher.class);
 
     private static final GcpPubSubTextMapSetter textMapSetter = new GcpPubSubTextMapSetter();
 
@@ -70,7 +70,7 @@ public class GcpPublisher<T> implements MessagePublisher<PubsubRecord<T>> {
      * @param threadPoolConfig {@link ThreadPoolConfig} to create threads to run publish on.
      * @param registry to record metrics.
      */
-    public GcpPublisher(
+    public GcpPubSubPublisher(
         String name,
         PubSubPublisherTemplate template,
         ThreadPoolConfig threadPoolConfig,

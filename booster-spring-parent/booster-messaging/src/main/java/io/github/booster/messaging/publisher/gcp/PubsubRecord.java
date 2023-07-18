@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.util.Map;
 
 /**
- * GCP pub/sub record to be sent by {@link GcpPublisher}
+ * GCP pub/sub record to be sent by {@link GcpPubSubPublisher}
  * @param <T> type of payload
  */
 @Getter
