@@ -1,6 +1,7 @@
 package io.github.booster.messaging.config;
 
 import arrow.core.Option;
+import org.apache.commons.lang3.StringUtils;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 import java.util.HashMap;
@@ -25,7 +26,9 @@ public class AwsSqsConfig {
 
     public Option<SqsClient> getClient(String name) {
         synchronized (this.cachedClients) {
-            if (this.cachedClients.containsKey(name)) {
+            if (StringUtils.isBlank(name)) {
+                return Option.fromNullable(null);
+            } else if (this.cachedClients.containsKey(name)) {
                 return Option.fromNullable(this.cachedClients.get(name));
             } else if (this.settings.containsKey(name)){
                 SqsClient client = this.settings.get(name).createClient();

@@ -56,7 +56,7 @@ public class AwsSqsProcessor extends AbstractProcessor<Message> {
     @Override
     protected boolean acknowledge(Message record) {
         DeleteMessageRequest request = DeleteMessageRequest.builder()
-                .queueUrl(((AwsSqsSubscriber)this.subscriberFlow).getQueryUrl())
+                .queueUrl(((AwsSqsSubscriber)this.subscriberFlow).getQueueUrl())
                 .receiptHandle(record.receiptHandle())
                 .build();
 

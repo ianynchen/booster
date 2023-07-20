@@ -14,9 +14,9 @@ import java.util.Map;
 @EqualsAndHashCode
 public class PubsubRecord<T> {
 
-    private T payload;
+    private final T payload;
 
-    private Map<String, String> headers;
+    private final Map<String, String> headers;
 
     /**
      * Constructs a {@link PubsubRecord} without any headers.

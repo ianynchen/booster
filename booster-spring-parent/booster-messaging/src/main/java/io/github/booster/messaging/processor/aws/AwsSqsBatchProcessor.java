@@ -69,7 +69,7 @@ public class AwsSqsBatchProcessor extends AbstractBatchProcessor<Message> {
                 ).collect(Collectors.toList());
 
         DeleteMessageBatchRequest request = DeleteMessageBatchRequest.builder()
-                .queueUrl(((AwsSqsSubscriber)this.subscriberFlow).getQueryUrl())
+                .queueUrl(((AwsSqsSubscriber)this.subscriberFlow).getQueueUrl())
                 .entries(entries)
                 .build();
 

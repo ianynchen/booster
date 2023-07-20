@@ -100,7 +100,7 @@ public class SqsRecord<T> {
         return new SqsRecord<>(groupId, deduplicationId, headers, body);
     }
 
-    public Either<Throwable, SendMessageRequest> createRequest(
+    public Either<Throwable, SendMessageRequest> createSendMessageRequest(
             String queueUrl,
             ObjectMapper mapper,
             OpenTelemetryConfig openTelemetryConfig,
@@ -118,7 +118,7 @@ public class SqsRecord<T> {
 
         Map<String, String> headers = this.headers;
         if (manuallyInjectTrace && openTelemetryConfig != null) {
-            Map<String, String> attributes = new HashMap<>(this.headers);
+            Map<String, String> attributes = new HashMap<>();
             openTelemetryConfig.getOpenTelemetry()
                     .getPropagators()
                     .getTextMapPropagator()
@@ -130,13 +130,21 @@ public class SqsRecord<T> {
 
         Map<String, MessageAttributeValue> attributes = headers.entrySet()
                 .stream()
-                .map(entry -> new AbstractMap.SimpleEntry<>(entry.getKey(), MessageAttributeValue.builder().stringValue(entry.getValue()).build()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .map(entry ->
+                        new AbstractMap.SimpleEntry<>(
+                                entry.getKey(),
+                                MessageAttributeValue.builder()
+                                        .stringValue(entry.getValue())
+                                        .dataType("String")
+                                        .build())
+                ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         builder = builder.messageAttributes(attributes);
 
         try {
-            String body = mapper.writeValueAsString(this.body);
+            String body = this.body.getClass().equals(String.class) ?
+                    this.body.toString() :
+                    mapper.writeValueAsString(this.body);
             return EitherUtil.convertData(builder.messageBody(body).build());
         } catch (Throwable t) {
             return EitherUtil.convertThrowable(t);

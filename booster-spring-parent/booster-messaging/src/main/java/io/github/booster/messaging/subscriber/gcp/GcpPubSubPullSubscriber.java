@@ -14,18 +14,17 @@ import io.github.booster.messaging.subscriber.BatchSubscriberFlow;
 import io.github.booster.messaging.subscriber.SubscriberFlow;
 import io.github.booster.messaging.util.MetricsHelper;
 import io.github.booster.messaging.util.TraceHelper;
-import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import lombok.val;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -53,8 +52,6 @@ public class GcpPubSubPullSubscriber
         }
     }
 
-    private static final ContextKey<SpanContext> CONSUMER_CONTEXT_KEY =
-            ContextKey.named("consumer_context");
     private static final Logger log = LoggerFactory.getLogger(GcpPubSubPullSubscriber.class);
 
     public static final GcpPubSubTextMapGetter GETTER = new GcpPubSubTextMapGetter();
@@ -102,29 +99,25 @@ public class GcpPubSubPullSubscriber
     }
 
     private List<AcknowledgeablePubsubMessage> pullRecords() {
+        val sampleOption = this.registry.startSample();
         try {
-            val sampleOption = this.registry.startSample();
             List<AcknowledgeablePubsubMessage> records = this.subscriberTemplate.pull(
                     this.gcpPubSubSubscriberSetting.getSubscription(),
                     this.gcpPubSubSubscriberSetting.getMaxRecords(),
                     true
             );
-            MetricsHelper.recordProcessingTime(
-                    this.registry,
-                    sampleOption,
-                    MessagingMetricsConstants.SUBSCRIBER_PULL_TIME,
-                    MessagingMetricsConstants.GCP_PUBSUB,
-                    this.name
-            );
-            MetricsHelper.recordMessageSubscribeCount(
-                    this.registry,
-                    MessagingMetricsConstants.SUBSCRIBER_PULL_COUNT,
-                    records.size(),
-                    MessagingMetricsConstants.GCP_PUBSUB,
-                    this.name,
-                    MessagingMetricsConstants.SUCCESS_STATUS,
-                    MessagingMetricsConstants.SUCCESS_STATUS
-            );
+
+            if (CollectionUtils.isNotEmpty(records)) {
+                MetricsHelper.recordMessageSubscribeCount(
+                        this.registry,
+                        MessagingMetricsConstants.SUBSCRIBER_PULL_COUNT,
+                        records.size(),
+                        MessagingMetricsConstants.GCP_PUBSUB,
+                        this.name,
+                        MessagingMetricsConstants.SUCCESS_STATUS,
+                        MessagingMetricsConstants.SUCCESS_STATUS
+                );
+            }
 
             return records;
         } catch (Throwable t) {
@@ -138,6 +131,14 @@ public class GcpPubSubPullSubscriber
                     t.getClass().getSimpleName()
             );
             return List.of();
+        } finally {
+            MetricsHelper.recordProcessingTime(
+                    this.registry,
+                    sampleOption,
+                    MessagingMetricsConstants.SUBSCRIBER_PULL_TIME,
+                    MessagingMetricsConstants.GCP_PUBSUB,
+                    this.name
+            );
         }
     }
 
@@ -167,7 +168,8 @@ public class GcpPubSubPullSubscriber
                     }
                     log.info("booster-messaging - queue[{}] stopped", this.name);
                 }
-        ).filter(entry -> entry != null && !CollectionUtils.isEmpty(entry));
+        ).publishOn(Schedulers.fromExecutorService(this.executorService))
+        .filter(entry -> entry != null && !CollectionUtils.isEmpty(entry));
     }
 
     /**

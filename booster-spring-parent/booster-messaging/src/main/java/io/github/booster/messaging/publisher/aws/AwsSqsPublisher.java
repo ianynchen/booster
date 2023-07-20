@@ -36,7 +36,7 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
 
     private final ObjectMapper mapper;
 
-    private final String queryUrl;
+    private final String queueUrl;
 
     private final Task<SqsRecord<T>, PublisherRecord> publisherTask;
 
@@ -62,8 +62,8 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
         this.name = name;
         this.openTelemetryConfig = openTelemetryConfig;
         this.manuallyInjectTrace = manuallyInjectTrace;
-        this.mapper = mapper;
-        this.queryUrl = awsSqsConfig.get(name).getUrl();
+        this.mapper = mapper == null ? new ObjectMapper() : mapper;
+        this.queueUrl = awsSqsConfig.get(name).getQueueUrl();
         this.registry = registry;
 
         this.publisherTask = taskFactory.getAsyncTask(
@@ -74,8 +74,8 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
 
     private Mono<PublisherRecord> publish(SqsRecord<T> message) {
         Option<Timer.Sample> sample = this.registry.startSample();
-        Either<Throwable, SendMessageRequest> either = message.createRequest(
-                this.queryUrl,
+        Either<Throwable, SendMessageRequest> either = message.createSendMessageRequest(
+                this.queueUrl,
                 this.mapper,
                 this.openTelemetryConfig,
                 this.manuallyInjectTrace
@@ -88,42 +88,43 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
                 SendMessageResponse response = this.sqsClient.sendMessage(sendMessageRequest);
 
                 if (response != null && response.messageId() != null) {
-                    log.info("booster-messaging - success sending to sqs: [{}], message: [{}]", this.queryUrl, message);
+                    log.info("booster-messaging - success sending to sqs: [{}], message: [{}]", this.queueUrl, message);
                     MetricsHelper.recordMessagePublishCount(
                             this.registry,
                             SQS_PUBLISH_COUNT,
                             MessagingMetricsConstants.AWS_SQS,
                             this.name,
-                            this.queryUrl,
+                            this.queueUrl,
                             MessagingMetricsConstants.SUCCESS_STATUS,
                             MessagingMetricsConstants.SUCCESS_STATUS
                     );
+                    return Mono.just(
+                            PublisherRecord.builder()
+                                    .recordId(response.messageId())
+                                    .topic(this.queueUrl)
+                                    .build()
+                    );
                 } else {
-                    log.warn("booster-messaging - failed to send to sqs: [{}] without exception", this.queryUrl);
+                    log.warn("booster-messaging - failed to send to sqs: [{}] without exception", this.queueUrl);
                     MetricsHelper.recordMessagePublishCount(
                             this.registry,
                             SQS_PUBLISH_COUNT,
                             MessagingMetricsConstants.AWS_SQS,
                             this.name,
-                            this.queryUrl,
+                            this.queueUrl,
                             MessagingMetricsConstants.FAILURE_STATUS,
                             MessagingMetricsConstants.FAILURE_STATUS
                     );
+                    return Mono.error(new IllegalStateException("no response or no message ID from response"));
                 }
-                return Mono.just(
-                        PublisherRecord.builder()
-                                .recordId(response.messageId())
-                                .topic(this.queryUrl)
-                                .build()
-                );
             } catch (Throwable t) {
-                log.error("booster-messaging - error publishing to sqs: [{}]", this.queryUrl, t);
+                log.error("booster-messaging - error publishing to sqs: [{}]", this.queueUrl, t);
                 MetricsHelper.recordMessagePublishCount(
                         this.registry,
                         SQS_PUBLISH_COUNT,
                         MessagingMetricsConstants.AWS_SQS,
                         this.name,
-                        this.queryUrl,
+                        this.queueUrl,
                         MessagingMetricsConstants.FAILURE_STATUS,
                         t.getClass().getSimpleName()
                 );
@@ -145,7 +146,7 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
                     SQS_PUBLISH_COUNT,
                     MessagingMetricsConstants.AWS_SQS,
                     this.name,
-                    this.queryUrl,
+                    this.queueUrl,
                     MessagingMetricsConstants.FAILURE_STATUS,
                     t.getClass().getSimpleName()
             );
