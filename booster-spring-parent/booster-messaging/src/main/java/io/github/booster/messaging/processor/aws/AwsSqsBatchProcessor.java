@@ -1,6 +1,9 @@
 package io.github.booster.messaging.processor.aws;
 
+import com.google.api.client.util.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
+import io.github.booster.messaging.MessagingMetricsConstants;
+import io.github.booster.messaging.config.AwsSqsConfig;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.processor.AbstractBatchProcessor;
 import io.github.booster.messaging.subscriber.BatchSubscriberFlow;
@@ -26,27 +29,40 @@ public class AwsSqsBatchProcessor extends AbstractBatchProcessor<Message> {
 
     private final SqsClient sqsClient;
 
+    private final String queueUrl;
+
     /**
      * Constructor
      *
-     * @param type                type of {@link AbstractBatchProcessor}, either Kafka or GCP pub/sub
      * @param subscriberFlow      {@link BatchSubscriberFlow} to listen to.
      * @param processTask         {@link Task} used to process events.
-     * @param openTelemetryConfig
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} OpenTelemetry configuration.
      * @param registry            metrics recording.
      * @param manuallyInjectTrace whether to inject trace from booster code.
      */
     public AwsSqsBatchProcessor(
-            String type,
-            AwsSqsSubscriber subscriberFlow,
-            SqsClient sqsClient,
+            BatchSubscriberFlow<Message> subscriberFlow,
+            AwsSqsConfig awsSqsConfig,
             Task<List<Message>, List<Message>> processTask,
             OpenTelemetryConfig openTelemetryConfig,
             MetricsRegistry registry,
             boolean manuallyInjectTrace
     ) {
-        super(type, subscriberFlow, processTask, openTelemetryConfig, registry, manuallyInjectTrace);
-        this.sqsClient = sqsClient;
+        super(
+                MessagingMetricsConstants.AWS_SQS,
+                subscriberFlow,
+                processTask,
+                openTelemetryConfig,
+                registry,
+                manuallyInjectTrace
+        );
+
+        Preconditions.checkArgument(
+                awsSqsConfig != null && awsSqsConfig.getClient(subscriberFlow.getName()).isDefined(),
+                "AWS SQS config must not be null and SQS configuration setting must exist for the client"
+        );
+        this.sqsClient = awsSqsConfig.getClient(subscriberFlow.getName()).orNull();
+        this.queueUrl = awsSqsConfig.get(subscriberFlow.getName()).getQueueUrl();
     }
 
     @Override
@@ -69,7 +85,7 @@ public class AwsSqsBatchProcessor extends AbstractBatchProcessor<Message> {
                 ).collect(Collectors.toList());
 
         DeleteMessageBatchRequest request = DeleteMessageBatchRequest.builder()
-                .queueUrl(((AwsSqsSubscriber)this.subscriberFlow).getQueueUrl())
+                .queueUrl(this.queueUrl)
                 .entries(entries)
                 .build();
 

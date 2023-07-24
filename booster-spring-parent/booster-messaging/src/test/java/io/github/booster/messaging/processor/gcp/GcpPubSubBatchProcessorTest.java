@@ -125,7 +125,7 @@ class GcpPubSubBatchProcessorTest {
                         task,
                         null,
                         new MetricsRegistry(new SimpleMeterRegistry()),
-                        false
+                        true
                 ),
                 notNullValue()
         );

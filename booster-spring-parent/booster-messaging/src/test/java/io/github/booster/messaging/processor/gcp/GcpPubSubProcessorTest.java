@@ -38,9 +38,9 @@ class GcpPubSubProcessorTest {
     private final Task<AcknowledgeablePubsubMessage, AcknowledgeablePubsubMessage> task =
             new AsyncTask<>(
                     "test",
-                    Option.<ExecutorService>fromNullable(null),
-                    Option.<Retry>fromNullable(null),
-                    Option.<CircuitBreaker>fromNullable(null),
+                    Option.fromNullable(null),
+                    Option.fromNullable(null),
+                    Option.fromNullable(null),
                     new MetricsRegistry(new SimpleMeterRegistry()),
                     process,
                     exceptionProcess

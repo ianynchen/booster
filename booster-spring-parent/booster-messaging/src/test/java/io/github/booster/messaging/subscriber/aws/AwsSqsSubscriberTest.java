@@ -175,6 +175,53 @@ class AwsSqsSubscriberTest {
     }
 
     @Test
+    void shouldReceiveBatch() {
+        SqsRecord<String> record = SqsRecord.createMessage(
+                Map.of("header1", "value1", "header2", "value2"),
+                "test-content"
+        );
+
+        AwsSqsPublisher<String> publisher = SqsUtil.createPublisher(
+                this.awsSqsConfig,
+                "test",
+                new ObjectMapper()
+        );
+
+        StepVerifier.create(publisher.publish("test-queue", record))
+                .consumeNextWith(either -> {
+                    assertThat(either.isRight(), equalTo(true));
+                    assertThat(either.getOrNull(), notNullValue());
+                    assertThat(either.getOrNull().getRecordId(), notNullValue());
+                }).verifyComplete();
+
+        AwsSqsSubscriber subscriber = SqsUtil.createSubscriber(
+                "test",
+                this.awsSqsConfig
+        );
+
+        StepVerifier.create(subscriber.flux().take(1))
+                .consumeNextWith(messages -> {
+                    log.warn("start verification with messages: [{}]", messages);
+                    assertThat(messages, notNullValue());
+                    assertThat(messages, hasSize(1));
+                    assertThat(messages.get(0).messageId(), notNullValue());
+                    assertThat(messages.get(0).body(), equalTo("test-content"));
+                    assertThat(messages.get(0).messageAttributes().keySet(), hasSize(2));
+                    assertThat(messages.get(0).messageAttributes().keySet(), containsInAnyOrder("header1", "header2"));
+                    assertThat(
+                            messages.get(0).messageAttributes()
+                                    .values()
+                                    .stream()
+                                    .map(MessageAttributeValue::stringValue)
+                                    .collect(Collectors.toList()),
+                            containsInAnyOrder("value1", "value2")
+                    );
+                }).verifyComplete();
+
+        subscriber.stop();
+    }
+
+    @Test
     void shouldReceive() {
         SqsRecord<String> record = SqsRecord.createMessage(
                 Map.of("header1", "value1", "header2", "value2"),

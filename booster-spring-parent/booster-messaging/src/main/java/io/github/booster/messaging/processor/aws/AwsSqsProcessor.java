@@ -1,6 +1,9 @@
 package io.github.booster.messaging.processor.aws;
 
+import com.google.api.client.util.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
+import io.github.booster.messaging.MessagingMetricsConstants;
+import io.github.booster.messaging.config.AwsSqsConfig;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.processor.AbstractProcessor;
 import io.github.booster.messaging.subscriber.SubscriberFlow;
@@ -23,10 +26,11 @@ public class AwsSqsProcessor extends AbstractProcessor<Message> {
 
     private final SqsClient sqsClient;
 
+    private final String queueUrl;
+
     /**
      * Constructor
      *
-     * @param type                type name for processor, either Kafka or GCP pub/sub
      * @param subscriberFlow      the {@link SubscriberFlow} to listen to
      * @param processTask         processor {@link Task} to process events coming from {@link SubscriberFlow}
      * @param openTelemetryConfig
@@ -34,29 +38,34 @@ public class AwsSqsProcessor extends AbstractProcessor<Message> {
      * @param manuallyInjectTrace
      */
     public AwsSqsProcessor(
-            String type,
-            AwsSqsSubscriber subscriberFlow,
-            SqsClient sqsClient,
+            SubscriberFlow<Message> subscriberFlow,
+            AwsSqsConfig awsSqsConfig,
             Task<Message, Message> processTask,
             OpenTelemetryConfig openTelemetryConfig,
             MetricsRegistry registry,
             boolean manuallyInjectTrace
     ) {
         super(
-                type,
+                MessagingMetricsConstants.AWS_SQS,
                 subscriberFlow,
                 processTask,
                 openTelemetryConfig,
                 registry,
                 manuallyInjectTrace
         );
-        this.sqsClient = sqsClient;
+
+        Preconditions.checkArgument(
+                awsSqsConfig != null && awsSqsConfig.getClient(subscriberFlow.getName()).isDefined(),
+                "AWS SQS config must not be null and SQS configuration setting must exist for the client"
+        );
+        this.sqsClient = awsSqsConfig.getClient(subscriberFlow.getName()).orNull();
+        this.queueUrl = awsSqsConfig.get(subscriberFlow.getName()).getQueueUrl();
     }
 
     @Override
     protected boolean acknowledge(Message record) {
         DeleteMessageRequest request = DeleteMessageRequest.builder()
-                .queueUrl(((AwsSqsSubscriber)this.subscriberFlow).getQueueUrl())
+                .queueUrl(this.queueUrl)
                 .receiptHandle(record.receiptHandle())
                 .build();
 
