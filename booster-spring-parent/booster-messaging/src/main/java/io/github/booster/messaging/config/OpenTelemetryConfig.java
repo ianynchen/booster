@@ -5,8 +5,12 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter;
 import io.opentelemetry.exporter.otlp.metrics.OtlpGrpcMetricExporter;
+import io.opentelemetry.extension.trace.propagation.B3Propagator;
+import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
+import io.opentelemetry.extension.trace.propagation.OtTracePropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
@@ -46,21 +50,31 @@ public class OpenTelemetryConfig {
                     .setResource(resource)
                     .build();
 
+            ContextPropagators contextPropagators = ContextPropagators.create(
+                    TextMapPropagator.composite(
+                            W3CTraceContextPropagator.getInstance(),
+                            B3Propagator.injectingSingleHeader(),
+                            B3Propagator.injectingMultiHeaders(),
+                            JaegerPropagator.getInstance(),
+                            OtTracePropagator.getInstance()
+                    )
+            );
+
+            // do not register as global as it will throw illegal state exception
             this.openTelemetry = OpenTelemetrySdk.builder()
                     .setTracerProvider(sdkTracerProvider)
                     .setMeterProvider(sdkMeterProvider)
-                    .setPropagators(
-                            ContextPropagators.create(
-                                    W3CTraceContextPropagator.getInstance()
-                            )
-                    ).buildAndRegisterGlobal();
+                    .setPropagators(contextPropagators)
+                    .build();
         } else {
             this.openTelemetry = openTelemetry;
         }
     }
 
     public Tracer getTracer() {
-        return this.openTelemetry.getTracerProvider().get(INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION);
+        return this.openTelemetry
+                .getTracerProvider()
+                .get(INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION);
     }
 
     public OpenTelemetry getOpenTelemetry() {

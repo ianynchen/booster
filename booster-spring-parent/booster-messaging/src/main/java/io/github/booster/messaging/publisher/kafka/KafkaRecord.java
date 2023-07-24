@@ -13,11 +13,11 @@ import lombok.Getter;
 @EqualsAndHashCode
 public class KafkaRecord<T> {
 
-    private String key;
+    private final String key;
 
-    private T value;
+    private final T value;
 
-    private String correlationKey;
+    private final String correlationKey;
 
     /**
      * Constructs a record with correlation ID same as key

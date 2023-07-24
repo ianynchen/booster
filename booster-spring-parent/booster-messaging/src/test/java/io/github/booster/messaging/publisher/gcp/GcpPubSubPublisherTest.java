@@ -32,7 +32,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class GcpPublisherTest {
+class GcpPubSubPublisherTest {
 
     static class PullResult extends AbstractFuture<String> {
 
@@ -67,7 +67,7 @@ class GcpPublisherTest {
     void shouldFailCreate() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpPublisher<Integer>(
+                () -> new GcpPubSubPublisher<Integer>(
                         null,
                         this.publisherTemplate,
                         this.threadPoolConfig,
@@ -78,7 +78,7 @@ class GcpPublisherTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpPublisher<Integer>(
+                () -> new GcpPubSubPublisher<Integer>(
                         "",
                         this.publisherTemplate,
                         this.threadPoolConfig,
@@ -89,7 +89,7 @@ class GcpPublisherTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpPublisher<Integer>(
+                () -> new GcpPubSubPublisher<Integer>(
                         " ",
                         this.publisherTemplate,
                         this.threadPoolConfig,
@@ -100,7 +100,7 @@ class GcpPublisherTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpPublisher<Integer>(
+                () -> new GcpPubSubPublisher<Integer>(
                         "abc",
                         null,
                         this.threadPoolConfig,
@@ -111,7 +111,7 @@ class GcpPublisherTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpPublisher<Integer>(
+                () -> new GcpPubSubPublisher<Integer>(
                         "abc",
                         this.publisherTemplate,
                         null,
@@ -122,7 +122,7 @@ class GcpPublisherTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpPublisher<Integer>(
+                () -> new GcpPubSubPublisher<Integer>(
                         "abc",
                         this.publisherTemplate,
                         this.threadPoolConfig,
@@ -136,7 +136,7 @@ class GcpPublisherTest {
     @Test
     void shouldCreate() {
         assertThat(
-                new GcpPublisher<>(
+                new GcpPubSubPublisher<>(
                         "test",
                         this.publisherTemplate,
                         this.threadPoolConfig,
@@ -147,7 +147,7 @@ class GcpPublisherTest {
                 notNullValue()
         );
         assertThat(
-                new GcpPublisher<>(
+                new GcpPubSubPublisher<>(
                         "test",
                         this.publisherTemplate,
                         this.threadPoolConfig,
@@ -164,7 +164,7 @@ class GcpPublisherTest {
         when(this.publisherTemplate.publish(anyString(), any(PubsubMessage.class)))
                 .thenReturn(new AsyncResult<>("1"));
 
-        GcpPublisher<Greeting> publisher = new GcpPublisher<>(
+        GcpPubSubPublisher<Greeting> publisher = new GcpPubSubPublisher<>(
                 "test",
                 this.publisherTemplate,
                 this.threadPoolConfig,
@@ -182,7 +182,7 @@ class GcpPublisherTest {
                     assertThat(record.getRecordId(), is("1"));
                 }).verifyComplete();
 
-        publisher = new GcpPublisher<>(
+        publisher = new GcpPubSubPublisher<>(
                 "test",
                 this.publisherTemplate,
                 this.threadPoolConfig,
@@ -206,7 +206,7 @@ class GcpPublisherTest {
         when(this.publisherTemplate.publish(anyString(), any(PubsubMessage.class)))
                 .thenReturn(AsyncResult.forExecutionException(new IllegalStateException("error")));
 
-        GcpPublisher<Greeting> publisher = new GcpPublisher<>(
+        GcpPubSubPublisher<Greeting> publisher = new GcpPubSubPublisher<>(
                 "test",
                 this.publisherTemplate,
                 this.threadPoolConfig,
@@ -224,7 +224,7 @@ class GcpPublisherTest {
                     assertThat(exception, instanceOf(IllegalStateException.class));
                 }).verifyComplete();
 
-        publisher = new GcpPublisher<>(
+        publisher = new GcpPubSubPublisher<>(
                 "test",
                 this.publisherTemplate,
                 this.threadPoolConfig,

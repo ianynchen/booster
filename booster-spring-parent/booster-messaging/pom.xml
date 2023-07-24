@@ -17,6 +17,7 @@
     <properties>
         <booster-web-starter.version>1.0.0</booster-web-starter.version>
 
+        <aws-sdk.version>2.20.102</aws-sdk.version>
         <scala.library.version>2.13.11</scala.library.version>
         <snakeyaml.version>2.0</snakeyaml.version>
         <spring-cloud-gcp.version>3.4.0</spring-cloud-gcp.version>
@@ -42,6 +43,10 @@
             <groupId>io.projectreactor.kafka</groupId>
             <artifactId>reactor-kafka</artifactId>
         </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sqs</artifactId>
+        </dependency>
 
         <!-- testing framework -->
         <dependency>
@@ -61,6 +66,12 @@
             <version>${scala.library.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>localstack</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -69,6 +80,13 @@
                 <groupId>com.google.cloud</groupId>
                 <artifactId>spring-cloud-gcp-dependencies</artifactId>
                 <version>${spring-cloud-gcp.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws-sdk.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

@@ -25,10 +25,6 @@ public interface MessagingMetricsConstants {
 
     String DEQUEUE_TIME = "dequeue_time";
 
-    String PROCESS_TIME = "process_time";
-
-    String PROCESS_COUNT = "process_count";
-
     String SEND_TIME = "send_time";
 
     String SEND_COUNT = "send_count";
@@ -43,7 +39,9 @@ public interface MessagingMetricsConstants {
 
     String GCP_PUBSUB = "gcp_pubsub";
 
-    String SUBSCRIBER_PROCESS_COUNT = "";
+    String AWS_SQS = "aws_sqs";
+
+    String SUBSCRIBER_PROCESS_COUNT = "subscriber_process_count";
 
     String ACKNOWLEDGEMENT_COUNT = "acknowledge_count";
 }

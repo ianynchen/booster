@@ -25,7 +25,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class GcpProcessorTest {
+class GcpPubSubProcessorTest {
 
     Function1<AcknowledgeablePubsubMessage, Mono<AcknowledgeablePubsubMessage>> process =
             Mono::just;
@@ -38,9 +38,9 @@ class GcpProcessorTest {
     private final Task<AcknowledgeablePubsubMessage, AcknowledgeablePubsubMessage> task =
             new AsyncTask<>(
                     "test",
-                    Option.<ExecutorService>fromNullable(null),
-                    Option.<Retry>fromNullable(null),
-                    Option.<CircuitBreaker>fromNullable(null),
+                    Option.fromNullable(null),
+                    Option.fromNullable(null),
+                    Option.fromNullable(null),
                     new MetricsRegistry(new SimpleMeterRegistry()),
                     process,
                     exceptionProcess
@@ -50,7 +50,7 @@ class GcpProcessorTest {
     void shouldFailCreate() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpProcessor(
+                () -> new GcpPubSubProcessor(
                         null,
                         task,
                         null,
@@ -60,7 +60,7 @@ class GcpProcessorTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GcpProcessor(
+                () -> new GcpPubSubProcessor(
                         new MockGcpSubscriberFlow("test", true),
                         null,
                         null,
@@ -73,7 +73,7 @@ class GcpProcessorTest {
     @Test
     void shouldCreate() {
         assertThat(
-                new GcpProcessor(
+                new GcpPubSubProcessor(
                         new MockGcpSubscriberFlow("test", true),
                         task,
                         null,
@@ -83,7 +83,7 @@ class GcpProcessorTest {
                 notNullValue()
         );
         assertThat(
-                new GcpProcessor(
+                new GcpPubSubProcessor(
                         new MockGcpSubscriberFlow("test", false),
                         task,
                         null,
@@ -96,7 +96,7 @@ class GcpProcessorTest {
 
     @Test
     void shouldExecuteAndAcknowledge() {
-        GcpProcessor processor = new GcpProcessor(
+        GcpPubSubProcessor processor = new GcpPubSubProcessor(
                 new MockGcpSubscriberFlow("test", true),
                 task,
                 null,
@@ -116,7 +116,7 @@ class GcpProcessorTest {
                     }
                 }).verifyComplete();
 
-        processor = new GcpProcessor(
+        processor = new GcpPubSubProcessor(
                 new MockGcpSubscriberFlow("test", true),
                 task,
                 null,
@@ -139,7 +139,7 @@ class GcpProcessorTest {
 
     @Test
     void shouldExecuteAndFailAcknowledge() {
-        GcpProcessor processor = new GcpProcessor(
+        GcpPubSubProcessor processor = new GcpPubSubProcessor(
                 new MockGcpSubscriberFlow("test", false),
                 task,
                 null,
@@ -159,7 +159,7 @@ class GcpProcessorTest {
                     }
                 }).verifyComplete();
 
-        processor = new GcpProcessor(
+        processor = new GcpPubSubProcessor(
                 new MockGcpSubscriberFlow("test", false),
                 task,
                 null,

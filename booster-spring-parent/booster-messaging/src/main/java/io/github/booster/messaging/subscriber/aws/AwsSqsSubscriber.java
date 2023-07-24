@@ -1,14 +1,11 @@
-package io.github.booster.messaging.subscriber.gcp;
+package io.github.booster.messaging.subscriber.aws;
 
 import com.google.api.client.util.Preconditions;
-import com.google.cloud.spring.pubsub.core.subscriber.PubSubSubscriberTemplate;
-import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
-import com.google.pubsub.v1.PubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.messaging.MessagingMetricsConstants;
-import io.github.booster.messaging.config.GcpPubSubSubscriberConfig;
-import io.github.booster.messaging.config.GcpPubSubSubscriberSetting;
+import io.github.booster.messaging.config.AwsSqsConfig;
+import io.github.booster.messaging.config.AwsSqsSetting;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.subscriber.BatchSubscriberFlow;
 import io.github.booster.messaging.subscriber.SubscriberFlow;
@@ -16,81 +13,79 @@ import io.github.booster.messaging.util.MetricsHelper;
 import io.github.booster.messaging.util.TraceHelper;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import lombok.val;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
-import reactor.core.scheduler.Schedulers;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Pull based GCP pub/sub subscriber. Internally uses
- * a pull based mechanism to pull messages from GCP.
- */
-public class GcpPubSubPullSubscriber
-        implements SubscriberFlow<AcknowledgeablePubsubMessage>, BatchSubscriberFlow<AcknowledgeablePubsubMessage> {
+public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscriberFlow<Message> {
 
-    public static class GcpPubSubTextMapGetter implements TextMapGetter<PubsubMessage> {
+    public static class AwsSqsTextMapGetter implements TextMapGetter<Message> {
 
         @Override
-        public Iterable<String> keys(PubsubMessage carrier) {
-            return carrier.getAttributesMap().keySet();
+        public Iterable<String> keys(Message carrier) {
+            return carrier.messageAttributes().keySet();
         }
 
         @Nullable
         @Override
-        public String get(@Nullable PubsubMessage carrier, String key) {
-            return carrier == null ? null :
-                    carrier.getAttributesMap().get(key);
+        public String get(@Nullable Message carrier, String key) {
+            return carrier == null || !carrier.messageAttributes().containsKey(key) ? null :
+                    carrier.messageAttributes().get(key).stringValue();
         }
     }
 
-    private static final Logger log = LoggerFactory.getLogger(GcpPubSubPullSubscriber.class);
+    private static final Logger log = LoggerFactory.getLogger(AwsSqsSubscriber.class);
 
-    public static final GcpPubSubTextMapGetter GETTER = new GcpPubSubTextMapGetter();
+    public static final AwsSqsTextMapGetter GETTER = new AwsSqsTextMapGetter();
 
-    private final PubSubSubscriberTemplate subscriberTemplate;
+    private final boolean manuallyInjectTrace;
+
+    private volatile boolean stopped = false;
 
     private final String name;
-
-    private final MetricsRegistry registry;
-
-    private final GcpPubSubSubscriberSetting gcpPubSubSubscriberSetting;
-
-    private volatile boolean stopped;
 
     private final ExecutorService executorService;
 
     private final OpenTelemetryConfig openTelemetryConfig;
 
-    private final boolean manuallyInjectTrace;
+    private final SqsClient sqsClient;
 
-    public GcpPubSubPullSubscriber(
-        String name,
-        PubSubSubscriberTemplate subscriberTemplate,
-        ThreadPoolConfig threadPoolConfig,
-        GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+    private final MetricsRegistry registry;
+
+    private final AwsSqsSetting sqsSetting;
+
+    public AwsSqsSubscriber(
+            String name,
+            AwsSqsConfig awsSqsConfig,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
-        Preconditions.checkArgument(subscriberTemplate != null, "subscriber template cannot be null");
+        Preconditions.checkArgument(awsSqsConfig != null, "AwsSqsConfig cannot be null");
+        Preconditions.checkArgument(
+                awsSqsConfig.get(name) != null && awsSqsConfig.getClient(name).isDefined(),
+                "SqsClient setting should be present and can be created"
+        );
         Preconditions.checkArgument(threadPoolConfig != null, "thread pool config cannot be null");
-        Preconditions.checkArgument(gcpPubSubSubscriberConfig != null, "gcp pubsub subscriber config cannot be null");
 
-        this.subscriberTemplate = subscriberTemplate;
+        this.sqsSetting = awsSqsConfig.get(name);
+        this.sqsClient = awsSqsConfig.getClient(name).orNull();
         this.name = name;
         this.registry = registry == null ? new MetricsRegistry() : registry;
-        this.gcpPubSubSubscriberSetting = gcpPubSubSubscriberConfig.getSetting(name);
-        Preconditions.checkArgument(this.gcpPubSubSubscriberSetting != null, "gcp pubsub subscriber setting cannot be null");
+        Preconditions.checkArgument(StringUtils.isNotBlank(this.sqsSetting.getQueueUrl()), "SQS queue URL cannot be blank");
 
         this.executorService = threadPoolConfig.get(this.name);
         Preconditions.checkArgument(this.executorService != null, "subscriber thread pool cannot be null");
@@ -98,21 +93,22 @@ public class GcpPubSubPullSubscriber
         this.manuallyInjectTrace = manuallyInjectTrace;
     }
 
-    private List<AcknowledgeablePubsubMessage> pullRecords() {
+    private List<Message> pullRecords() {
         val sampleOption = this.registry.startSample();
         try {
-            List<AcknowledgeablePubsubMessage> records = this.subscriberTemplate.pull(
-                    this.gcpPubSubSubscriberSetting.getSubscription(),
-                    this.gcpPubSubSubscriberSetting.getMaxRecords(),
-                    true
+            ReceiveMessageResponse response = this.sqsClient.receiveMessage(
+                    this.sqsSetting
+                            .getReceiverSetting()
+                            .createRequest(this.sqsSetting.getQueueUrl())
             );
+            List<Message> records = response.messages() == null ? List.of() : response.messages();
 
-            if (CollectionUtils.isNotEmpty(records)) {
+            if (records.size() > 0) {
                 MetricsHelper.recordMessageSubscribeCount(
                         this.registry,
                         MessagingMetricsConstants.SUBSCRIBER_PULL_COUNT,
                         records.size(),
-                        MessagingMetricsConstants.GCP_PUBSUB,
+                        MessagingMetricsConstants.AWS_SQS,
                         this.name,
                         MessagingMetricsConstants.SUCCESS_STATUS,
                         MessagingMetricsConstants.SUCCESS_STATUS
@@ -136,25 +132,17 @@ public class GcpPubSubPullSubscriber
                     this.registry,
                     sampleOption,
                     MessagingMetricsConstants.SUBSCRIBER_PULL_TIME,
-                    MessagingMetricsConstants.GCP_PUBSUB,
+                    MessagingMetricsConstants.AWS_SQS,
                     this.name
             );
         }
     }
 
-    /**
-     * Stops pulling from pub/sub.
-     */
-    public void stop() {
-        this.stopped = true;
-        this.executorService.shutdown();
-    }
-
-    private Flux<List<AcknowledgeablePubsubMessage>> generateFlux() {
+    private Flux<List<Message>> generateFlux() {
         return Flux.generate(
                 () -> this.stopped,
-                (Boolean stopState, SynchronousSink<List<AcknowledgeablePubsubMessage>> sink) -> {
-                    List<AcknowledgeablePubsubMessage> records = this.pullRecords();
+                (Boolean stopState, SynchronousSink<List<Message>> sink) -> {
+                    List<Message> records = this.pullRecords();
                     sink.next(records);
                     if (this.stopped) {
                         sink.complete();
@@ -168,16 +156,16 @@ public class GcpPubSubPullSubscriber
                     }
                     log.info("booster-messaging - queue[{}] stopped", this.name);
                 }
-        ).publishOn(Schedulers.fromExecutorService(this.executorService))
-        .filter(entry -> entry != null && !CollectionUtils.isEmpty(entry));
+        ).filter(entry -> entry != null && !CollectionUtils.isEmpty(entry));
     }
 
-    /**
-     * Creates a flux from messages in the {@link BlockingQueue}.
-     * @return a {@link Flux} of non-empty {@link List} of {@link AcknowledgeablePubsubMessage} messages.
-     */
+    public void stop() {
+        this.stopped = true;
+        this.executorService.shutdown();
+    }
+
     @Override
-    public Flux<List<AcknowledgeablePubsubMessage>> flux() {
+    public Flux<List<Message>> flux() {
         return this.generateFlux()
                 .flatMap(records -> {
                     if (this.manuallyInjectTrace) {
@@ -187,12 +175,13 @@ public class GcpPubSubPullSubscriber
                 });
     }
 
-    /**
-     * Flattens the output of the messages.
-     * @return a {@link Flux} of non-null {@link AcknowledgeablePubsubMessage}
-     */
     @Override
-    public Flux<AcknowledgeablePubsubMessage> flatFlux() {
+    public String getName() {
+        return this.name;
+    }
+
+    @Override
+    public Flux<Message> flatFlux() {
         return this.generateFlux()
                 .flatMap(Flux::fromIterable)
                 .flatMap(record -> {
@@ -203,8 +192,7 @@ public class GcpPubSubPullSubscriber
                 });
     }
 
-    @Override
-    public String getName() {
-        return this.name;
+    public String getQueueUrl() {
+        return this.sqsSetting.getQueueUrl();
     }
 }

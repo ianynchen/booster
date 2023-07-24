@@ -20,17 +20,17 @@ import java.util.List;
  * Processes GCP pub/sub events in batch mode. Each element will be a list of
  * {@link AcknowledgeablePubsubMessage} objects.
  */
-public class GcpBatchProcessor extends AbstractBatchProcessor<AcknowledgeablePubsubMessage> {
+public class GcpPubSubBatchProcessor extends AbstractBatchProcessor<AcknowledgeablePubsubMessage> {
 
-    private final static Logger log = LoggerFactory.getLogger(GcpBatchProcessor.class);
+    private final static Logger log = LoggerFactory.getLogger(GcpPubSubBatchProcessor.class);
 
     /**
-     * Constructs a {@link GcpBatchProcessor}
+     * Constructs a {@link GcpPubSubBatchProcessor}
      * @param subscriberFlow {@link BatchSubscriberFlow} to listen to.
      * @param processTask {@link Task} used to process GCP pub/sub events
      * @param registry metrics recording.
      */
-    public GcpBatchProcessor(
+    public GcpPubSubBatchProcessor(
             BatchSubscriberFlow<AcknowledgeablePubsubMessage> subscriberFlow,
             Task<List<AcknowledgeablePubsubMessage>, List<AcknowledgeablePubsubMessage>> processTask,
             OpenTelemetryConfig openTelemetryConfig,
