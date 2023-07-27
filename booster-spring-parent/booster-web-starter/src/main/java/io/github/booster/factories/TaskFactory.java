@@ -1,5 +1,6 @@
 package io.github.booster.factories;
 
+import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
@@ -9,7 +10,9 @@ import io.github.booster.http.client.HttpClient;
 import io.github.booster.http.client.config.HttpClientConnectionConfig;
 import io.github.booster.http.client.request.HttpClientRequestContext;
 import io.github.booster.task.Task;
+import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
+import io.github.booster.task.impl.RequestHandlers;
 import io.github.booster.task.impl.SynchronousTask;
 import kotlin.jvm.functions.Function1;
 import org.slf4j.Logger;
@@ -78,20 +81,25 @@ public class TaskFactory {
      */
     protected <Request, Response> Task<Request, Response> createAsyncTask(
             String name,
-            Function1<Request, Mono<Response>> processor,
-            Function1<Throwable, Response> exceptionHandler
+            Function1<Request, Mono<Option<Response>>> processor,
+            Function1<Throwable, Option<Response>> exceptionHandler
     ) {
         if (exceptionHandler == null) {
             exceptionHandler = TaskFactory::handleException;
         }
         return new AsyncTask<>(
                 name,
-                this.threadPoolConfig.getOption(name),
-                this.retryConfig.get(name),
-                this.circuitBreakerConfig.get(name),
-                this.registry,
-                processor,
-                exceptionHandler
+                new RequestHandlers<>(
+                        Option.fromNullable(null),
+                        Option.fromNullable(exceptionHandler)
+                ),
+                new TaskExecutionContext(
+                        this.threadPoolConfig.getOption(name),
+                        this.retryConfig.getOption(name),
+                        this.circuitBreakerConfig.getOption(name),
+                        this.registry
+                ),
+                processor
         );
     }
 
@@ -109,20 +117,25 @@ public class TaskFactory {
      */
     protected <Request, Response> Task<Request, Response> createSyncTask(
             String name,
-            Function1<Request, Response> processor,
-            Function1<Throwable, Response> exceptionHandler
+            Function1<Request, Option<Response>> processor,
+            Function1<Throwable, Option<Response>> exceptionHandler
     ) {
         if (exceptionHandler == null) {
             exceptionHandler = TaskFactory::handleException;
         }
         return new SynchronousTask<>(
                 name,
-                this.threadPoolConfig.getOption(name),
-                this.retryConfig.get(name),
-                this.circuitBreakerConfig.get(name),
-                this.registry,
-                processor,
-                exceptionHandler
+                new RequestHandlers<>(
+                        Option.fromNullable(null),
+                        Option.fromNullable(exceptionHandler)
+                ),
+                new TaskExecutionContext(
+                        this.threadPoolConfig.getOption(name),
+                        this.retryConfig.getOption(name),
+                        this.circuitBreakerConfig.getOption(name),
+                        this.registry
+                ),
+                processor
         );
     }
 
@@ -134,8 +147,10 @@ public class TaskFactory {
      * @return {@link ResponseEntity} with PRECONDITION_FAILED as status code.
      * @param <Response> response type.
      */
-    private static <Response> ResponseEntity<Response> handleRequestException(Throwable t) {
-        return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
+    private static <Response> Option<ResponseEntity<Response>> handleRequestException(Throwable t) {
+        return Option.fromNullable(
+                ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build()
+        );
     }
 
     /**
@@ -151,22 +166,28 @@ public class TaskFactory {
     protected <Request, Response> Task<HttpClientRequestContext<Request, Response>, ResponseEntity<Response>> createHttpClientTask(
             String name,
             HttpClient<Request, Response> httpClient,
-            Function1<Throwable, ResponseEntity<Response>> exceptionHandler
+            Function1<Throwable, Option<ResponseEntity<Response>>> exceptionHandler
     ) {
-        Function1<HttpClientRequestContext<Request, Response>, Mono<ResponseEntity<Response>>> function =
-                request -> httpClient.invoke(request);
+        Function1<HttpClientRequestContext<Request, Response>, Mono<Option<ResponseEntity<Response>>>> function =
+                request -> httpClient.invoke(request)
+                        .map(Option::fromNullable);
 
         if (exceptionHandler == null) {
             exceptionHandler = TaskFactory::handleRequestException;
         }
         return new AsyncTask<>(
                 name,
-                this.threadPoolConfig.getOption(name),
-                this.retryConfig.get(name),
-                this.circuitBreakerConfig.get(name),
-                this.registry,
-                function,
-                exceptionHandler
+                new RequestHandlers<>(
+                        Option.fromNullable(null),
+                        Option.fromNullable(exceptionHandler)
+                ),
+                new TaskExecutionContext(
+                        this.threadPoolConfig.getOption(name),
+                        this.retryConfig.getOption(name),
+                        this.circuitBreakerConfig.getOption(name),
+                        this.registry
+                ),
+                function
         );
     }
 
@@ -197,7 +218,7 @@ public class TaskFactory {
      */
     public <Request, Response> Task<HttpClientRequestContext<Request, Response>, ResponseEntity<Response>> getHttpTask(
             String name,
-            Function1<Throwable, ResponseEntity<Response>> exceptionHandler
+            Function1<Throwable, Option<ResponseEntity<Response>>> exceptionHandler
     ) {
         synchronized (this.httpClientTasks) {
             if (this.httpClientTasks.containsKey(name)) {
@@ -228,7 +249,7 @@ public class TaskFactory {
      */
     public <Request, Response> Task<Request, Response> getAsyncTask(
             String name,
-            Function1<Request, Mono<Response>> processor
+            Function1<Request, Mono<Option<Response>>> processor
     ) {
         return this.getAsyncTask(name, processor, null);
     }
@@ -246,8 +267,8 @@ public class TaskFactory {
      */
     public <Request, Response> Task<Request, Response> getAsyncTask(
             String name,
-            Function1<Request, Mono<Response>> processor,
-            Function1<Throwable, Response> exceptionHandler
+            Function1<Request, Mono<Option<Response>>> processor,
+            Function1<Throwable, Option<Response>> exceptionHandler
     ) {
         synchronized (this.simpleTasks) {
             if (this.simpleTasks.containsKey(name)) {
@@ -274,7 +295,7 @@ public class TaskFactory {
      */
     public <Request, Response> Task<Request, Response> getSyncTask(
             String name,
-            Function1<Request, Response> processor
+            Function1<Request, Option<Response>> processor
     ) {
         return this.getSyncTask(name, processor, null);
     }
@@ -292,8 +313,8 @@ public class TaskFactory {
      */
     public <Request, Response> Task<Request, Response> getSyncTask(
             String name,
-            Function1<Request, Response> processor,
-            Function1<Throwable, Response> exceptionHandler
+            Function1<Request, Option<Response>> processor,
+            Function1<Throwable, Option<Response>> exceptionHandler
     ) {
         synchronized (this.simpleTasks) {
             if (this.simpleTasks.containsKey(name)) {

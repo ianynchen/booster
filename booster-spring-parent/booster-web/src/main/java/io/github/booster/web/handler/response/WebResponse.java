@@ -2,6 +2,7 @@ package io.github.booster.web.handler.response;
 
 import arrow.core.Either;
 import arrow.core.EitherKt;
+import arrow.core.Option;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -105,7 +106,7 @@ public class WebResponse<T> {
      * @param <T> type of actual response
      */
     public static <T> ResponseEntity<WebResponse<?>> build(
-            Either<Throwable, T> either,
+            Either<Throwable, Option<?>> either,
             ExceptionConverter exceptionConverter
     ) {
         if (either == null) {
@@ -116,7 +117,7 @@ public class WebResponse<T> {
             return ResponseEntity.status(HttpStatus.OK.value())
                     .body(
                             WebResponse.builder()
-                                    .response(EitherKt.getOrElse(either, o -> null))
+                                    .response(EitherKt.getOrElse(either, o -> Option.fromNullable(null)).orNull())
                                     .build()
                     );
         } else {

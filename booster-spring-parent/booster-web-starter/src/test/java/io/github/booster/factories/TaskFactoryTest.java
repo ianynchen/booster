@@ -2,6 +2,7 @@ package io.github.booster.factories;
 
 import arrow.core.Either;
 import arrow.core.EitherKt;
+import arrow.core.Option;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerSetting;
@@ -115,17 +116,17 @@ class TaskFactoryTest {
 
         Task<String, Integer> task = this.factory.getAsyncTask(
                 "async",
-                str -> Mono.just(str.length())
+                str -> Mono.just(Option.fromNullable(str.length()))
         );
 
         Task<String, Integer> task2 = this.factory.getAsyncTask(
                 "async2",
-                str -> Mono.just(str.length())
+                str -> Mono.just(Option.fromNullable(str.length()))
         );
 
         Task<String, Integer> task3 = this.factory.getAsyncTask(
                 "async",
-                str -> Mono.just(str.length())
+                str -> Mono.just(Option.fromNullable(str.length()))
         );
 
         assertThat(task, notNullValue());
@@ -138,8 +139,8 @@ class TaskFactoryTest {
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), is(true));
 
-                    int value = EitherKt.getOrElse(either, o -> 0);
-                    assertThat(value, is("hello".length()));
+                    Option<Integer> value = EitherKt.getOrElse(either, o -> Option.fromNullable(0));
+                    assertThat(value.orNull(), is("hello".length()));
                 }).verifyComplete();
     }
 
@@ -149,17 +150,17 @@ class TaskFactoryTest {
 
         Task<String, Integer> task = this.factory.getSyncTask(
                 "async",
-                String::length
+                str -> Option.fromNullable(str.length())
         );
 
         Task<String, Integer> task2 = this.factory.getSyncTask(
                 "async2",
-                String::length
+                str -> Option.fromNullable(str.length())
         );
 
         Task<String, Integer> task3 = this.factory.getSyncTask(
                 "async",
-                String::length
+                str -> Option.fromNullable(str.length())
         );
 
         assertThat(task, notNullValue());
@@ -172,8 +173,8 @@ class TaskFactoryTest {
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), is(true));
 
-                    int value = EitherKt.getOrElse(either, o -> 0);
-                    assertThat(value, is("hello".length()));
+                    Option<Integer> value = EitherKt.getOrElse(either, o -> Option.fromNullable(0));
+                    assertThat(value.orNull(), is("hello".length()));
                 }).verifyComplete();
     }
 
@@ -219,7 +220,7 @@ class TaskFactoryTest {
         StepVerifier.create(task.execute(context))
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), is(true));
-                    GreetingResponse response = either.getOrNull().getBody();
+                    GreetingResponse response = either.getOrNull().orNull().getBody();
                     assertThat(response, notNullValue());
                     assertThat(response.getFrom(), is("server"));
                     assertThat(response.getGreeting(), is("hola"));
@@ -241,13 +242,13 @@ class TaskFactoryTest {
 
         assertThat(this.factory.getHttpTask("client"), sameInstance(task));
 
-        Either<Throwable, HttpClientRequestContext<Object, GreetingResponse>> request =
+        Either<Throwable, Option<HttpClientRequestContext<Object, GreetingResponse>>> request =
                 new Either.Left<>(new IllegalArgumentException());
         StepVerifier.create(
                 task.execute(request)
         ).consumeNextWith(either -> {
             assertThat(either.isRight(), is(true));
-            ResponseEntity<?> response = either.getOrNull();
+            ResponseEntity<?> response = either.getOrNull().orNull();
             assertThat(response, notNullValue());
             assertThat(response.getStatusCode(), equalTo(HttpStatus.PRECONDITION_FAILED));
         }).verifyComplete();

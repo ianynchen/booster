@@ -1,6 +1,7 @@
 package io.github.booster.web.handler.controller;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import io.github.booster.web.handler.dto.Greeting;
 import io.github.booster.web.handler.response.WebException;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ public class TestController {
             value = "/hello",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<Either<Throwable, Greeting>> hello(
+    public Mono<Either<Throwable, Option<Greeting>>> hello(
         @RequestParam("from") String from,
         @RequestParam("greeting") String greeting
     ) {
@@ -36,7 +37,7 @@ public class TestController {
             );
             return Mono.just(new Either.Left<>(exception));
         } else {
-            return Mono.just(new Either.Right<>(new Greeting("server", from, greeting)));
+            return Mono.just(new Either.Right<>(Option.fromNullable(new Greeting("server", from, greeting))));
         }
     }
 }

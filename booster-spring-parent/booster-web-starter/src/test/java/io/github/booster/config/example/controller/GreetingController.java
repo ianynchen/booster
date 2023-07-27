@@ -1,6 +1,7 @@
 package io.github.booster.config.example.controller;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import io.github.booster.config.example.dto.GreetingResponse;
 import io.github.booster.factories.TaskFactory;
 import io.github.booster.task.Task;
@@ -24,23 +25,27 @@ public class GreetingController {
     }
 
     @GetMapping("/hello")
-    Mono<Either<Throwable, GreetingResponse>> hello(
+    Mono<Either<Throwable, Option<GreetingResponse>>> hello(
             @RequestParam("from") String from,
             @RequestParam("greeting") String greeting
     ) {
         Task<GreetingResponse, GreetingResponse> task =
                 taskFactory.getSyncTask(
                         "greeting",
-                        greet -> GreetingResponse.builder()
-                                .from("server")
-                                .greeting(greet.getGreeting())
-                                .build()
+                        greet -> Option.fromNullable(
+                                GreetingResponse.builder()
+                                        .from("server")
+                                        .greeting(greet.getGreeting())
+                                        .build()
+                        )
                 );
         return task.execute(
-                GreetingResponse.builder()
-                        .from(from)
-                        .greeting(greeting)
-                        .build()
+                Option.fromNullable(
+                        GreetingResponse.builder()
+                                .from(from)
+                                .greeting(greeting)
+                                .build()
+                )
         );
     }
 }

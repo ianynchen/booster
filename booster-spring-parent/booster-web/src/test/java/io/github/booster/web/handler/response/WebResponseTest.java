@@ -1,6 +1,7 @@
 package io.github.booster.web.handler.response;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import io.github.booster.web.handler.ExceptionConverter;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -29,7 +30,7 @@ class WebResponseTest {
 
     @Test
     void shouldBuildResponseBody() {
-        Either<Throwable, String> content = new Either.Right<>("abc");
+        Either<Throwable, Option<?>> content = new Either.Right<>(Option.fromNullable("abc"));
         ResponseEntity<WebResponse<?>> response = WebResponse.build(content, new ExceptionConverter(null));
         assertThat(response, notNullValue());
         assertThat(response.getBody(), notNullValue());
@@ -38,7 +39,7 @@ class WebResponseTest {
 
     @Test
     void shouldBuildError() {
-        Either<Throwable, String> content = new Either.Left<>(new IllegalArgumentException());
+        Either<Throwable, Option<?>> content = new Either.Left<>(new IllegalArgumentException());
         ResponseEntity<WebResponse<?>> response = WebResponse.build(content, new ExceptionConverter(null));
         assertThat(response, notNullValue());
         assertThat(response.getBody(), notNullValue());
