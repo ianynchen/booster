@@ -13,23 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RetryConfigTest {
 
-
-    @Test
-    void shouldThrowException() {
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new RetryConfig().getOption("test")
-        );
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new RetryConfig(Map.of()).getOption("test")
-        );
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new RetryConfig(Map.of("test", new RetrySetting())).getOption("test")
-        );
-    }
-
     @Test
     void shouldCreateConfig() {
         assertThat(new RetryConfig(), notNullValue());

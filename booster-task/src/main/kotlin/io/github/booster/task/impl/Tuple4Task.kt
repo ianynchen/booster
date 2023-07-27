@@ -25,7 +25,8 @@ typealias Tuple4WithError<E0, E1, E2, E3> =
                 DataWithError<E3>
                 >
 
-typealias Tuple4ExceptionHandler<Resp0, Resp1, Resp2, Resp3> = (Throwable) -> Tuple4WithError<Resp0, Resp1, Resp2, Resp3>
+typealias Tuple4ExceptionHandler<Resp0, Resp1, Resp2, Resp3> =
+            (Throwable) -> Tuple4WithError<Resp0, Resp1, Resp2, Resp3>
 
 @Suppress("LongParameterList")
 class Tuple4Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3>(

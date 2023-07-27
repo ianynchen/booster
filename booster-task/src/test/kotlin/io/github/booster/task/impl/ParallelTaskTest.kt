@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.Option
 import arrow.core.getOrElse
 import io.github.booster.task.circuitBreakerConfig
-import io.github.booster.task.defaultLengthFuncObj
 import io.github.booster.task.emptyThreadPool
 import io.github.booster.task.retryConfig
 import io.github.booster.task.threadPool

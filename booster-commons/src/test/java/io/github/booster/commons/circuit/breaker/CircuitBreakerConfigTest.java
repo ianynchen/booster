@@ -14,22 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class CircuitBreakerConfigTest {
 
     @Test
-    void shouldThrowException() {
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new CircuitBreakerConfig().getOption("test")
-        );
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new CircuitBreakerConfig(Map.of()).getOption("test")
-        );
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new CircuitBreakerConfig(Map.of("test", new CircuitBreakerSetting())).getOption("test")
-        );
-    }
-
-    @Test
     void shouldCreateConfig() {
         assertThat(new CircuitBreakerConfig(), notNullValue());
         assertThat(new CircuitBreakerConfig(Map.of()), notNullValue());

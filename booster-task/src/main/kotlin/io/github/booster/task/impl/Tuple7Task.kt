@@ -40,7 +40,8 @@ class Tuple7Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4, Resp4
     private val task4: Task<Req4, Resp4>,
     private val task5: Task<Req5, Resp5>,
     private val task6: Task<Req6, Resp6>,
-    private val requestExceptionHandler: Option<Tuple7ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6>>,
+    private val requestExceptionHandler:
+        Option<Tuple7ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6>>,
     private val registry: MetricsRegistry
 ): Task<OptionTuple7<Req0, Req1, Req2, Req3, Req4, Req5, Req6>,
         Tuple7WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6>> {
@@ -52,7 +53,8 @@ class Tuple7Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4, Resp4
         this.taskName = name
     }
 
-    private fun handleException(t: Throwable): Mono<Option<Tuple7WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6>>> {
+    private fun handleException(t: Throwable):
+            Mono<Option<Tuple7WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6>>> {
         return this.requestExceptionHandler.map {
             Mono.just(Option.fromNullable(it.invoke(t)))
         }.getOrElse {
@@ -131,7 +133,8 @@ class Tuple7TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4
     private lateinit var task4: Task<Req4, Resp4>
     private lateinit var task5: Task<Req5, Resp5>
     private lateinit var task6: Task<Req6, Resp6>
-    private var requestExceptionHandler: Option<Tuple7ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6>> =
+    private var requestExceptionHandler:
+            Option<Tuple7ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6>> =
         Option.fromNullable(null)
 
     fun name(name: String) {

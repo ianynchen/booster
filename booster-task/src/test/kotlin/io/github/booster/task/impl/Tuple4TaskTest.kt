@@ -116,6 +116,7 @@ internal class Tuple4TaskTest {
         )
     }
 
+    @Suppress("LongMethod")
     @Test
     fun `should execute normal flow`() {
         val task = tuple4Task {

@@ -36,6 +36,7 @@ internal class Tuple2Task<Req0, Resp0, Req1, Resp1>(
         this.taskName = name
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun handleException(t: Throwable): Mono<Option<Tuple2WithError<Resp0, Resp1>>> {
         return this.requestExceptionHandler.map {
             Mono.create { sink ->
