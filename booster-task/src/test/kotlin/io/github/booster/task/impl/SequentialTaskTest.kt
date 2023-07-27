@@ -1,5 +1,6 @@
 package io.github.booster.task.impl
 
+import arrow.core.Option
 import io.github.booster.task.circuitBreakerConfig
 import io.github.booster.task.retryConfig
 import io.github.booster.task.threadPool
@@ -18,14 +19,14 @@ internal class SequentialTaskTest {
         name("abc")
         registry(io.github.booster.task.registry)
         firstTask(
-            syncTask<String, Int?> {
+            syncTask<String, Int> {
                 name("length")
                 registry(io.github.booster.task.registry)
-                retryOption(retryConfig.get("abc"))
-                circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                retryOption(Option.fromNullable(retryConfig.get("abc")))
+                circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                 executorOption(threadPool)
                 processor {
-                    it!!.length
+                    Option.fromNullable(it.length)
                 }
             }.build()
         )
@@ -33,11 +34,11 @@ internal class SequentialTaskTest {
             syncTask<Int, String> {
                 name("str")
                 registry(io.github.booster.task.registry)
-                retryOption(retryConfig.get("abc"))
-                circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                retryOption(Option.fromNullable(retryConfig.get("abc")))
+                circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                 executorOption(threadPool)
                 processor {
-                    it.toString()
+                    Option.fromNullable(it.toString())
                 }
             }.build()
         )
@@ -49,14 +50,14 @@ internal class SequentialTaskTest {
             name("test")
             registry(io.github.booster.task.registry)
             firstTask(
-                syncTask<String, Int?> {
+                syncTask<String, Int> {
                     name("length")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                     executorOption(threadPool)
                     processor {
-                        it?.length ?: 0
+                        Option.fromNullable(it.length)
                     }
                 }.build()
             )
@@ -64,11 +65,11 @@ internal class SequentialTaskTest {
                 syncTask<Int, String> {
                     name("str")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                     executorOption(threadPool)
                     processor {
-                        it.toString()
+                        Option.fromNullable(it.toString())
                     }
                 }.build()
             )
@@ -90,11 +91,11 @@ internal class SequentialTaskTest {
                     syncTask<Int, String> {
                         name("str")
                         registry(io.github.booster.task.registry)
-                        retryOption(retryConfig.get("abc"))
-                        circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                        retryOption(Option.fromNullable(retryConfig.get("abc")))
+                        circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                         executorOption(threadPool)
                         processor {
-                            it.toString()
+                            Option.fromNullable(it.toString())
                         }
                     }.build()
                 )
@@ -108,14 +109,14 @@ internal class SequentialTaskTest {
                 name("test")
                 registry(io.github.booster.task.registry)
                 firstTask(
-                    syncTask<String, Int?> {
+                    syncTask<String, Int> {
                         name("length")
                         registry(io.github.booster.task.registry)
-                        retryOption(retryConfig.get("abc"))
-                        circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                        retryOption(Option.fromNullable(retryConfig.get("abc")))
+                        circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                         executorOption(threadPool)
                         processor {
-                            it?.length ?: 0
+                            Option.fromNullable(it.length)
                         }
                     }.build()
                 )
@@ -129,14 +130,14 @@ internal class SequentialTaskTest {
             sequentialTask {
                 registry(io.github.booster.task.registry)
                 firstTask(
-                    syncTask<String, Int?> {
+                    syncTask<String, Int> {
                         name("length")
                         registry(io.github.booster.task.registry)
-                        retryOption(retryConfig.get("abc"))
-                        circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                        retryOption(Option.fromNullable(retryConfig.get("abc")))
+                        circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                         executorOption(threadPool)
                         processor {
-                            it?.length ?: 0
+                            Option.fromNullable(it.length)
                         }
                     }.build()
                 )
@@ -144,11 +145,11 @@ internal class SequentialTaskTest {
                     syncTask<Int, String> {
                         name("str")
                         registry(io.github.booster.task.registry)
-                        retryOption(retryConfig.get("abc"))
-                        circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                        retryOption(Option.fromNullable(retryConfig.get("abc")))
+                        circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                         executorOption(threadPool)
                         processor {
-                            it.toString()
+                            Option.fromNullable(it.toString())
                         }
                     }.build()
                 )
@@ -163,7 +164,7 @@ internal class SequentialTaskTest {
         StepVerifier.create(task.execute("abc"))
             .consumeNextWith {
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull(), equalTo("3"))
+                assertThat(it.getOrNull()?.orNull(), equalTo("3"))
             }.verifyComplete()
     }
 

@@ -15,7 +15,7 @@ internal class EitherUtilKtTest {
         val either = toEither<Int>(null)
         assertThat(either, notNullValue())
         assertThat(either.isRight(), `is`(true))
-        assertThat(either.getOrNull(), nullValue())
+        assertThat(either.getOrNull()?.orNull(), nullValue())
     }
 
     @Test

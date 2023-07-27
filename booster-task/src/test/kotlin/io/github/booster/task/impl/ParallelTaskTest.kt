@@ -1,8 +1,10 @@
 package io.github.booster.task.impl
 
 import arrow.core.Either
+import arrow.core.Option
 import arrow.core.getOrElse
 import io.github.booster.task.circuitBreakerConfig
+import io.github.booster.task.defaultLengthFuncObj
 import io.github.booster.task.emptyThreadPool
 import io.github.booster.task.retryConfig
 import io.github.booster.task.threadPool
@@ -25,14 +27,14 @@ internal class ParallelTaskTest {
             name("parallel")
             registry(io.github.booster.task.registry)
             task(
-                syncTask<String?, Int> {
+                syncTask<String, Int> {
                     name("length")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                     executorOption(emptyThreadPool)
                     processor {
-                        it?.length ?: 0
+                        Option.fromNullable(it.length)
                     }
                 }.build()
             )
@@ -48,21 +50,22 @@ internal class ParallelTaskTest {
 
     @Test
     fun `should use custom request exception handler`() {
-        val task = parallelTask<String?, Int> {
+        val task = parallelTask {
             name("parallel")
             registry(io.github.booster.task.registry)
             requestErrorHandler {
-                if (it is IllegalArgumentException) listOf() else listOf(1, 1)
+                if (it is IllegalArgumentException) Option.fromNullable(listOf())
+                else Option.fromNullable(listOf(1, 1))
             }
             task(
-                syncTask<String?, Int> {
+                syncTask<String, Int> {
                     name("length")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                     executorOption(emptyThreadPool)
                     processor {
-                        it?.length ?: 0
+                        Option.fromNullable(it.length)
                     }
                 }.build()
             )
@@ -71,21 +74,27 @@ internal class ParallelTaskTest {
         StepVerifier.create(task.execute(Either.Left(IllegalArgumentException())))
             .consumeNextWith {
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?.size ?: 0, `is`(0))
+                assertThat(it.getOrNull()?.isDefined(), `is`(true))
+                val list = it.getOrNull()?.orNull()
+                assertThat(list, notNullValue())
+                assertThat(list, hasSize(0))
             }.verifyComplete()
 
         StepVerifier.create(task.execute(Either.Left(IllegalStateException())))
             .consumeNextWith {
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?.size ?: 0, `is`(2))
-                assertThat(it.getOrNull()!!, containsInAnyOrder(1, 1))
+                assertThat(it.getOrNull()?.isDefined(), `is`(true))
+                val list = it.getOrNull()?.orNull()
+                assertThat(list, notNullValue())
+                assertThat(list, hasSize(2))
+                assertThat(list, containsInAnyOrder(1, 1))
             }.verifyComplete()
     }
 
     @Test
     @Suppress("UseRequire")
     fun `should calculate length`() {
-        val task = parallelTask<String?, Int> {
+        val task = parallelTask {
             name("parallel")
             registry(io.github.booster.task.registry)
             executorOption(threadPool)
@@ -93,11 +102,12 @@ internal class ParallelTaskTest {
                 syncTask<String?, Int> {
                     name("length")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
+                    defaultRequestHandler { throw IllegalStateException("error") }
                     executorOption(emptyThreadPool)
                     processor {
-                        it!!.length
+                        Option.fromNullable(it?.length)
                     }
                 }.build()
             )
@@ -105,7 +115,9 @@ internal class ParallelTaskTest {
                 if (!isAllRight(it)) {
                     throw IllegalArgumentException("not all right values")
                 } else {
-                    it.map { either -> either.getOrNull() }
+                    Option.fromNullable(
+                        it.mapNotNull { either -> either.getOrNull()?.orNull() }
+                    )
                 }
             }
         }.build()
@@ -113,11 +125,15 @@ internal class ParallelTaskTest {
         StepVerifier.create(task.execute(listOf("a", "ab", "abc")))
             .consumeNextWith {
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?.size ?: 0, `is`(3))
-                assertThat(it.getOrNull()!!, containsInAnyOrder(1, 2, 3))
+                assertThat(it.getOrNull()?.isDefined(), `is`(true))
+
+                val list = it.getOrNull()?.orNull()
+                assertThat(list, notNullValue())
+                assertThat(list, hasSize(3))
+                assertThat(list, containsInAnyOrder(1, 2, 3))
             }.verifyComplete()
 
-        StepVerifier.create(task.execute(listOf("a", null, "abc")))
+        StepVerifier.create(task.execute(Option.fromNullable(listOf("a", null, "abc"))))
             .consumeNextWith {
                 assertThat(it.isRight(), `is`(false))
                 assertThat(it.swap().getOrNull(), notNullValue())
@@ -135,20 +151,23 @@ internal class ParallelTaskTest {
                 syncTask<String?, Int> {
                     name("length")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                     executorOption(emptyThreadPool)
+                    defaultRequestHandler { throw NullPointerException() }
                     processor {
-                        it!!.length
+                        Option.fromNullable(it?.length ?: 0)
                     }
                 }.build()
             )
         }.build()
 
-        StepVerifier.create(task.execute(listOf(null, null, null, "abcd")))
+        StepVerifier.create(task.execute(Option.fromNullable(listOf(null, null, null, "abcd"))))
             .consumeNextWith {
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrElse { listOf() }, hasSize(1))
+                val value = it.getOrNull()?.getOrElse { listOf() }
+                assertThat(value, notNullValue())
+                assertThat(value, hasSize(1))
             }.verifyComplete()
 
         StepVerifier.create(task.execute(listOf(null, null, null, null)))
@@ -168,14 +187,14 @@ internal class ParallelTaskTest {
             registry(io.github.booster.task.registry)
             requestErrorHandler { throw it }
             task(
-                syncTask<String?, Int> {
+                syncTask<String, Int> {
                     name("length")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                     executorOption(emptyThreadPool)
                     processor {
-                        it?.length ?: 0
+                        Option.fromNullable(it.length)
                     }
                 }.build()
             )
@@ -202,14 +221,14 @@ internal class ParallelTaskTest {
             registry(io.github.booster.task.registry)
             requestErrorHandler { throw it }
             task(
-                syncTask<String?, Int> {
+                syncTask<String, Int> {
                     name("length")
                     registry(io.github.booster.task.registry)
-                    retryOption(retryConfig.get("abc"))
-                    circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                    retryOption(Option.fromNullable(retryConfig.get("abc")))
+                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                     executorOption(emptyThreadPool)
                     processor {
-                        it?.length ?: 0
+                        Option.fromNullable(it.length)
                     }
                 }.build()
             )
@@ -221,14 +240,14 @@ internal class ParallelTaskTest {
             parallelTask {
                 registry(io.github.booster.task.registry)
                 task(
-                    syncTask<String?, Int> {
+                    syncTask<String, Int> {
                         name("length")
                         registry(io.github.booster.task.registry)
-                        retryOption(retryConfig.get("abc"))
-                        circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                        retryOption(Option.fromNullable(retryConfig.get("abc")))
+                        circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                         executorOption(emptyThreadPool)
                         processor {
-                            it?.length ?: 0
+                            Option.fromNullable(it.length)
                         }
                     }.build()
                 )
@@ -241,14 +260,14 @@ internal class ParallelTaskTest {
                 name(null)
                 registry(io.github.booster.task.registry)
                 task(
-                    syncTask<String?, Int> {
+                    syncTask<String, Int> {
                         name("length")
                         registry(io.github.booster.task.registry)
-                        retryOption(retryConfig.get("abc"))
-                        circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                        retryOption(Option.fromNullable(retryConfig.get("abc")))
+                        circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                         executorOption(emptyThreadPool)
                         processor {
-                            it?.length ?: 0
+                            Option.fromNullable(it.length)
                         }
                     }.build()
                 )

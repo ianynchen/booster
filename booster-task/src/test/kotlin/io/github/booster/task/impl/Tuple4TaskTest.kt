@@ -1,6 +1,7 @@
 package io.github.booster.task.impl
 
 import arrow.core.Either
+import arrow.core.Option
 import io.github.booster.task.lengthTask
 import io.github.booster.task.stringTask
 import io.vavr.Tuple
@@ -27,14 +28,6 @@ internal class Tuple4TaskTest {
                 secondTask(stringTask)
                 thirdTask(lengthTask)
                 fourthTask(stringTask)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
             }.build()
         }
 
@@ -47,14 +40,6 @@ internal class Tuple4TaskTest {
                 secondTask(stringTask)
                 thirdTask(lengthTask)
                 fourthTask(stringTask)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
             }.build()
         }
 
@@ -67,102 +52,50 @@ internal class Tuple4TaskTest {
                 secondTask(stringTask)
                 thirdTask(lengthTask)
                 fourthTask(stringTask)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
             }.build()
         }
 
         assertThrows(
             IllegalArgumentException::class.java
         ) {
-            tuple4Task<String?, Int, Int?, String, String?, Int, Int?, String> {
+            tuple4Task<String, Int, Int, String, String, Int, Int, String> {
                 name("abc")
                 secondTask(stringTask)
                 thirdTask(lengthTask)
                 fourthTask(stringTask)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
             }.build()
         }
 
         assertThrows(
             IllegalArgumentException::class.java
         ) {
-            tuple4Task<String?, Int, Int?, String, String?, Int, Int?, String> {
+            tuple4Task<String, Int, Int, String, String, Int, Int, String> {
                 name("abc")
                 firstTask(lengthTask)
                 thirdTask(lengthTask)
                 fourthTask(stringTask)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
             }.build()
         }
 
         assertThrows(
             IllegalArgumentException::class.java
         ) {
-            tuple4Task<String?, Int, Int?, String, String?, Int, Int?, String> {
+            tuple4Task<String, Int, Int, String, String, Int, Int, String> {
                 name("abc")
                 firstTask(lengthTask)
                 secondTask(stringTask)
                 fourthTask(stringTask)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
             }.build()
         }
 
         assertThrows(
             IllegalArgumentException::class.java
         ) {
-            tuple4Task<String?, Int, Int?, String, String?, Int, Int?, String> {
+            tuple4Task<String, Int, Int, String, String, Int, Int, String> {
                 name("abc")
                 firstTask(lengthTask)
                 secondTask(stringTask)
                 thirdTask(lengthTask)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
-            }.build()
-        }
-
-        assertThrows(
-            IllegalArgumentException::class.java
-        ) {
-            tuple4Task {
-                name("abc")
-                firstTask(lengthTask)
-                secondTask(stringTask)
-                thirdTask(lengthTask)
-                fourthTask(stringTask)
             }.build()
         }
     }
@@ -178,14 +111,6 @@ internal class Tuple4TaskTest {
                 thirdTask(lengthTask)
                 fourthTask(stringTask)
                 registry(io.github.booster.task.registry)
-                aggregator { either1, either2, either3, either4 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull(),
-                        either3.getOrNull(),
-                        either4.getOrNull()
-                    )
-                }
             }.build(),
             notNullValue()
         )
@@ -200,47 +125,119 @@ internal class Tuple4TaskTest {
             thirdTask(lengthTask)
             fourthTask(stringTask)
             registry(io.github.booster.task.registry)
-            aggregator { either1, either2, either3, either4 ->
-                Tuple.of(
-                    either1.getOrNull(),
-                    either2.getOrNull(),
-                    either3.getOrNull(),
-                    either4.getOrNull()
-                )
-            }
         }.build()
 
-        val response = task.execute(Either.Right(Tuple.of("abc", 12, "abcd", 123)))
+        val response = task.execute(
+            Tuple.of(
+                Option.fromNullable("abc"),
+                Option.fromNullable(12),
+                Option.fromNullable("abcd"),
+                Option.fromNullable(123)
+            )
+        )
         StepVerifier.create(response)
             .consumeNextWith {
-                assertThat(it, CoreMatchers.notNullValue())
+                assertThat(it, notNullValue())
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?._1(), equalTo(3))
-                assertThat(it.getOrNull()?._2(), equalTo("12"))
-                assertThat(it.getOrNull()?._3(), equalTo(4))
-                assertThat(it.getOrNull()?._4(), equalTo("123"))
+
+                val tupleWithErrorOption = it.getOrNull()
+                assertThat(tupleWithErrorOption, notNullValue())
+                assertThat(tupleWithErrorOption!!.isDefined(), `is`(true))
+
+                val tupleWithError = tupleWithErrorOption.orNull()
+                assertThat(tupleWithError, notNullValue())
+
+                val a = tupleWithError?._1()
+                val b = tupleWithError?._2()
+                val c = tupleWithError?._3()
+                val d = tupleWithError?._4()
+
+                assertThat(a, notNullValue())
+                assertThat(b, notNullValue())
+                assertThat(c, notNullValue())
+                assertThat(d, notNullValue())
+                assertThat(a?.isRight(), `is`(true))
+                assertThat(b?.isRight(), `is`(true))
+                assertThat(c?.isRight(), `is`(true))
+                assertThat(d?.isRight(), `is`(true))
+
+                assertThat(a?.getOrNull()?.orNull(), equalTo(3))
+                assertThat(b?.getOrNull()?.orNull(), equalTo("12"))
+                assertThat(c?.getOrNull()?.orNull(), equalTo(4))
+                assertThat(d?.getOrNull()?.orNull(), equalTo("123"))
             }.verifyComplete()
 
-        val response2 = task.execute(Either.Right(Tuple.of(null, null, null, null)))
+        val response2 = task.execute(
+            Tuple.of(
+                Option.fromNullable(null),
+                Option.fromNullable(null),
+                Option.fromNullable(null),
+                Option.fromNullable(null)
+            )
+        )
         StepVerifier.create(response2)
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?._1(), equalTo(0))
-                assertThat(it.getOrNull()?._2(), equalTo(""))
-                assertThat(it.getOrNull()?._3(), equalTo(0))
-                assertThat(it.getOrNull()?._4(), equalTo(""))
+
+                val tupleWithErrorOption = it.getOrNull()
+                assertThat(tupleWithErrorOption, notNullValue())
+                assertThat(tupleWithErrorOption!!.isDefined(), `is`(true))
+
+                val tupleWithError = tupleWithErrorOption.orNull()
+                assertThat(tupleWithError, notNullValue())
+
+                val a = tupleWithError?._1()
+                val b = tupleWithError?._2()
+                val c = tupleWithError?._3()
+                val d = tupleWithError?._4()
+
+                assertThat(a, notNullValue())
+                assertThat(b, notNullValue())
+                assertThat(c, notNullValue())
+                assertThat(d, notNullValue())
+                assertThat(a?.isRight(), `is`(true))
+                assertThat(b?.isRight(), `is`(true))
+                assertThat(c?.isRight(), `is`(true))
+                assertThat(d?.isRight(), `is`(true))
+
+                assertThat(a?.getOrNull()?.orNull(), equalTo(0))
+                assertThat(b?.getOrNull()?.orNull(), equalTo(""))
+                assertThat(c?.getOrNull()?.orNull(), equalTo(0))
+                assertThat(d?.getOrNull()?.orNull(), equalTo(""))
             }.verifyComplete()
 
-        val response3 = task.execute(Either.Right(null))
+        val response3 = task.execute(Option.fromNullable(null))
         StepVerifier.create(response3)
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?._1(), equalTo(0))
-                assertThat(it.getOrNull()?._2(), equalTo(""))
-                assertThat(it.getOrNull()?._3(), equalTo(0))
-                assertThat(it.getOrNull()?._4(), equalTo(""))
+
+                val tupleWithErrorOption = it.getOrNull()
+                assertThat(tupleWithErrorOption, notNullValue())
+                assertThat(tupleWithErrorOption!!.isDefined(), `is`(true))
+
+                val tupleWithError = tupleWithErrorOption.orNull()
+                assertThat(tupleWithError, notNullValue())
+
+                val a = tupleWithError?._1()
+                val b = tupleWithError?._2()
+                val c = tupleWithError?._3()
+                val d = tupleWithError?._4()
+
+                assertThat(a, notNullValue())
+                assertThat(b, notNullValue())
+                assertThat(c, notNullValue())
+                assertThat(d, notNullValue())
+                assertThat(a?.isRight(), `is`(true))
+                assertThat(b?.isRight(), `is`(true))
+                assertThat(c?.isRight(), `is`(true))
+                assertThat(d?.isRight(), `is`(true))
+
+                assertThat(a?.getOrNull()?.orNull(), equalTo(0))
+                assertThat(b?.getOrNull()?.orNull(), equalTo(""))
+                assertThat(c?.getOrNull()?.orNull(), equalTo(0))
+                assertThat(d?.getOrNull()?.orNull(), equalTo(""))
             }.verifyComplete()
     }
 
@@ -253,14 +250,6 @@ internal class Tuple4TaskTest {
             thirdTask(lengthTask)
             fourthTask(stringTask)
             registry(io.github.booster.task.registry)
-            aggregator { either1, either2, either3, either4 ->
-                Tuple.of(
-                    either1.getOrNull(),
-                    either2.getOrNull(),
-                    either3.getOrNull(),
-                    either4.getOrNull()
-                )
-            }
         }.build()
 
         val response = task.execute(Either.Left(IllegalArgumentException()))
@@ -287,14 +276,6 @@ internal class Tuple4TaskTest {
             secondTask(stringTask)
             thirdTask(lengthTask)
             fourthTask(stringTask)
-            aggregator { either1, either2, either3, either4 ->
-                Tuple.of(
-                    either1.getOrNull(),
-                    either2.getOrNull(),
-                    either3.getOrNull(),
-                    either4.getOrNull()
-                )
-            }
         }.build()
 
         val response = task.execute(Either.Left(IllegalArgumentException()))

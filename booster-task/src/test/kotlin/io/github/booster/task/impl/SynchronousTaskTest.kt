@@ -1,9 +1,13 @@
 package io.github.booster.task.impl
 
 import arrow.core.Either
+import arrow.core.Option
+import io.github.booster.task.TaskExecutionContext
 import io.github.booster.task.circuitBreakerConfig
+import io.github.booster.task.defaultLengthFuncObj
 import io.github.booster.task.emptyThreadPool
 import io.github.booster.task.lengthExceptionThrower
+import io.github.booster.task.lengthExceptionThrowerObj
 import io.github.booster.task.registry
 import io.github.booster.task.retryConfig
 import io.github.booster.task.syncLengthFunc
@@ -18,45 +22,62 @@ import reactor.test.StepVerifier
 
 internal class SynchronousTaskTest {
 
-    private val taskWithThreadPool = SynchronousTask<String, Int>(
-        "lengthTask",
-        threadPool,
-        retryConfig.get("abc"),
-        circuitBreakerConfig.get("abc"),
-        registry,
-        ::syncLengthFunc,
-        ::lengthExceptionThrower
-    )
+    private val taskWithThreadPool: SynchronousTask<String, Int>
+        get() = SynchronousTask(
+            "lengthTask",
+            RequestHandlers(
+                Option.fromNullable(defaultLengthFuncObj),
+                Option.fromNullable(lengthExceptionThrowerObj)
+            ),
+            TaskExecutionContext(
+                threadPool,
+                Option.fromNullable(retryConfig.get("abc")),
+                Option.fromNullable(circuitBreakerConfig.get("abc")),
+                registry
+            )
+        ) { Option.fromNullable(it.length) }
 
     private val taskWithoutThreadPool = SynchronousTask<String, Int>(
         "lengthTask",
-        emptyThreadPool,
-        retryConfig.get("abc"),
-        circuitBreakerConfig.get("abc"),
-        registry,
-        ::syncLengthFunc,
-        ::lengthExceptionThrower
-    )
+        RequestHandlers(
+            Option.fromNullable(defaultLengthFuncObj),
+            Option.fromNullable(lengthExceptionThrowerObj)
+        ),
+        TaskExecutionContext(
+            emptyThreadPool,
+            Option.fromNullable(retryConfig.get("abc")),
+            Option.fromNullable(circuitBreakerConfig.get("abc")),
+            registry
+        )
+    ) { Option.fromNullable(it.length) }
 
     private val completeTask = SynchronousTask<String, Int>(
         "lengthTask",
-        emptyThreadPool,
-        retryConfig.get("test"),
-        circuitBreakerConfig.get("test"),
-        registry,
-        ::syncLengthFunc,
-        ::lengthExceptionThrower
-    )
+        RequestHandlers(
+            Option.fromNullable(defaultLengthFuncObj),
+            Option.fromNullable(lengthExceptionThrowerObj)
+        ),
+        TaskExecutionContext(
+            emptyThreadPool,
+            Option.fromNullable(retryConfig.get("test")),
+            Option.fromNullable(circuitBreakerConfig.get("test")),
+            registry
+        )
+    ) { Option.fromNullable(it.length) }
 
     private val defaultExceptionTask = SynchronousTask<String, Int>(
         "lengthTask",
-        emptyThreadPool,
-        retryConfig.get("test"),
-        circuitBreakerConfig.get("test"),
-        registry,
-        ::syncLengthFunc,
-        null
-    )
+        RequestHandlers(
+            Option.fromNullable(defaultLengthFuncObj),
+            Option.fromNullable(null)
+        ),
+        TaskExecutionContext(
+            emptyThreadPool,
+            Option.fromNullable(retryConfig.get("test")),
+            Option.fromNullable(circuitBreakerConfig.get("test")),
+            registry
+        )
+    ) { Option.fromNullable(it.length) }
 
     @Test
     fun `should run with default exception handling`() {
@@ -66,15 +87,15 @@ internal class SynchronousTaskTest {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(3))
+                assertThat(value?.orNull(), equalTo(3))
             }.verifyComplete()
 
-        StepVerifier.create(defaultExceptionTask.execute(Either.Right<String?>(null)))
+        StepVerifier.create(defaultExceptionTask.execute(Either.Right<Option<String>>(Option.fromNullable(null))))
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(0))
+                assertThat(value?.orNull(), equalTo(0))
             }.verifyComplete()
 
         StepVerifier.create(defaultExceptionTask.execute(Either.Left(IllegalArgumentException())))
@@ -94,15 +115,15 @@ internal class SynchronousTaskTest {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(3))
+                assertThat(value?.orNull(), equalTo(3))
             }.verifyComplete()
 
-        StepVerifier.create(completeTask.execute(Either.Right<String?>(null)))
+        StepVerifier.create(completeTask.execute(Either.Right<Option<String>>(Option.fromNullable(null))))
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(0))
+                assertThat(value?.orNull(), equalTo(0))
             }.verifyComplete()
 
         StepVerifier.create(completeTask.execute(Either.Left(IllegalArgumentException())))
@@ -122,15 +143,15 @@ internal class SynchronousTaskTest {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(3))
+                assertThat(value?.orNull(), equalTo(3))
             }.verifyComplete()
 
-        StepVerifier.create(taskWithoutThreadPool.execute(Either.Right<String?>(null)))
+        StepVerifier.create(taskWithoutThreadPool.execute(Either.Right<Option<String>>(Option.fromNullable(null))))
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(0))
+                assertThat(value?.orNull(), equalTo(0))
             }.verifyComplete()
 
         StepVerifier.create(taskWithoutThreadPool.execute(Either.Left(IllegalArgumentException())))
@@ -150,15 +171,15 @@ internal class SynchronousTaskTest {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(3))
+                assertThat(value?.orNull(), equalTo(3))
             }.verifyComplete()
 
-        StepVerifier.create(taskWithThreadPool.execute(Either.Right<String?>(null)))
+        StepVerifier.create(taskWithThreadPool.execute(Either.Right<Option<String>>(Option.fromNullable(null))))
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 val value = it.getOrNull()
                 assertThat(value, notNullValue())
-                assertThat(value, equalTo(0))
+                assertThat(value?.orNull(), equalTo(0))
             }.verifyComplete()
 
         StepVerifier.create(taskWithThreadPool.execute(Either.Left(IllegalArgumentException())))
@@ -172,13 +193,14 @@ internal class SynchronousTaskTest {
 
     @Test
     fun `should create simple sync task`() {
-        val task = syncTask<String, Int> {
+        val task = syncTask {
             name("abc")
             registry(registry)
             executorOption(emptyThreadPool)
-            retryOption(retryConfig.get("abc"))
-            circuitBreakerOption(circuitBreakerConfig.get("abc"))
-            processor { str: String? -> str?.length ?: 0 }
+            retryOption(Option.fromNullable(retryConfig.get("abc")))
+            circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
+            defaultRequestHandler(defaultLengthFuncObj)
+            processor { str: String -> Option.fromNullable(str.length) }
         }.build()
 
         assertThat(task, notNullValue())
@@ -188,9 +210,9 @@ internal class SynchronousTaskTest {
                 name("abc")
                 registry(registry)
                 executorOption(emptyThreadPool)
-                retryOption(retryConfig.get("abc"))
-                circuitBreakerOption(circuitBreakerConfig.get("abc"))
-                processor { str: String? -> str?.length ?: 0 }
+                retryOption(Option.fromNullable(retryConfig.get("abc")))
+                circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
+                processor { str -> Option.fromNullable(str.length) }
                 exceptionHandler { throw it }
             }.build(),
             notNullValue()
@@ -204,10 +226,10 @@ internal class SynchronousTaskTest {
         ) {
             syncTask<String, Int> {
                 registry(registry)
-                retryOption(retryConfig.get("abc"))
-                circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                retryOption(Option.fromNullable(retryConfig.get("abc")))
+                circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                 executorOption(emptyThreadPool)
-                processor { str: String? -> str?.length ?: 0 }
+                processor { str -> Option.fromNullable(str.length) }
             }.build()
         }
 
@@ -216,11 +238,11 @@ internal class SynchronousTaskTest {
         ) {
             syncTask<String, Int> {
                 registry(registry)
-                retryOption(retryConfig.get("abc"))
-                circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                retryOption(Option.fromNullable(retryConfig.get("abc")))
+                circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                 executorOption(emptyThreadPool)
                 name("")
-                processor { str: String? -> str?.length ?: 0 }
+                processor { str -> Option.fromNullable(str.length) }
             }.build()
         }
 
@@ -229,11 +251,11 @@ internal class SynchronousTaskTest {
         ) {
             syncTask<String, Int> {
                 registry(registry)
-                retryOption(retryConfig.get("abc"))
-                circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                retryOption(Option.fromNullable(retryConfig.get("abc")))
+                circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                 executorOption(emptyThreadPool)
                 name("  ")
-                processor { str: String? -> str?.length ?: 0 }
+                processor { str: String -> Option.fromNullable(str.length) }
             }.build()
         }
 
@@ -243,8 +265,8 @@ internal class SynchronousTaskTest {
             syncTask<String, Int> {
                 name("abc")
                 registry(registry)
-                retryOption(retryConfig.get("abc"))
-                circuitBreakerOption(circuitBreakerConfig.get("abc"))
+                retryOption(Option.fromNullable(retryConfig.get("abc")))
+                circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
                 executorOption(emptyThreadPool)
             }.build()
         }
@@ -256,15 +278,16 @@ internal class SynchronousTaskTest {
         val task = syncTask<String, Int> {
             name("abc")
             registry(registry)
-            retryOption(retryConfig.get("abc"))
-            circuitBreakerOption(circuitBreakerConfig.get("abc"))
+            retryOption(Option.fromNullable(retryConfig.get("abc")))
+            circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
+            defaultRequestHandler { throw NullPointerException("") }
             executorOption(emptyThreadPool)
             processor {
-                it!!.length
+                Option.fromNullable(it.length)
             }
         }.build()
 
-        StepVerifier.create(task.execute(null))
+        StepVerifier.create(task.execute(Option.fromNullable(null)))
             .consumeNextWith {
                 assertThat(it.isLeft(), equalTo(true))
                 val error = it.swap().getOrNull()

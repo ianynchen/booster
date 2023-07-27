@@ -38,7 +38,6 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -92,7 +91,7 @@ class TaskFactoryTest {
         this.threadPoolConfig.setMetricsRegistry(this.registry);
 
         this.retryConfig = new RetryConfig();
-        this.retryConfig.setRetrySettings(
+        this.retryConfig.setSettings(
                 Map.of("client", new RetrySetting())
         );
 

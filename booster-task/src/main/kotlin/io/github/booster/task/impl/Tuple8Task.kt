@@ -1,25 +1,36 @@
 package io.github.booster.task.impl
 
-import arrow.core.Either
+import arrow.core.Option
+import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
+import io.github.booster.task.DataWithError
 import io.github.booster.task.Task
 import io.github.booster.task.util.convertAndRecord
-import io.github.booster.task.util.toMonoEither
+import io.github.booster.task.util.extractValue
+import io.vavr.Tuple
 import io.vavr.Tuple8
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 
 
+typealias OptionTuple8<E0, E1, E2, E3, E4, E5, E6, E7> =
+        Tuple8<Option<E0>, Option<E1>, Option<E2>, Option<E3>, Option<E4>, Option<E5>, Option<E6>, Option<E7>>
+
+typealias Tuple8WithError<E0, E1, E2, E3, E4, E5, E6, E7> =
+        Tuple8<
+                DataWithError<E0>,
+                DataWithError<E1>,
+                DataWithError<E2>,
+                DataWithError<E3>,
+                DataWithError<E4>,
+                DataWithError<E5>,
+                DataWithError<E6>,
+                DataWithError<E7>
+                >
+
 typealias Tuple8ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7> =
-            (Throwable) -> Tuple8<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?, Resp6?, Resp7?>
-typealias Tuple8Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7> =
-            (
-            Either<Throwable, Resp0?>, Either<Throwable, Resp1?>,
-            Either<Throwable, Resp2?>, Either<Throwable, Resp3?>,
-            Either<Throwable, Resp4?>, Either<Throwable, Resp5?>,
-            Either<Throwable, Resp6?>, Either<Throwable, Resp7?>
-        ) -> Tuple8<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?, Resp6?, Resp7?>
+            (Throwable) -> Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>
 
 @Suppress("LongParameterList")
 class Tuple8Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
@@ -34,11 +45,10 @@ class Tuple8Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
     private val task6: Task<Req6, Resp6>,
     private val task7: Task<Req7, Resp7>,
     private val requestExceptionHandler:
-    Tuple8ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>?,
-    private val responseAggregator: Tuple8Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>,
+    Option<Tuple8ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>>,
     private val registry: MetricsRegistry
-): Task<Tuple8<Req0?, Req1?, Req2?, Req3?, Req4?, Req5?, Req6?, Req7?>,
-        Tuple8<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?, Resp6?, Resp7?>> {
+): Task<OptionTuple8<Req0, Req1, Req2, Req3, Req4, Req5, Req6, Req7>,
+        Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>> {
 
     private val taskName: String
 
@@ -48,38 +58,64 @@ class Tuple8Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
     }
 
     private fun handleException(t: Throwable):
-            Mono<Tuple8<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?, Resp6?, Resp7?>> {
-        return if (this.requestExceptionHandler == null) {
+            Mono<Option<Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>>> {
+        return this.requestExceptionHandler.map {
+            Mono.just(Option.fromNullable(it.invoke(t)))
+        }.getOrElse {
             Mono.error(t)
-        } else {
-            Mono.fromSupplier { this.requestExceptionHandler.invoke(t) }
         }
     }
 
-    @Suppress("UnsafeCallOnNullableType")
-    override fun execute(request: Mono<Either<Throwable,
-            Tuple8<Req0?, Req1?, Req2?, Req3?, Req4?, Req5?, Req6?, Req7?>?>>):
-            Mono<Either<Throwable,
-                    Tuple8<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?, Resp6?, Resp7?>>> {
+    private fun executeOnOption(
+        tupleOption: Option<OptionTuple8<Req0, Req1, Req2, Req3, Req4, Req5, Req6, Req7>>
+    ): Mono<Option<Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>>> {
+        return tupleOption.map { tuple ->
+            Mono.zip(
+                this.task0.execute(tuple._1()),
+                this.task1.execute(tuple._2()),
+                this.task2.execute(tuple._3()),
+                this.task3.execute(tuple._4()),
+                this.task4.execute(tuple._5()),
+                this.task5.execute(tuple._6()),
+                this.task6.execute(tuple._7()),
+                this.task7.execute(tuple._8())
+            )
+        }.getOrElse {
+            Mono.zip(
+                this.task0.execute(Option.fromNullable(null)),
+                this.task1.execute(Option.fromNullable(null)),
+                this.task2.execute(Option.fromNullable(null)),
+                this.task3.execute(Option.fromNullable(null)),
+                this.task4.execute(Option.fromNullable(null)),
+                this.task5.execute(Option.fromNullable(null)),
+                this.task6.execute(Option.fromNullable(null)),
+                this.task7.execute(Option.fromNullable(null))
+            )
+        }.map { tuple8 ->
+            Option.fromNullable(
+                Tuple.of(
+                    tuple8.t1,
+                    tuple8.t2,
+                    tuple8.t3,
+                    tuple8.t4,
+                    tuple8.t5,
+                    tuple8.t6,
+                    tuple8.t7,
+                    tuple8.t8
+                )
+            )
+        }
+    }
+
+    override fun execute(request: Mono<DataWithError<OptionTuple8<Req0, Req1, Req2, Req3, Req4, Req5, Req6, Req7>>>):
+            Mono<DataWithError<Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>>> {
 
         val sampleOption = this.registry.startSample()
-        return request.flatMap {
-            if (it.isRight()) {
-                Mono.zip(
-                    task0.execute(toMonoEither(it.getOrNull()?._1())),
-                    task1.execute(toMonoEither(it.getOrNull()?._2())),
-                    task2.execute(toMonoEither(it.getOrNull()?._3())),
-                    task3.execute(toMonoEither(it.getOrNull()?._4())),
-                    task4.execute(toMonoEither(it.getOrNull()?._5())),
-                    task5.execute(toMonoEither(it.getOrNull()?._6())),
-                    task6.execute(toMonoEither(it.getOrNull()?._7())),
-                    task7.execute(toMonoEither(it.getOrNull()?._8()))
-                ).map {
-                        tuple -> responseAggregator.invoke(tuple.t1, tuple.t2, tuple.t3, tuple.t4,
-                    tuple.t5, tuple.t6, tuple.t7, tuple.t8)
-                }
-            } else {
-                this.handleException(it.swap().getOrNull()!!)
+        return request.flatMap { req ->
+            req.map {
+                this.executeOnOption(it)
+            }.getOrElse {
+                this.handleException(it)
             }
         }.convertAndRecord(log, registry, sampleOption, name)
     }
@@ -106,10 +142,9 @@ class Tuple8TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
     private lateinit var task5: Task<Req5, Resp5>
     private lateinit var task6: Task<Req6, Resp6>
     private lateinit var task7: Task<Req7, Resp7>
-    private lateinit var tupleAggregator:
-            Tuple8Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>
     private var requestExceptionHandler:
-            Tuple8ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>? = null
+            Option<Tuple8ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>> =
+        Option.fromNullable(null)
 
     fun name(name: String) {
         this.taskName = name
@@ -152,17 +187,12 @@ class Tuple8TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
     }
 
     fun exceptionHandler(handler: Tuple8ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>) {
-        this.requestExceptionHandler = handler
-    }
-
-    fun aggregator(aggregator: Tuple8Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>) {
-        this.tupleAggregator = aggregator
+        this.requestExceptionHandler = Option.fromNullable(handler)
     }
 
     fun build(): Task<
-            Tuple8<Req0?, Req1?, Req2?, Req3?, Req4?, Req5?, Req6?, Req7?>,
-            Tuple8<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?, Resp6?, Resp7?>
-            > {
+            OptionTuple8<Req0, Req1, Req2, Req3, Req4, Req5, Req6, Req7>,
+            Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>> {
         Preconditions.checkArgument(::taskName.isInitialized, "task name not initialized")
         Preconditions.checkArgument(::task0.isInitialized, "first task not initialized")
         Preconditions.checkArgument(::task1.isInitialized, "second task not initialized")
@@ -172,7 +202,7 @@ class Tuple8TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
         Preconditions.checkArgument(::task5.isInitialized, "sixth task not initialized")
         Preconditions.checkArgument(::task6.isInitialized, "seventh task not initialized")
         Preconditions.checkArgument(::task7.isInitialized, "eighth task not initialized")
-        Preconditions.checkArgument(::tupleAggregator.isInitialized, "aggregator not initialized")
+
         return Tuple8Task(
             this.taskName,
             this.task0,
@@ -184,7 +214,6 @@ class Tuple8TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
             this.task6,
             this.task7,
             this.requestExceptionHandler,
-            this.tupleAggregator,
             this.registry
         )
     }

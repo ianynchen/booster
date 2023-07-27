@@ -38,10 +38,10 @@ class CircuitBreakerConfigTest {
 
     @Test
     void shouldNotCreateCircuitBreaker() {
-        assertThat(new CircuitBreakerConfig().get("test").isDefined(), equalTo(false));
-        assertThat(new CircuitBreakerConfig(Map.of()).get("test").isDefined(), equalTo(false));
+        assertThat(new CircuitBreakerConfig().getOption("test").isDefined(), equalTo(false));
+        assertThat(new CircuitBreakerConfig(Map.of()).getOption("test").isDefined(), equalTo(false));
         assertThat(
-                new CircuitBreakerConfig(Map.of("abc", new CircuitBreakerSetting())).get("test").isDefined(),
+                new CircuitBreakerConfig(Map.of("abc", new CircuitBreakerSetting())).getOption("test").isDefined(),
                 equalTo(false)
         );
     }
@@ -49,7 +49,7 @@ class CircuitBreakerConfigTest {
     @Test
     void shouldCreateCircuitBreaker() {
         assertThat(
-                new CircuitBreakerConfig(Map.of("test", new CircuitBreakerSetting())).get("test").isDefined(),
+                new CircuitBreakerConfig(Map.of("test", new CircuitBreakerSetting())).getOption("test").isDefined(),
                 equalTo(true)
         );
     }
@@ -60,26 +60,26 @@ class CircuitBreakerConfigTest {
 
         config.setMetricsRegistry(null);
         assertThat(
-                config.get("test").isDefined(), equalTo(true)
+                config.getOption("test").isDefined(), equalTo(true)
         );
         assertThat(
-                config.get("abc").isDefined(), equalTo(false)
+                config.getOption("abc").isDefined(), equalTo(false)
         );
 
         config.setMetricsRegistry(new MetricsRegistry());
         assertThat(
-                config.get("test").isDefined(), equalTo(true)
+                config.getOption("test").isDefined(), equalTo(true)
         );
         assertThat(
-                config.get("abc").isDefined(), equalTo(false)
+                config.getOption("abc").isDefined(), equalTo(false)
         );
 
         config.setMetricsRegistry(new MetricsRegistry(new SimpleMeterRegistry()));
         assertThat(
-                config.get("test").isDefined(), equalTo(true)
+                config.getOption("test").isDefined(), equalTo(true)
         );
         assertThat(
-                config.get("abc").isDefined(), equalTo(false)
+                config.getOption("abc").isDefined(), equalTo(false)
         );
     }
 }
