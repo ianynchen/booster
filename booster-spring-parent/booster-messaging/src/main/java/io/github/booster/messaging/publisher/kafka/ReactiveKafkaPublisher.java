@@ -1,6 +1,7 @@
 package io.github.booster.messaging.publisher.kafka;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.util.EitherUtil;
@@ -103,7 +104,7 @@ public class ReactiveKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
         return senderRecord;
     }
 
-    private Mono<Either<Throwable, PublisherRecord>> convert(String topic, Flux<SenderResult<String>> senderResultFlux) {
+    private Mono<Either<Throwable, Option<PublisherRecord>>> convert(String topic, Flux<SenderResult<String>> senderResultFlux) {
         Mono<SenderResult<String>> senderResultMono = senderResultFlux.last();
         return senderResultMono.map(senderResult -> {
             if (senderResult.exception() != null) {
@@ -132,11 +133,13 @@ public class ReactiveKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
                 );
 
                 return EitherUtil.convertData(
-                        PublisherRecord.builder()
-                                .topic(topic)
-                                .recordId(
-                                        Long.toString(senderResult.recordMetadata().offset())
-                                ).build()
+                        Option.fromNullable(
+                                PublisherRecord.builder()
+                                        .topic(topic)
+                                        .recordId(
+                                                Long.toString(senderResult.recordMetadata().offset())
+                                        ).build()
+                        )
                 );
             }
         });
@@ -149,7 +152,7 @@ public class ReactiveKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @return {@link PublisherRecord} when successful, or {@link Throwable} in case of exceptions.
      */
     @Override
-    public Mono<Either<Throwable, PublisherRecord>> publish(String topic, KafkaRecord<T> message) {
+    public Mono<Either<Throwable, Option<PublisherRecord>>> publish(String topic, KafkaRecord<T> message) {
 
         val sample = this.registry.startSample();
 

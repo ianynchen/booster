@@ -99,7 +99,7 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @return {@link PublisherRecord} when successful, or {@link Throwable} in case of exceptions.
      */
     @Override
-    public Mono<Either<Throwable, PublisherRecord>> publish(String topic, KafkaRecord<T> message) {
+    public Mono<Either<Throwable, Option<PublisherRecord>>> publish(String topic, KafkaRecord<T> message) {
         Option<Timer.Sample> sample = this.registry.startSample();
 
         log.debug("booster-messaging - kafka publisher[{}] published to Kafka topic {}", this.name, topic);
@@ -126,14 +126,16 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
                             MessagingMetricsConstants.SUCCESS_STATUS
                     );
                     return EitherUtil.convertData(
-                            PublisherRecord.builder()
-                                    .topic(topic)
-                                    .recordId(
-                                            Long.toString(
-                                                    sendResult.getRecordMetadata()
-                                                            .offset()
-                                            )
-                                    ).build()
+                            Option.fromNullable(
+                                    PublisherRecord.builder()
+                                            .topic(topic)
+                                            .recordId(
+                                                    Long.toString(
+                                                            sendResult.getRecordMetadata()
+                                                                    .offset()
+                                                    )
+                                            ).build()
+                            )
                     );
                 }).onErrorResume(throwable -> {
                     log.error("booster-messaging - kafka publisher[{}] error publishing to kafka topic: {}", this.name, topic, throwable);

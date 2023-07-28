@@ -2,6 +2,8 @@ package io.github.booster.messaging.processor;
 
 import arrow.core.Either;
 import arrow.core.EitherKt;
+import arrow.core.Option;
+import arrow.core.OptionKt;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.util.EitherUtil;
@@ -91,121 +93,134 @@ abstract public class AbstractBatchProcessor<T> {
      */
     abstract protected int acknowledge(List<T> records);
 
-    private Either<Throwable, BatchProcessResult<T>> recordMetricsAndAcknowledge(
-            Either<Throwable, List<T>> processedRecords,
+    private Option<BatchProcessResult<T>> tryAcknowledge(
+            List<T> records,
             int totalSize
     ) {
-        if (processedRecords.isRight()) {
-            int size = EitherKt.getOrElse(processedRecords, List::of).size();
-            int acknowledged = this.acknowledge(processedRecords.getOrNull());
-            int unacknowledged = size - acknowledged;
-            int failed = totalSize - size;
+        int size = records.size();
+        int acknowledged = this.acknowledge(records);
+        int unacknowledged = size - acknowledged;
+        int failed = totalSize - size;
 
+        log.debug(
+                "booster-messaging - processor[{}] message from {} subscriber[{}] processed [{}] records successfully out of a total of [{}] records",
+                this.getName(),
+                this.type,
+                this.subscriberFlow.getName(),
+                size,
+                totalSize
+        );
+
+        if (acknowledged > 0) {
             log.debug(
-                    "booster-messaging - processor[{}] message from {} subscriber[{}] processed [{}] records successfully out of a total of [{}] records",
+                    "booster-messaging - processor[{}] message from {} subscriber[{}] acknowledged [{}] records",
                     this.getName(),
                     this.type,
                     this.subscriberFlow.getName(),
-                    size,
-                    totalSize
+                    acknowledged
             );
-
-            if (acknowledged > 0) {
-                log.debug(
-                        "booster-messaging - processor[{}] message from {} subscriber[{}] acknowledged [{}] records",
-                        this.getName(),
-                        this.type,
-                        this.subscriberFlow.getName(),
-                        acknowledged
-                );
-                MetricsHelper.recordMessageSubscribeCount(
-                        this.registry,
-                        MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
-                        acknowledged,
-                        this.type,
-                        this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.SUCCESS_STATUS,
-                        MessagingMetricsConstants.SUCCESS_STATUS
-                );
-            }
-            if (unacknowledged > 0) {
-                log.warn(
-                        "booster-messaging - processor[{}] message from {} subscriber[{}] failed to acknowledge [{}] records",
-                        this.getName(),
-                        this.type,
-                        this.subscriberFlow.getName(),
-                        unacknowledged
-                );
-                MetricsHelper.recordMessageSubscribeCount(
-                        this.registry,
-                        MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
-                        unacknowledged,
-                        this.type,
-                        this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.FAILURE_STATUS,
-                        ACK_FAILURE
-                );
-            }
-
-            if (size > 0) {
-                MetricsHelper.recordMessageSubscribeCount(
-                        this.registry,
-                        MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
-                        size,
-                        this.type,
-                        this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.SUCCESS_STATUS,
-                        MessagingMetricsConstants.SUCCESS_STATUS
-                );
-            }
-            if (failed > 0) {
-                MetricsHelper.recordMessageSubscribeCount(
-                        this.registry,
-                        MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
-                        failed,
-                        this.type,
-                        this.subscriberFlow.getName(),
-                        MessagingMetricsConstants.FAILURE_STATUS,
-                        MessagingMetricsConstants.FAILURE_STATUS
-                );
-            }
-            return EitherUtil.convertData(
-                    new BatchProcessResult<>(
-                            processedRecords.getOrNull(),
-                            acknowledged,
-                            unacknowledged,
-                            failed
-                    )
-            );
-        } else {
-            Throwable t = processedRecords.swap().getOrNull();
-            log.error(
-                    "booster-messaging - processor[{}] message from {} subscriber[{}] processed with error",
-                    this.getName(),
-                    this.type,
-                    this.subscriberFlow.getName(),
-                    t
-            );
-            // record all records as failed to process.
             MetricsHelper.recordMessageSubscribeCount(
                     this.registry,
-                    MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
-                    totalSize,
+                    MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
+                    acknowledged,
+                    this.type,
+                    this.subscriberFlow.getName(),
+                    MessagingMetricsConstants.SUCCESS_STATUS,
+                    MessagingMetricsConstants.SUCCESS_STATUS
+            );
+        }
+        if (unacknowledged > 0) {
+            log.warn(
+                    "booster-messaging - processor[{}] message from {} subscriber[{}] failed to acknowledge [{}] records",
+                    this.getName(),
+                    this.type,
+                    this.subscriberFlow.getName(),
+                    unacknowledged
+            );
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
+                    MessagingMetricsConstants.ACKNOWLEDGEMENT_COUNT,
+                    unacknowledged,
                     this.type,
                     this.subscriberFlow.getName(),
                     MessagingMetricsConstants.FAILURE_STATUS,
-                    t.getClass().getSimpleName()
+                    ACK_FAILURE
             );
-            // since all records failed processing, there's no need to record
-            // acknowledged or unacknowledged.
-            return EitherUtil.convertThrowable(t);
         }
+
+        if (size > 0) {
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
+                    MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
+                    size,
+                    this.type,
+                    this.subscriberFlow.getName(),
+                    MessagingMetricsConstants.SUCCESS_STATUS,
+                    MessagingMetricsConstants.SUCCESS_STATUS
+            );
+        }
+        if (failed > 0) {
+            MetricsHelper.recordMessageSubscribeCount(
+                    this.registry,
+                    MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
+                    failed,
+                    this.type,
+                    this.subscriberFlow.getName(),
+                    MessagingMetricsConstants.FAILURE_STATUS,
+                    MessagingMetricsConstants.FAILURE_STATUS
+            );
+        }
+        return Option.fromNullable(
+                new BatchProcessResult<>(
+                        records,
+                        acknowledged,
+                        unacknowledged,
+                        failed
+                )
+        );
+    }
+
+    private Either<Throwable, Option<BatchProcessResult<T>>> recordMetricsAndAcknowledge(
+            Either<Throwable, Option<List<T>>> processedRecords,
+            int totalSize
+    ) {
+        return EitherKt.getOrElse(
+                processedRecords.map(optionRecords -> {
+                    Option<BatchProcessResult<T>> result = OptionKt.getOrElse(
+                            optionRecords.map(records -> this.tryAcknowledge(records, totalSize)),
+                            () -> Option.fromNullable(null)
+                    );
+                    return EitherUtil.convertData(result);
+                }),
+                (t) -> {
+                    log.error(
+                            "booster-messaging - processor[{}] message from {} subscriber[{}] processed with error",
+                            this.getName(),
+                            this.type,
+                            this.subscriberFlow.getName(),
+                            t
+                    );
+                    // record all records as failed to process.
+                    MetricsHelper.recordMessageSubscribeCount(
+                            this.registry,
+                            MessagingMetricsConstants.SUBSCRIBER_PROCESS_COUNT,
+                            totalSize,
+                            this.type,
+                            this.subscriberFlow.getName(),
+                            MessagingMetricsConstants.FAILURE_STATUS,
+                            t.getClass().getSimpleName()
+                    );
+                    // since all records failed processing, there's no need to record
+                    // acknowledged or unacknowledged.
+                    return EitherUtil.convertThrowable(t);
+                }
+        );
     }
 
     /**
      * Start listening on {@link BatchSubscriberFlow}
      */
-    public Flux<Either<Throwable, BatchProcessResult<T>>> process() {
+    public Flux<Either<Throwable, Option<BatchProcessResult<T>>>> process() {
         AtomicReference<Span> spanReference = new AtomicReference<>();
         AtomicReference<Scope> scopeReference = new AtomicReference<>();
 

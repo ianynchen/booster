@@ -166,7 +166,8 @@ class TemplateKafkaPublisherTest {
                 .consumeNextWith(result -> {
                     assertThat(result.isRight(), is(true));
                     assertThat(result.getOrNull(), notNullValue());
-                    assertThat(result.getOrNull(), instanceOf(PublisherRecord.class));
+                    assertThat(result.getOrNull().orNull(), notNullValue());
+                    assertThat(result.getOrNull().orNull(), instanceOf(PublisherRecord.class));
                 }).verifyComplete();
 
         publisher = new TemplateKafkaPublisher<>(
@@ -182,7 +183,8 @@ class TemplateKafkaPublisherTest {
                 .consumeNextWith(result -> {
                     assertThat(result.isRight(), is(true));
                     assertThat(result.getOrNull(), notNullValue());
-                    assertThat(result.getOrNull(), instanceOf(PublisherRecord.class));
+                    assertThat(result.getOrNull().orNull(), notNullValue());
+                    assertThat(result.getOrNull().orNull(), instanceOf(PublisherRecord.class));
                 }).verifyComplete();
     }
 

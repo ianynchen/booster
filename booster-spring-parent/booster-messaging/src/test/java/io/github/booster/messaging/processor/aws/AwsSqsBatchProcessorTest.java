@@ -6,8 +6,11 @@ import io.github.booster.messaging.config.AwsSqsConfig;
 import io.github.booster.messaging.config.AwsSqsSetting;
 import io.github.booster.messaging.subscriber.aws.MockAwsBatchSubscriberFlow;
 import io.github.booster.task.Task;
+import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
+import io.github.booster.task.impl.RequestHandlers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,53 +98,76 @@ class AwsSqsBatchProcessorTest {
 
     private final AwsSqsConfig awsSqsConfig = new AwsSqsConfig();
 
-    Function1<List<Message>, Mono<List<Message>>> process =
-            Mono::just;
+    Function1<List<Message>, Mono<Option<List<Message>>>> process =
+            (records) -> Mono.just(Option.fromNullable(records));
 
-    Function1<List<Message>, Mono<List<Message>>> exceptionProcess =
+    Function1<List<Message>, Mono<Option<List<Message>>>> exceptionProcess =
             (o) -> Mono.error(new IllegalStateException("error"));
 
-    Function1<List<Message>, Mono<List<Message>>> partialFailureProcess =
+    Function1<List<Message>, Mono<Option<List<Message>>>> partialFailureProcess =
             (messages) -> Mono.just(
-                    messages.stream()
-                            .filter(msg -> {
-                                String value = msg.body();
-                                return !Objects.equals(value, "3");
-                            })
-                            .collect(Collectors.toList())
+                    Option.fromNullable(
+                            messages.stream()
+                                    .filter(msg -> {
+                                        String value = msg.body();
+                                        return !Objects.equals(value, "3");
+                                    })
+                                    .collect(Collectors.toList())
+                    )
             );
+
+    Function0<Option<List<Message>>> emptyRequestHandler =
+            () -> Option.fromNullable(null);
+
+    Function1<Throwable, Option<List<Message>>> requestExceptionHandler =
+            (t) -> { throw new IllegalArgumentException(t); };
 
     private final Task<List<Message>, List<Message>> task =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    this.process,
-                    null
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(requestExceptionHandler)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    this.process
             );
 
     private final Task<List<Message>, List<Message>> partialFailureTask =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    this.partialFailureProcess,
-                    null
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(requestExceptionHandler)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    this.partialFailureProcess
             );
 
     private final Task<List<Message>, List<Message>> errorTask =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    this.exceptionProcess,
-                    null
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(requestExceptionHandler)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    this.exceptionProcess
             );
 
     @BeforeEach
@@ -265,7 +291,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(i + 1));
@@ -291,7 +320,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(i + 1));
@@ -323,7 +355,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -349,7 +384,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -381,7 +419,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -407,7 +448,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -439,7 +483,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -465,7 +512,10 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -497,7 +547,7 @@ class AwsSqsBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(false));
-                        Throwable t = list.get(i).swap().orNull();
+                        Throwable t = list.get(i).swap().getOrNull();
                         assertThat(t, notNullValue());
                         assertThat(t, instanceOf(IllegalStateException.class));
                         assertThat(t.getMessage(), is("error"));
@@ -546,7 +596,10 @@ class AwsSqsBatchProcessorTest {
                     for (int i = 0; i < list.size(); i++) {
 
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).orNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
 
                         if (i < 3) {
@@ -574,7 +627,10 @@ class AwsSqsBatchProcessorTest {
                     for (int i = 0; i < list.size(); i++) {
 
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
 
                         if (i < 3) {

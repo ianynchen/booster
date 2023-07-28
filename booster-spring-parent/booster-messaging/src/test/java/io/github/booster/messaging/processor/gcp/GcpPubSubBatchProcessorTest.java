@@ -5,8 +5,11 @@ import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.messaging.subscriber.gcp.MockGcpBatchSubscriberFlow;
 import io.github.booster.task.Task;
+import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
+import io.github.booster.task.impl.RequestHandlers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
 import org.junit.jupiter.api.Test;
@@ -28,59 +31,78 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class GcpPubSubBatchProcessorTest {
 
-    Function1<List<AcknowledgeablePubsubMessage>, Mono<List<AcknowledgeablePubsubMessage>>> process =
-            Mono::just;
+    Function1<Throwable, Option<List<AcknowledgeablePubsubMessage>>> requestExceptionHandler =
+            (t) -> {
+                throw new IllegalArgumentException(t);
+            };
 
-    Function1<List<AcknowledgeablePubsubMessage>, Mono<List<AcknowledgeablePubsubMessage>>> exceptionProcess =
+    Function0<Option<List<AcknowledgeablePubsubMessage>>> emptyRequestHandler =
+            () -> Option.fromNullable(null);
+
+    Function1<List<AcknowledgeablePubsubMessage>, Mono<Option<List<AcknowledgeablePubsubMessage>>>> process =
+            (list) -> Mono.just(Option.fromNullable(list));
+
+    Function1<List<AcknowledgeablePubsubMessage>, Mono<Option<List<AcknowledgeablePubsubMessage>>>> exceptionProcess =
             (data) -> Mono.error(new IllegalStateException("error"));
 
-    Function1<List<AcknowledgeablePubsubMessage>, Mono<List<AcknowledgeablePubsubMessage>>> partialFailureProcess =
+    Function1<List<AcknowledgeablePubsubMessage>, Mono<Option<List<AcknowledgeablePubsubMessage>>>> partialFailureProcess =
             (messages) -> Mono.just(
-                    messages.stream()
-                            .filter(msg -> {
-                                String value = msg.getPubsubMessage().getData().toString(StandardCharsets.UTF_8);
-                                return !Objects.equals(value, "3");
-                            })
-                            .collect(Collectors.toList())
+                    Option.fromNullable(
+                            messages.stream()
+                                    .filter(msg -> {
+                                        String value = msg.getPubsubMessage().getData().toString(StandardCharsets.UTF_8);
+                                        return !Objects.equals(value, "3");
+                                    })
+                                    .collect(Collectors.toList())
+                    )
             );
 
     private final Task<List<AcknowledgeablePubsubMessage>, List<AcknowledgeablePubsubMessage>> task =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    this.process,
-                    (t) -> {
-                        throw new IllegalArgumentException(t);
-                    }
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(requestExceptionHandler)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    this.process
             );
 
     private final Task<List<AcknowledgeablePubsubMessage>, List<AcknowledgeablePubsubMessage>> partialFailureTask =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    this.partialFailureProcess,
-                    (t) -> {
-                        throw new IllegalArgumentException(t);
-                    }
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(requestExceptionHandler)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    this.partialFailureProcess
             );
 
     private final Task<List<AcknowledgeablePubsubMessage>, List<AcknowledgeablePubsubMessage>> errorTask =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    this.exceptionProcess,
-                    (t) -> {
-                        throw new IllegalArgumentException(t);
-                    }
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(requestExceptionHandler)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    this.exceptionProcess
             );
 
     @Test
@@ -146,7 +168,10 @@ class GcpPubSubBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(i + 1));
@@ -171,7 +196,10 @@ class GcpPubSubBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(i + 1));
@@ -199,7 +227,10 @@ class GcpPubSubBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -224,7 +255,10 @@ class GcpPubSubBatchProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData(), hasSize(i + 1));
                         assertThat(record.getAcknowledged(), is(0));
@@ -296,7 +330,10 @@ class GcpPubSubBatchProcessorTest {
                     for (int i = 0; i < list.size(); i++) {
 
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
 
                         if (i < 3) {
@@ -323,7 +360,10 @@ class GcpPubSubBatchProcessorTest {
                     for (int i = 0; i < list.size(); i++) {
 
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
 
                         if (i < 3) {

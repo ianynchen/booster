@@ -9,6 +9,7 @@ import io.github.booster.commons.circuit.breaker.CircuitBreakerSetting;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
 import io.github.booster.commons.retry.RetrySetting;
+import io.github.booster.commons.util.EitherUtil;
 import io.github.booster.config.BoosterConfig;
 import io.github.booster.config.example.BoosterSampleApplication;
 import io.github.booster.config.example.dto.GreetingResponse;
@@ -62,9 +63,9 @@ class TaskFactoryTest {
 
     private CircuitBreakerConfig circuitBreakerConfig;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    private MetricsRegistry registry = new MetricsRegistry(new SimpleMeterRegistry());
+    private final MetricsRegistry registry = new MetricsRegistry(new SimpleMeterRegistry());
 
     private TaskFactory factory;
 
@@ -243,7 +244,7 @@ class TaskFactoryTest {
         assertThat(this.factory.getHttpTask("client"), sameInstance(task));
 
         Either<Throwable, Option<HttpClientRequestContext<Object, GreetingResponse>>> request =
-                new Either.Left<>(new IllegalArgumentException());
+                EitherUtil.convertThrowable(new IllegalArgumentException());
         StepVerifier.create(
                 task.execute(request)
         ).consumeNextWith(either -> {
