@@ -1,6 +1,7 @@
 package io.github.booster.messaging.publisher.gcp;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import com.google.api.client.util.Preconditions;
 import com.google.cloud.spring.pubsub.core.publisher.PubSubPublisherTemplate;
 import com.google.pubsub.v1.PubsubMessage;
@@ -99,7 +100,7 @@ public class GcpPubSubPublisher<T> implements MessagePublisher<PubsubRecord<T>> 
      * @return {@link PublisherRecord} when successful, or {@link Throwable} in case of exceptions.
      */
     @Override
-    public Mono<Either<Throwable, PublisherRecord>> publish(String topic, PubsubRecord<T> message) {
+    public Mono<Either<Throwable, Option<PublisherRecord>>> publish(String topic, PubsubRecord<T> message) {
 
         val sample = this.registry.startSample();
         PubsubMessage pubsubMessage = this.createMessage(message);
@@ -120,7 +121,9 @@ public class GcpPubSubPublisher<T> implements MessagePublisher<PubsubRecord<T>> 
                             MessagingMetricsConstants.SUCCESS_STATUS
                     );
                     return EitherUtil.convertData(
-                            PublisherRecord.builder().topic(topic).recordId(string).build()
+                            Option.fromNullable(
+                                    PublisherRecord.builder().topic(topic).recordId(string).build()
+                            )
                     );
                 }).onErrorResume(throwable -> {
                     log.error("booster-messaging - gcp publisher[{}] send failed", this.name, throwable);

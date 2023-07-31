@@ -72,7 +72,7 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
         );
     }
 
-    private Mono<PublisherRecord> publish(SqsRecord<T> message) {
+    private Mono<Option<PublisherRecord>> publish(SqsRecord<T> message) {
         Option<Timer.Sample> sample = this.registry.startSample();
         Either<Throwable, SendMessageRequest> either = message.createSendMessageRequest(
                 this.queueUrl,
@@ -99,10 +99,12 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
                             MessagingMetricsConstants.SUCCESS_STATUS
                     );
                     return Mono.just(
-                            PublisherRecord.builder()
-                                    .recordId(response.messageId())
-                                    .topic(this.queueUrl)
-                                    .build()
+                            Option.fromNullable(
+                                    PublisherRecord.builder()
+                                            .recordId(response.messageId())
+                                            .topic(this.queueUrl)
+                                            .build()
+                            )
                     );
                 } else {
                     log.warn("booster-messaging - failed to send to sqs: [{}] without exception", this.queueUrl);
@@ -155,7 +157,7 @@ public class AwsSqsPublisher<T> implements MessagePublisher<SqsRecord<T>> {
     }
 
     @Override
-    public Mono<Either<Throwable, PublisherRecord>> publish(String topic, SqsRecord<T> message) {
-        return this.publisherTask.execute(message);
+    public Mono<Either<Throwable, Option<PublisherRecord>>> publish(String topic, SqsRecord<T> message) {
+        return this.publisherTask.execute(Option.fromNullable(message));
     }
 }

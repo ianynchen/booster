@@ -1,6 +1,5 @@
 package io.github.booster.commons.retry;
 
-import arrow.core.Option;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.pool.NamedObjectPool;
 import io.github.resilience4j.retry.Retry;
@@ -13,11 +12,11 @@ import java.util.Map;
 /**
  * Provides a central repository for {@link Retry} management.
  */
-public class RetryConfig extends NamedObjectPool<Option<Retry>> {
+public class RetryConfig extends NamedObjectPool<Retry> {
 
-    private static Logger LOG = LoggerFactory.getLogger(RetryConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(RetryConfig.class);
 
-    private Map<String, RetrySetting> retrySettings;
+    private Map<String, RetrySetting> settings;
 
     private MetricsRegistry registry;
 
@@ -30,14 +29,14 @@ public class RetryConfig extends NamedObjectPool<Option<Retry>> {
 
     /**
      * Constructor with default retry settings.
-     * @param retrySettings map of {@link RetrySetting} identified by name
+     * @param settings map of {@link RetrySetting} identified by name
      */
-    public RetryConfig(Map<String, RetrySetting> retrySettings) {
-        this.retrySettings = retrySettings == null ? new HashMap<>() : retrySettings;
+    public RetryConfig(Map<String, RetrySetting> settings) {
+        this.settings = settings == null ? new HashMap<>() : settings;
     }
 
-    public void setRetrySettings(Map<String, RetrySetting> retrySettings) {
-        this.retrySettings = retrySettings == null ? new HashMap<>() : retrySettings;
+    public void setSettings(Map<String, RetrySetting> settings) {
+        this.settings = settings == null ? new HashMap<>() : settings;
     }
 
     public void setMetricsRegistry(MetricsRegistry registry) {
@@ -47,14 +46,10 @@ public class RetryConfig extends NamedObjectPool<Option<Retry>> {
     }
 
     @Override
-    protected Option<Retry> createObject(String name) {
-        return this.retrySettings.containsKey(name) ?
-                this.retrySettings.get(name).buildRetry(name, this.registry) :
-                Option.fromNullable(null);
-    }
-
-    @Override
-    public Option<Option<Retry>> getOption(String name) {
-        throw new UnsupportedOperationException("operation not supported");
+    protected Retry createObject(String name) {
+        log.debug("booster-commons - cache contains [{}] entry: {}", name, this.settings.containsKey(name));
+        return this.settings.containsKey(name) ?
+                this.settings.get(name).buildRetry(name, this.registry).orNull() :
+                null;
     }
 }

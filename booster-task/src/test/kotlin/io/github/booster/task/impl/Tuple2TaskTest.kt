@@ -1,6 +1,7 @@
 package io.github.booster.task.impl
 
 import arrow.core.Either
+import arrow.core.Option
 import io.github.booster.task.lengthTask
 import io.github.booster.task.registry
 import io.github.booster.task.stringTask
@@ -25,12 +26,6 @@ internal class Tuple2TaskTest {
             tuple2Task {
                 firstTask(lengthTask)
                 secondTask(stringTask)
-                aggregator { either1, either2 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull()
-                    )
-                }
             }.build()
         }
 
@@ -41,12 +36,6 @@ internal class Tuple2TaskTest {
                 name("")
                 firstTask(lengthTask)
                 secondTask(stringTask)
-                aggregator { either1, either2 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull()
-                    )
-                }
             }.build()
         }
 
@@ -63,39 +52,18 @@ internal class Tuple2TaskTest {
         assertThrows(
             IllegalArgumentException::class.java
         ) {
-            tuple2Task<String, Int, Int?, String> {
+            tuple2Task<String, Int, Int, String> {
                 name("abc")
                 secondTask(stringTask)
-                aggregator { either1, either2 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull()
-                    )
-                }
             }.build()
         }
 
         assertThrows(
             IllegalArgumentException::class.java
         ) {
-            tuple2Task<String?, Int, Int, String> {
+            tuple2Task<String, Int, Int, String> {
                 name("abc")
                 firstTask(lengthTask)
-                aggregator { either1, either2 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull()
-                    )
-                }
-            }.build()
-        }
-        assertThrows(
-            IllegalArgumentException::class.java
-        ) {
-            tuple2Task {
-                name("abc")
-                firstTask(lengthTask)
-                secondTask(stringTask)
             }.build()
         }
     }
@@ -109,56 +77,93 @@ internal class Tuple2TaskTest {
                 firstTask(lengthTask)
                 secondTask(stringTask)
                 registry(registry)
-                aggregator { either1, either2 ->
-                    Tuple.of(
-                        either1.getOrNull(),
-                        either2.getOrNull()
-                    )
-                }
             }.build(),
             notNullValue()
         )
     }
 
+    @Suppress("LongMethod")
     @Test
     fun `should execute normal flow`() {
         val task = tuple2Task {
             name("tuple")
             firstTask(lengthTask)
             secondTask(stringTask)
-            aggregator { either1, either2 ->
-                Tuple.of(
-                    either1.getOrNull(),
-                    either2.getOrNull()
-                )
-            }
         }.build()
 
-        val response = task.execute(Either.Right(Tuple.of("abc", 12)))
+        val response = task.execute(Tuple.of(Option.fromNullable("abc"), Option.fromNullable(12)))
         StepVerifier.create(response)
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?._1(), equalTo(3))
-                assertThat(it.getOrNull()?._2(), equalTo("12"))
+
+                val tupleWithErrorOption = it.getOrNull()
+                assertThat(tupleWithErrorOption, notNullValue())
+                assertThat(tupleWithErrorOption!!.isDefined(), `is`(true))
+
+                val tupleWithError = tupleWithErrorOption.orNull()
+                assertThat(tupleWithError, notNullValue())
+
+                val a = tupleWithError?._1()
+                val b = tupleWithError?._2()
+
+                assertThat(a, notNullValue())
+                assertThat(b, notNullValue())
+                assertThat(a?.isRight(), `is`(true))
+                assertThat(b?.isRight(), `is`(true))
+
+                assertThat(a?.getOrNull()?.orNull(), equalTo(3))
+                assertThat(b?.getOrNull()?.orNull(), equalTo("12"))
             }.verifyComplete()
 
-        val response2 = task.execute(Either.Right(Tuple.of(null, null)))
+        val response2 = task.execute(Tuple.of(Option.fromNullable(null), Option.fromNullable(null)))
         StepVerifier.create(response2)
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?._1(), equalTo(0))
-                assertThat(it.getOrNull()?._2(), equalTo(""))
+
+                val tupleWithErrorOption = it.getOrNull()
+                assertThat(tupleWithErrorOption, notNullValue())
+                assertThat(tupleWithErrorOption!!.isDefined(), `is`(true))
+
+                val tupleWithError = tupleWithErrorOption.orNull()
+                assertThat(tupleWithError, notNullValue())
+
+                val a = tupleWithError?._1()
+                val b = tupleWithError?._2()
+
+                assertThat(a, notNullValue())
+                assertThat(b, notNullValue())
+                assertThat(a?.isRight(), `is`(true))
+                assertThat(b?.isRight(), `is`(true))
+
+                assertThat(a?.getOrNull()?.orNull(), equalTo(0))
+                assertThat(b?.getOrNull()?.orNull(), equalTo(""))
             }.verifyComplete()
 
-        val response3 = task.execute(Either.Right(null))
+        val response3 = task.execute(Option.fromNullable(null))
         StepVerifier.create(response3)
             .consumeNextWith {
                 assertThat(it, notNullValue())
                 assertThat(it.isRight(), `is`(true))
-                assertThat(it.getOrNull()?._1(), equalTo(0))
-                assertThat(it.getOrNull()?._2(), equalTo(""))
+
+                val tupleWithErrorOption = it.getOrNull()
+                assertThat(tupleWithErrorOption, notNullValue())
+                assertThat(tupleWithErrorOption!!.isDefined(), `is`(true))
+
+                val tupleWithError = tupleWithErrorOption.orNull()
+                assertThat(tupleWithError, notNullValue())
+
+                val a = tupleWithError?._1()
+                val b = tupleWithError?._2()
+
+                assertThat(a, notNullValue())
+                assertThat(b, notNullValue())
+                assertThat(a?.isRight(), `is`(true))
+                assertThat(b?.isRight(), `is`(true))
+
+                assertThat(a?.getOrNull()?.orNull(), equalTo(0))
+                assertThat(b?.getOrNull()?.orNull(), equalTo(""))
             }.verifyComplete()
     }
 
@@ -168,12 +173,6 @@ internal class Tuple2TaskTest {
             name("tuple")
             firstTask(lengthTask)
             secondTask(stringTask)
-            aggregator { either1, either2 ->
-                Tuple.of(
-                    either1.getOrNull(),
-                    either2.getOrNull()
-                )
-            }
         }.build()
 
         val response = task.execute(Either.Left(IllegalArgumentException()))
@@ -195,12 +194,6 @@ internal class Tuple2TaskTest {
             }
             firstTask(lengthTask)
             secondTask(stringTask)
-            aggregator { either1, either2 ->
-                Tuple.of(
-                    either1.getOrNull(),
-                    either2.getOrNull()
-                )
-            }
         }.build()
 
         val response = task.execute(Either.Left(IllegalArgumentException()))

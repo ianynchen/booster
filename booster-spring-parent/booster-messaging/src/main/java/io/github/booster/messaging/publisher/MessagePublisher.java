@@ -1,6 +1,7 @@
 package io.github.booster.messaging.publisher;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import reactor.core.publisher.Mono;
 
 /**
@@ -15,5 +16,5 @@ public interface MessagePublisher<T> {
      * @param message the message to be published.
      * @return {@link PublisherRecord} when successful, or {@link Throwable} in case of exceptions.
      */
-    Mono<Either<Throwable, PublisherRecord>> publish(String topic, T message);
+    Mono<Either<Throwable, Option<PublisherRecord>>> publish(String topic, T message);
 }

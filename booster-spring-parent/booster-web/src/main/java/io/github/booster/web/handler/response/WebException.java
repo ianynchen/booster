@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = false)
 public class WebException extends RuntimeException {
 
     private final HttpStatus status;

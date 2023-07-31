@@ -1,6 +1,7 @@
 package io.github.booster.web.handler;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.web.handler.response.WebResponse;
 import org.jetbrains.annotations.NotNull;
@@ -63,13 +64,14 @@ public class ResponseHandler extends ResponseEntityResultHandler {
     public boolean supports(HandlerResult result) {
         boolean shouldHandle =  result.getReturnType().resolve() == Mono.class &&
                 result.getReturnType().resolveGeneric(0) == Either.class &&
-                result.getReturnType().getGeneric(0).resolveGeneric(0) == Throwable.class;
+                result.getReturnType().getGeneric(0).resolveGeneric(0) == Throwable.class &&
+                result.getReturnType().getGeneric(0).resolveGeneric(1) == Option.class;
         log.debug("booster-web - ResponseHandler should handle: {}", shouldHandle);
         return shouldHandle;
     }
 
     /**
-     * Converts {@literal Mono<Either<Throwable, ?>>} to {@literal Mono<ResponseEntity<WebResponse<?>>>}
+     * Converts {@literal Mono<Either<Throwable, Option<?>>>} to {@literal Mono<ResponseEntity<WebResponse<?>>>}
      * @param exchange current server exchange
      * @param result the result from the handling
      * @return returns nothing.
@@ -78,13 +80,15 @@ public class ResponseHandler extends ResponseEntityResultHandler {
     @Override
     public Mono<Void> handleResult(@NotNull ServerWebExchange exchange, HandlerResult result) {
         Preconditions.checkNotNull(result.getReturnValue(), "response cannot be null");
-        Mono<Either<Throwable, ?>> response = (Mono<Either<Throwable, ?>>)result.getReturnValue();
+        Mono<Either<Throwable, Option<?>>> response = (Mono<Either<Throwable, Option<?>>>)result.getReturnValue();
 
-        Either<Throwable, ?> emptyResponse = new Either.Left<>(new IllegalStateException("response is null"));
+        Either<Throwable, Option<?>> emptyResponse = new Either.Left<>(new IllegalStateException("response is null"));
         response.switchIfEmpty(Mono.just(emptyResponse));
+
         Mono<ResponseEntity<WebResponse<?>>> webResponse = response.map(resp -> {
             log.debug("booster-web - response: [{}]", resp);
-            ResponseEntity<WebResponse<?>> mappedResponse = WebResponse.build(resp, this.exceptionConverter);
+            ResponseEntity<WebResponse<?>> mappedResponse =
+                    WebResponse.build(resp, this.exceptionConverter);
             log.debug("booster-web - mapped response: [{}]", mappedResponse);
             return mappedResponse;
         });

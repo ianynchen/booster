@@ -13,23 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RetryConfigTest {
 
-
-    @Test
-    void shouldThrowException() {
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new RetryConfig().getOption("test")
-        );
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new RetryConfig(Map.of()).getOption("test")
-        );
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> new RetryConfig(Map.of("test", new RetrySetting())).getOption("test")
-        );
-    }
-
     @Test
     void shouldCreateConfig() {
         assertThat(new RetryConfig(), notNullValue());
@@ -39,10 +22,10 @@ class RetryConfigTest {
 
     @Test
     void shouldNotCreateRetry() {
-        assertThat(new RetryConfig().get("test").isDefined(), equalTo(false));
-        assertThat(new RetryConfig(Map.of()).get("test").isDefined(), equalTo(false));
+        assertThat(new RetryConfig().getOption("test").isDefined(), equalTo(false));
+        assertThat(new RetryConfig(Map.of()).getOption("test").isDefined(), equalTo(false));
         assertThat(
-                new RetryConfig(Map.of("abc", new RetrySetting())).get("test").isDefined(),
+                new RetryConfig(Map.of("abc", new RetrySetting())).getOption("test").isDefined(),
                 equalTo(false)
         );
     }
@@ -53,7 +36,7 @@ class RetryConfigTest {
         setting.setMaxAttempts(1);
 
         assertThat(
-                new RetryConfig(Map.of("test", setting)).get("test").isDefined(),
+                new RetryConfig(Map.of("test", setting)).getOption("test").isDefined(),
                 equalTo(true)
         );
     }
@@ -66,26 +49,26 @@ class RetryConfigTest {
 
         config.setMetricsRegistry(null);
         assertThat(
-                config.get("test").isDefined(), equalTo(true)
+                config.getOption("test").isDefined(), equalTo(true)
         );
         assertThat(
-                config.get("abc").isDefined(), equalTo(false)
+                config.getOption("abc").isDefined(), equalTo(false)
         );
 
         config.setMetricsRegistry(new MetricsRegistry());
         assertThat(
-                config.get("test").isDefined(), equalTo(true)
+                config.getOption("test").isDefined(), equalTo(true)
         );
         assertThat(
-                config.get("abc").isDefined(), equalTo(false)
+                config.getOption("abc").isDefined(), equalTo(false)
         );
 
         config.setMetricsRegistry(new MetricsRegistry(new SimpleMeterRegistry()));
         assertThat(
-                config.get("test").isDefined(), equalTo(true)
+                config.getOption("test").isDefined(), equalTo(true)
         );
         assertThat(
-                config.get("abc").isDefined(), equalTo(false)
+                config.getOption("abc").isDefined(), equalTo(false)
         );
     }
 }

@@ -1,6 +1,8 @@
 package io.github.booster.web.handler.controller;
 
 import arrow.core.Either;
+import arrow.core.Option;
+import io.github.booster.commons.util.EitherUtil;
 import io.github.booster.web.handler.dto.Greeting;
 import io.github.booster.web.handler.response.WebException;
 import org.springframework.http.HttpStatus;
@@ -21,12 +23,12 @@ public class TestController {
             value = "/hello",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public Mono<Either<Throwable, Greeting>> hello(
+    public Mono<Either<Throwable, Option<Greeting>>> hello(
         @RequestParam("from") String from,
         @RequestParam("greeting") String greeting
     ) {
         if (Objects.equals(from, "death")) {
-            return Mono.just(new Either.Left<>(new IllegalStateException("illegal state")));
+            return Mono.just(EitherUtil.convertThrowable(new IllegalStateException("illegal state")));
         } else if (Objects.equals(greeting, "hola")) {
             WebException exception = new WebException(
                     HttpStatus.BAD_REQUEST,
@@ -34,9 +36,9 @@ public class TestController {
                     "unknown language",
                     "unknown language"
             );
-            return Mono.just(new Either.Left<>(exception));
+            return Mono.just(EitherUtil.convertThrowable(exception));
         } else {
-            return Mono.just(new Either.Right<>(new Greeting("server", from, greeting)));
+            return Mono.just(EitherUtil.convertData(Option.fromNullable(new Greeting("server", from, greeting))));
         }
     }
 }

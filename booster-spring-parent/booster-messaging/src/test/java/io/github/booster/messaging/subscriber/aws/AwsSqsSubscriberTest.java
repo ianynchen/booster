@@ -191,7 +191,8 @@ class AwsSqsSubscriberTest {
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), equalTo(true));
                     assertThat(either.getOrNull(), notNullValue());
-                    assertThat(either.getOrNull().getRecordId(), notNullValue());
+                    assertThat(either.getOrNull().orNull(), notNullValue());
+                    assertThat(either.getOrNull().orNull().getRecordId(), notNullValue());
                 }).verifyComplete();
 
         AwsSqsSubscriber subscriber = SqsUtil.createSubscriber(
@@ -238,7 +239,8 @@ class AwsSqsSubscriberTest {
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), equalTo(true));
                     assertThat(either.getOrNull(), notNullValue());
-                    assertThat(either.getOrNull().getRecordId(), notNullValue());
+                    assertThat(either.getOrNull().orNull(), notNullValue());
+                    assertThat(either.getOrNull().orNull().getRecordId(), notNullValue());
                 }).verifyComplete();
 
         AwsSqsSubscriber subscriber = SqsUtil.createSubscriber(

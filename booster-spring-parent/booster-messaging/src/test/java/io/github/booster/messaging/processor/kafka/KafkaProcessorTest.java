@@ -6,8 +6,11 @@ import io.github.booster.messaging.processor.ProcessResult;
 import io.github.booster.messaging.subscriber.kafka.MockKafkaSubscriberFlow;
 import io.github.booster.messaging.subscriber.kafka.SubscriberRecord;
 import io.github.booster.task.Task;
+import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
+import io.github.booster.task.impl.RequestHandlers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -20,28 +23,34 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class KafkaProcessorTest {
 
-    Function1<SubscriberRecord<Integer>, Mono<SubscriberRecord<Integer>>> process =
-            Mono::just;
+    Function1<SubscriberRecord<Integer>, Mono<Option<SubscriberRecord<Integer>>>> process =
+            (record) -> Mono.just(Option.fromNullable(record));
 
-    Function1<SubscriberRecord<Integer>, Mono<SubscriberRecord<Integer>>> errorProcess =
-            (data) -> {
-                throw new IllegalArgumentException("");
-            };
+    Function1<SubscriberRecord<Integer>, Mono<Option<SubscriberRecord<Integer>>>> errorProcess =
+            (data) -> Mono.error(new IllegalArgumentException(""));
 
-    Function1<Throwable, SubscriberRecord<Integer>> exceptionProcess =
+    Function1<Throwable, Option<SubscriberRecord<Integer>>> exceptionProcess =
             (either) -> {
                 throw new IllegalStateException("error");
             };
 
+    Function0<Option<SubscriberRecord<Integer>>> emptyRequestHandler =
+            () -> Option.fromNullable(null);
+
     private final Task<SubscriberRecord<Integer>, SubscriberRecord<Integer>> task =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    process,
-                    exceptionProcess
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(exceptionProcess)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    process
             );
 
     @Test
@@ -58,7 +67,7 @@ class KafkaProcessorTest {
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new KafkaProcessor(
+                () -> new KafkaProcessor<>(
                         new MockKafkaSubscriberFlow("test"),
                         null,
                         null,
@@ -105,7 +114,10 @@ class KafkaProcessorTest {
                 .consumeNextWith(list -> {
                     for (int i = 0; i < 5; i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        ProcessResult<SubscriberRecord<Integer>> record = list.get(i).getOrNull();
+                        Option<ProcessResult<SubscriberRecord<Integer>>> recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        ProcessResult<SubscriberRecord<Integer>> record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.getData().getData(), is(i));
                         assertThat(record.isAcknowledged(), is(true));
@@ -123,7 +135,11 @@ class KafkaProcessorTest {
                 .consumeNextWith(list -> {
                     for (int i = 0; i < 5; i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        ProcessResult<SubscriberRecord<Integer>> record = list.get(i).getOrNull();
+                        Option<ProcessResult<SubscriberRecord<Integer>>> recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        ProcessResult<SubscriberRecord<Integer>> record = recordOption.orNull();
+                        assertThat(record, notNullValue());
                         assertThat(record, notNullValue());
                         assertThat(record.getData().getData(), is(i));
                         assertThat(record.isAcknowledged(), is(true));
@@ -137,12 +153,17 @@ class KafkaProcessorTest {
                 new MockKafkaSubscriberFlow("test"),
                 new AsyncTask<>(
                         "test",
-                        Option.fromNullable(null),
-                        Option.fromNullable(null),
-                        Option.fromNullable(null),
-                        new MetricsRegistry(new SimpleMeterRegistry()),
-                        (data) -> Mono.error(new IllegalArgumentException("error")),
-                        this.exceptionProcess
+                        new RequestHandlers<>(
+                                Option.fromNullable(emptyRequestHandler),
+                                Option.fromNullable(exceptionProcess)
+                        ),
+                        new TaskExecutionContext(
+                                Option.fromNullable(null),
+                                Option.fromNullable(null),
+                                Option.fromNullable(null),
+                                new MetricsRegistry(new SimpleMeterRegistry())
+                        ),
+                        this.errorProcess
                 ),
                 null,
                 new MetricsRegistry(new SimpleMeterRegistry()),
@@ -159,12 +180,17 @@ class KafkaProcessorTest {
                 new MockKafkaSubscriberFlow("test"),
                 new AsyncTask<>(
                         "test",
-                        Option.fromNullable(null),
-                        Option.fromNullable(null),
-                        Option.fromNullable(null),
-                        new MetricsRegistry(new SimpleMeterRegistry()),
-                        this.errorProcess,
-                        this.exceptionProcess
+                        new RequestHandlers<>(
+                                Option.fromNullable(emptyRequestHandler),
+                                Option.fromNullable(exceptionProcess)
+                        ),
+                        new TaskExecutionContext(
+                                Option.fromNullable(null),
+                                Option.fromNullable(null),
+                                Option.fromNullable(null),
+                                new MetricsRegistry(new SimpleMeterRegistry())
+                        ),
+                        this.errorProcess
                 ),
                 null,
                 new MetricsRegistry(new SimpleMeterRegistry()),
@@ -191,7 +217,11 @@ class KafkaProcessorTest {
                 .consumeNextWith(list -> {
                     for (int i = 0; i < 5; i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        ProcessResult<SubscriberRecord<Integer>> record = list.get(i).getOrNull();
+                        Option<ProcessResult<SubscriberRecord<Integer>>> recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        ProcessResult<SubscriberRecord<Integer>> record = recordOption.orNull();
+                        assertThat(record, notNullValue());
                         assertThat(record, notNullValue());
                         assertThat(record.getData().getData(), is(i));
                         assertThat(record.isAcknowledged(), is(false));
@@ -209,7 +239,11 @@ class KafkaProcessorTest {
                 .consumeNextWith(list -> {
                     for (int i = 0; i < 5; i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        ProcessResult<SubscriberRecord<Integer>> record = list.get(i).getOrNull();
+                        Option<ProcessResult<SubscriberRecord<Integer>>> recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        ProcessResult<SubscriberRecord<Integer>> record = recordOption.orNull();
+                        assertThat(record, notNullValue());
                         assertThat(record, notNullValue());
                         assertThat(record.getData().getData(), is(i));
                         assertThat(record.isAcknowledged(), is(false));

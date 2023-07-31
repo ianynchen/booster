@@ -3,37 +3,33 @@ package io.github.booster.task.impl
 import arrow.core.Option
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
+import io.github.booster.task.EmptyRequestHandler
+import io.github.booster.task.RequestExceptionHandler
+import io.github.booster.task.TaskExecutionContext
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.Retry
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import java.util.concurrent.ExecutorService
 
-typealias SyncProcessor<Request, Response> = (Request?) -> Response
+typealias SyncProcessor<Request, Response> = (Request) -> Option<Response>
 
-@Suppress("LongParameterList")
 class SynchronousTask<Request, Response>(
     name: String,
-    executorServiceOption: Option<ExecutorService>,
-    retryOption: Option<Retry>,
-    circuitBreakerOption: Option<CircuitBreaker>,
-    registry: MetricsRegistry,
+    requestHandlers: RequestHandlers<Response>,
+    taskExecutionContext: TaskExecutionContext,
     private val processor: SyncProcessor<Request, Response>,
-    requestExceptionHandler: RequestExceptionHandler<Response>?
 ): AbstractTask<Request, Response>(
     name,
-    requestExceptionHandler,
-    executorServiceOption,
-    retryOption,
-    circuitBreakerOption,
-    registry
+    requestHandlers,
+    taskExecutionContext
 ){
     companion object {
         private val log = LoggerFactory.getLogger(SynchronousTask::class.java)
     }
 
     @Suppress("TooGenericExceptionCaught")
-    override fun executeInternal(request: Request?): Mono<Response> {
+    override fun handleRequest(request: Request): Mono<Option<Response>> {
         return Mono.create { sink ->
             try {
                 val response = this.processor.invoke(request)
@@ -55,7 +51,8 @@ class SynchronousTaskBuilder<Request, Response> {
     private var circuitBreakerOption: Option<CircuitBreaker> = Option.fromNullable(null)
     private var executorServiceOption: Option<ExecutorService> = Option.fromNullable(null)
     private lateinit var process: SyncProcessor<Request, Response>
-    private var errorHandler: RequestExceptionHandler<Response>? = null
+    private var errorHandler: Option<RequestExceptionHandler<Response>> = Option.fromNullable(null)
+    private var defaultHandler: Option<EmptyRequestHandler<Response>> = Option.fromNullable(null)
 
     fun name(name: String) {
         this.taskName = name
@@ -69,8 +66,12 @@ class SynchronousTaskBuilder<Request, Response> {
         this.process = process
     }
 
+    fun defaultRequestHandler(emptyRequestHandler: EmptyRequestHandler<Response>) {
+        this.defaultHandler = Option.fromNullable(emptyRequestHandler)
+    }
+
     fun exceptionHandler(errorHandler: RequestExceptionHandler<Response>) {
-        this.errorHandler = errorHandler
+        this.errorHandler = Option.fromNullable(errorHandler)
     }
 
     fun retryOption(retryOption: Option<Retry>) {
@@ -91,12 +92,17 @@ class SynchronousTaskBuilder<Request, Response> {
 
         return SynchronousTask(
             this.taskName,
-            this.executorServiceOption,
-            this.retryOption,
-            this.circuitBreakerOption,
-            this.registry,
-            this.process,
-            this.errorHandler
+            RequestHandlers(
+                this.defaultHandler,
+                this.errorHandler
+            ),
+            TaskExecutionContext(
+                this.executorServiceOption,
+                this.retryOption,
+                this.circuitBreakerOption,
+                this.registry,
+            ),
+            this.process
         )
     }
 }

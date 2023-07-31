@@ -1,23 +1,33 @@
 package io.github.booster.task.impl
 
-import arrow.core.Either
+import arrow.core.Option
+import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
+import io.github.booster.task.DataWithError
 import io.github.booster.task.Task
 import io.github.booster.task.util.convertAndRecord
-import io.github.booster.task.util.toMonoEither
+import io.github.booster.task.util.extractValue
+import io.vavr.Tuple
 import io.vavr.Tuple6
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 
+typealias OptionTuple6<E0, E1, E2, E3, E4, E5> =
+        Tuple6<Option<E0>, Option<E1>, Option<E2>, Option<E3>, Option<E4>, Option<E5>>
+
+typealias Tuple6WithError<E0, E1, E2, E3, E4, E5> =
+        Tuple6<
+                DataWithError<E0>,
+                DataWithError<E1>,
+                DataWithError<E2>,
+                DataWithError<E3>,
+                DataWithError<E4>,
+                DataWithError<E5>
+                >
+
 typealias Tuple6ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5> =
-            (Throwable) -> Tuple6<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?>
-typealias Tuple6Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5> =
-            (
-            Either<Throwable, Resp0?>, Either<Throwable, Resp1?>,
-            Either<Throwable, Resp2?>, Either<Throwable, Resp3?>,
-            Either<Throwable, Resp4?>, Either<Throwable, Resp5?>
-        ) -> Tuple6<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?>
+            (Throwable) -> Tuple6WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>
 
 @Suppress("LongParameterList")
 class Tuple6Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4, Resp4, Req5, Resp5>(
@@ -28,11 +38,10 @@ class Tuple6Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4, Resp4
     private val task3: Task<Req3, Resp3>,
     private val task4: Task<Req4, Resp4>,
     private val task5: Task<Req5, Resp5>,
-    private val requestExceptionHandler: Tuple6ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>?,
-    private val responseAggregator: Tuple6Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>,
+    private val requestExceptionHandler: Option<Tuple6ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>>,
     private val registry: MetricsRegistry
-): Task<Tuple6<Req0?, Req1?, Req2?, Req3?, Req4?, Req5?>,
-        Tuple6<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?>> {
+): Task<OptionTuple6<Req0, Req1, Req2, Req3, Req4, Req5>,
+        Tuple6WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>> {
 
     private val taskName: String
 
@@ -41,31 +50,58 @@ class Tuple6Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4, Resp4
         this.taskName = name
     }
 
-    private fun handleException(t: Throwable): Mono<Tuple6<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?>> {
-        return if (this.requestExceptionHandler == null) {
+    private fun handleException(t: Throwable): Mono<Option<Tuple6WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>>> {
+        return this.requestExceptionHandler.map {
+            Mono.just(Option.fromNullable(it.invoke(t)))
+        }.getOrElse {
             Mono.error(t)
-        } else {
-            Mono.fromSupplier { this.requestExceptionHandler.invoke(t) }
         }
     }
 
-    @Suppress("UnsafeCallOnNullableType")
-    override fun execute(request: Mono<Either<Throwable, Tuple6<Req0?, Req1?, Req2?, Req3?, Req4?, Req5?>?>>):
-            Mono<Either<Throwable, Tuple6<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?>>> {
+    private fun executeOnOption(
+        tupleOption: Option<OptionTuple6<Req0, Req1, Req2, Req3, Req4, Req5>>
+    ): Mono<Option<Tuple6WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>>> {
+        return tupleOption.map { tuple ->
+            Mono.zip(
+                this.task0.execute(tuple._1()),
+                this.task1.execute(tuple._2()),
+                this.task2.execute(tuple._3()),
+                this.task3.execute(tuple._4()),
+                this.task4.execute(tuple._5()),
+                this.task5.execute(tuple._6())
+            )
+        }.getOrElse {
+            Mono.zip(
+                this.task0.execute(Option.fromNullable(null)),
+                this.task1.execute(Option.fromNullable(null)),
+                this.task2.execute(Option.fromNullable(null)),
+                this.task3.execute(Option.fromNullable(null)),
+                this.task4.execute(Option.fromNullable(null)),
+                this.task5.execute(Option.fromNullable(null))
+            )
+        }.map { tuple6 ->
+            Option.fromNullable(
+                Tuple.of(
+                    tuple6.t1,
+                    tuple6.t2,
+                    tuple6.t3,
+                    tuple6.t4,
+                    tuple6.t5,
+                    tuple6.t6
+                )
+            )
+        }
+    }
+
+    override fun execute(request: Mono<DataWithError<OptionTuple6<Req0, Req1, Req2, Req3, Req4, Req5>>>):
+            Mono<DataWithError<Tuple6WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>>> {
 
         val sampleOption = this.registry.startSample()
-        return request.flatMap {
-            if (it.isRight()) {
-                Mono.zip(
-                    task0.execute(toMonoEither(it.getOrNull()?._1())),
-                    task1.execute(toMonoEither(it.getOrNull()?._2())),
-                    task2.execute(toMonoEither(it.getOrNull()?._3())),
-                    task3.execute(toMonoEither(it.getOrNull()?._4())),
-                    task4.execute(toMonoEither(it.getOrNull()?._5())),
-                    task5.execute(toMonoEither(it.getOrNull()?._6()))
-                ).map { tuple -> responseAggregator.invoke(tuple.t1, tuple.t2, tuple.t3, tuple.t4, tuple.t5, tuple.t6) }
-            } else {
-                this.handleException(it.swap().getOrNull()!!)
+        return request.flatMap { req ->
+            req.map {
+                this.executeOnOption(it)
+            }.getOrElse {
+                this.handleException(it)
             }
         }.convertAndRecord(log, registry, sampleOption, name)
     }
@@ -89,8 +125,8 @@ class Tuple6TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4
     private lateinit var task3: Task<Req3, Resp3>
     private lateinit var task4: Task<Req4, Resp4>
     private lateinit var task5: Task<Req5, Resp5>
-    private lateinit var tupleAggregator: Tuple6Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>
-    private var requestExceptionHandler: Tuple6ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>? = null
+    private var requestExceptionHandler: Option<Tuple6ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>> =
+        Option.fromNullable(null)
 
     fun name(name: String) {
         this.taskName = name
@@ -125,15 +161,11 @@ class Tuple6TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4
     }
 
     fun exceptionHandler(handler: Tuple6ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>) {
-        this.requestExceptionHandler = handler
+        this.requestExceptionHandler = Option.fromNullable(handler)
     }
 
-    fun aggregator(aggregator: Tuple6Aggregator<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>) {
-        this.tupleAggregator = aggregator
-    }
-
-    fun build(): Task<Tuple6<Req0?, Req1?, Req2?, Req3?, Req4?, Req5?>,
-            Tuple6<Resp0?, Resp1?, Resp2?, Resp3?, Resp4?, Resp5?>> {
+    fun build(): Task<OptionTuple6<Req0, Req1, Req2, Req3, Req4, Req5>,
+            Tuple6WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5>> {
         Preconditions.checkArgument(::taskName.isInitialized, "task name not initialized")
         Preconditions.checkArgument(::task0.isInitialized, "first task not initialized")
         Preconditions.checkArgument(::task1.isInitialized, "second task not initialized")
@@ -141,7 +173,7 @@ class Tuple6TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4
         Preconditions.checkArgument(::task3.isInitialized, "fourth task not initialized")
         Preconditions.checkArgument(::task4.isInitialized, "fifth task not initialized")
         Preconditions.checkArgument(::task5.isInitialized, "sixth task not initialized")
-        Preconditions.checkArgument(::tupleAggregator.isInitialized, "aggregator not initialized")
+
         return Tuple6Task(
             this.taskName,
             this.task0,
@@ -151,7 +183,6 @@ class Tuple6TaskBuilder<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3, Req4
             this.task4,
             this.task5,
             this.requestExceptionHandler,
-            this.tupleAggregator,
             this.registry
         )
     }

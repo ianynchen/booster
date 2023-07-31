@@ -17,9 +17,17 @@
 
     <properties>
         <booster-base-pom.version>1.0.0</booster-base-pom.version>
+
+        <booster-commons.version>1.0.0</booster-commons.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>io.github.booster</groupId>
+            <artifactId>booster-commons</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!-- spring boot/cloud -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -37,6 +37,7 @@ import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -341,7 +342,12 @@ class AwsSqsPublisherTest {
         StepVerifier.create(publisher.publish("abc", record))
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), equalTo(true));
-                    PublisherRecord publisherRecord = either.getOrNull();
+
+                    Option<PublisherRecord> recordOption = either.getOrNull();
+                    assertThat(recordOption, notNullValue());
+                    assertThat(recordOption.isDefined(), is(true));
+
+                    PublisherRecord publisherRecord = recordOption.orNull();
                     assertThat(publisherRecord, notNullValue());
                     assertThat(publisherRecord.getRecordId(), notNullValue());
                 }).verifyComplete();
