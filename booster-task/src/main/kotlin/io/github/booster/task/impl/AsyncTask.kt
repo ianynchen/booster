@@ -3,31 +3,27 @@ package io.github.booster.task.impl
 import arrow.core.Option
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
+import io.github.booster.task.EmptyRequestHandler
+import io.github.booster.task.RequestExceptionHandler
+import io.github.booster.task.TaskExecutionContext
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.Retry
 import reactor.core.publisher.Mono
 import java.util.concurrent.ExecutorService
 
-typealias AsyncProcessor<Request, Response> = (Request?) -> Mono<Response>
+typealias AsyncProcessor<Request, Response> = (Request) -> Mono<Option<Response>>
 
-@Suppress("LongParameterList")
 class AsyncTask<Request, Response>(
     name: String,
-    executorServiceOption: Option<ExecutorService>,
-    retryOption: Option<Retry>,
-    circuitBreakerOption: Option<CircuitBreaker>,
-    registry: MetricsRegistry,
-    private val processor: AsyncProcessor<Request, Response>,
-    requestExceptionHandler: RequestExceptionHandler<Response>?
+    requestHandlers: RequestHandlers<Response>,
+    taskExecutionContext: TaskExecutionContext,
+    private val processor: AsyncProcessor<Request, Response>
 ) : AbstractTask<Request, Response>(
     name,
-    requestExceptionHandler,
-    executorServiceOption,
-    retryOption,
-    circuitBreakerOption,
-    registry
+    requestHandlers,
+    taskExecutionContext
 ) {
-    override fun executeInternal(request: Request?) =
+    override fun handleRequest(request: Request): Mono<Option<Response>> =
         this.processor.invoke(request)
 }
 
@@ -39,7 +35,8 @@ class AsynchronousTaskBuilder<Request, Response> {
     private var circuitBreakerOption: Option<CircuitBreaker> = Option.fromNullable(null)
     private var executorServiceOption: Option<ExecutorService> = Option.fromNullable(null)
     private lateinit var process: AsyncProcessor<Request, Response>
-    private var requestExceptionHandler: RequestExceptionHandler<Response>? = null
+    private var requestExceptionHandler: Option<RequestExceptionHandler<Response>> = Option.fromNullable(null)
+    private var emptyRequestHandler: Option<EmptyRequestHandler<Response>> = Option.fromNullable(null)
 
     fun name(name: String) {
         this.taskName = name
@@ -53,8 +50,12 @@ class AsynchronousTaskBuilder<Request, Response> {
         this.process = process
     }
 
+    fun defaultHandler(emptyRequestHandler: EmptyRequestHandler<Response>) {
+        this.emptyRequestHandler = Option.fromNullable(emptyRequestHandler)
+    }
+
     fun exceptionHandler(errorHandler: RequestExceptionHandler<Response>) {
-        this.requestExceptionHandler = errorHandler
+        this.requestExceptionHandler = Option.fromNullable(errorHandler)
     }
 
     fun retryOption(retryOption: Option<Retry>) {
@@ -75,12 +76,17 @@ class AsynchronousTaskBuilder<Request, Response> {
 
         return AsyncTask(
             this.taskName,
-            this.executorServiceOption,
-            this.retryOption,
-            this.circuitBreakerOption,
-            this.registry,
+            RequestHandlers(
+                this.emptyRequestHandler,
+                this.requestExceptionHandler
+            ),
+            TaskExecutionContext(
+                this.executorServiceOption,
+                this.retryOption,
+                this.circuitBreakerOption,
+                this.registry
+            ),
             this.process,
-            this.requestExceptionHandler
         )
     }
 }

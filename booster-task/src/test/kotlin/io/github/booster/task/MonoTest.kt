@@ -9,15 +9,15 @@ import reactor.test.StepVerifier
 
 internal class MonoTest {
 
-    private fun handleException(t: Throwable): Integer {
+    private fun handleException(t: Throwable): Int {
         return if (t is IllegalArgumentException) {
             throw t
         } else {
-            0 as Integer
+            0
         }
     }
 
-    private fun processor(value: Either<Throwable, Integer?>): Mono<Integer> {
+    private fun processor(value: Either<Throwable, Int?>): Mono<Int> {
         return if (value.isRight()) {
             Mono.just(value.getOrNull()!!)
         } else {

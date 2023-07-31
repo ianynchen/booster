@@ -1,5 +1,6 @@
 package io.github.booster.messaging.publisher.gcp;
 
+import arrow.core.Option;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.spring.pubsub.core.publisher.PubSubPublisherTemplate;
 import com.google.cloud.spring.pubsub.support.converter.JacksonPubSubMessageConverter;
@@ -176,7 +177,12 @@ class GcpPubSubPublisherTest {
         StepVerifier.create(publisher.publish("abc", new PubsubRecord<>(new Greeting("server", "hello"))))
                 .consumeNextWith(result -> {
                     assertThat(result.isRight(), is(true));
-                    PublisherRecord record = result.getOrNull();
+
+                    Option<PublisherRecord> recordOption = result.getOrNull();
+                    assertThat(recordOption, notNullValue());
+                    assertThat(recordOption.isDefined(), is(true));
+
+                    PublisherRecord record = recordOption.orNull();
                     assertThat(record, notNullValue());
                     assertThat(record.getTopic(), is("abc"));
                     assertThat(record.getRecordId(), is("1"));
@@ -194,7 +200,12 @@ class GcpPubSubPublisherTest {
         StepVerifier.create(publisher.publish("abc", new PubsubRecord<>(new Greeting("server", "hello"))))
                 .consumeNextWith(result -> {
                     assertThat(result.isRight(), is(true));
-                    PublisherRecord record = result.getOrNull();
+
+                    Option<PublisherRecord> recordOption = result.getOrNull();
+                    assertThat(recordOption, notNullValue());
+                    assertThat(recordOption.isDefined(), is(true));
+
+                    PublisherRecord record = recordOption.orNull();
                     assertThat(record, notNullValue());
                     assertThat(record.getTopic(), is("abc"));
                     assertThat(record.getRecordId(), is("1"));

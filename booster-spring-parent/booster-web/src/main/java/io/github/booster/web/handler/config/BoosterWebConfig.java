@@ -1,6 +1,7 @@
 package io.github.booster.web.handler.config;
 
 import arrow.core.Either;
+import arrow.core.Option;
 import com.fasterxml.classmate.TypeResolver;
 import io.github.booster.web.handler.ExceptionConverter;
 import io.github.booster.web.handler.ExceptionHandler;
@@ -64,7 +65,10 @@ public class BoosterWebConfig {
                                         typeResolver.resolve(
                                                 Either.class,
                                                 Throwable.class,
-                                                WildcardType.class
+                                                typeResolver.resolve(
+                                                        Option.class,
+                                                        WildcardType.class
+                                                )
                                         )
                                 ),
                                 typeResolver.resolve(
@@ -77,7 +81,10 @@ public class BoosterWebConfig {
                                 typeResolver.resolve(
                                         Either.class,
                                         Throwable.class,
-                                        WildcardType.class
+                                        typeResolver.resolve(
+                                                Option.class,
+                                                WildcardType.class
+                                        )
                                 ),
                                 typeResolver.resolve(
                                         WebResponse.class,

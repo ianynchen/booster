@@ -2,12 +2,14 @@ package io.github.booster.factories;
 
 import arrow.core.Either;
 import arrow.core.EitherKt;
+import arrow.core.Option;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerSetting;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
 import io.github.booster.commons.retry.RetrySetting;
+import io.github.booster.commons.util.EitherUtil;
 import io.github.booster.config.BoosterConfig;
 import io.github.booster.config.example.BoosterSampleApplication;
 import io.github.booster.config.example.dto.GreetingResponse;
@@ -38,7 +40,6 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -62,9 +63,9 @@ class TaskFactoryTest {
 
     private CircuitBreakerConfig circuitBreakerConfig;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    private MetricsRegistry registry = new MetricsRegistry(new SimpleMeterRegistry());
+    private final MetricsRegistry registry = new MetricsRegistry(new SimpleMeterRegistry());
 
     private TaskFactory factory;
 
@@ -92,7 +93,7 @@ class TaskFactoryTest {
         this.threadPoolConfig.setMetricsRegistry(this.registry);
 
         this.retryConfig = new RetryConfig();
-        this.retryConfig.setRetrySettings(
+        this.retryConfig.setSettings(
                 Map.of("client", new RetrySetting())
         );
 
@@ -116,17 +117,17 @@ class TaskFactoryTest {
 
         Task<String, Integer> task = this.factory.getAsyncTask(
                 "async",
-                str -> Mono.just(str.length())
+                str -> Mono.just(Option.fromNullable(str.length()))
         );
 
         Task<String, Integer> task2 = this.factory.getAsyncTask(
                 "async2",
-                str -> Mono.just(str.length())
+                str -> Mono.just(Option.fromNullable(str.length()))
         );
 
         Task<String, Integer> task3 = this.factory.getAsyncTask(
                 "async",
-                str -> Mono.just(str.length())
+                str -> Mono.just(Option.fromNullable(str.length()))
         );
 
         assertThat(task, notNullValue());
@@ -139,8 +140,8 @@ class TaskFactoryTest {
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), is(true));
 
-                    int value = EitherKt.getOrElse(either, o -> 0);
-                    assertThat(value, is("hello".length()));
+                    Option<Integer> value = EitherKt.getOrElse(either, o -> Option.fromNullable(0));
+                    assertThat(value.orNull(), is("hello".length()));
                 }).verifyComplete();
     }
 
@@ -150,17 +151,17 @@ class TaskFactoryTest {
 
         Task<String, Integer> task = this.factory.getSyncTask(
                 "async",
-                String::length
+                str -> Option.fromNullable(str.length())
         );
 
         Task<String, Integer> task2 = this.factory.getSyncTask(
                 "async2",
-                String::length
+                str -> Option.fromNullable(str.length())
         );
 
         Task<String, Integer> task3 = this.factory.getSyncTask(
                 "async",
-                String::length
+                str -> Option.fromNullable(str.length())
         );
 
         assertThat(task, notNullValue());
@@ -173,8 +174,8 @@ class TaskFactoryTest {
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), is(true));
 
-                    int value = EitherKt.getOrElse(either, o -> 0);
-                    assertThat(value, is("hello".length()));
+                    Option<Integer> value = EitherKt.getOrElse(either, o -> Option.fromNullable(0));
+                    assertThat(value.orNull(), is("hello".length()));
                 }).verifyComplete();
     }
 
@@ -220,7 +221,7 @@ class TaskFactoryTest {
         StepVerifier.create(task.execute(context))
                 .consumeNextWith(either -> {
                     assertThat(either.isRight(), is(true));
-                    GreetingResponse response = either.getOrNull().getBody();
+                    GreetingResponse response = either.getOrNull().orNull().getBody();
                     assertThat(response, notNullValue());
                     assertThat(response.getFrom(), is("server"));
                     assertThat(response.getGreeting(), is("hola"));
@@ -242,13 +243,13 @@ class TaskFactoryTest {
 
         assertThat(this.factory.getHttpTask("client"), sameInstance(task));
 
-        Either<Throwable, HttpClientRequestContext<Object, GreetingResponse>> request =
-                new Either.Left<>(new IllegalArgumentException());
+        Either<Throwable, Option<HttpClientRequestContext<Object, GreetingResponse>>> request =
+                EitherUtil.convertThrowable(new IllegalArgumentException());
         StepVerifier.create(
                 task.execute(request)
         ).consumeNextWith(either -> {
             assertThat(either.isRight(), is(true));
-            ResponseEntity<?> response = either.getOrNull();
+            ResponseEntity<?> response = either.getOrNull().orNull();
             assertThat(response, notNullValue());
             assertThat(response.getStatusCode(), equalTo(HttpStatus.PRECONDITION_FAILED));
         }).verifyComplete();

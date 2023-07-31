@@ -29,17 +29,19 @@ val circuitBreakerConfig = CircuitBreakerConfig(mapOf("test" to circuitBreakerSe
 
 val registry = MetricsRegistry(SimpleMeterRegistry())
 
-val lengthTask = syncTask<String?, Int> {
+val lengthTask = syncTask<String, Int> {
     name("length")
+    defaultRequestHandler { Option.fromNullable(0) }
     processor {
-        it?.length ?: 0
+        Option.fromNullable(it.length)
     }
 }.build()
 
-val stringTask = syncTask<Int?, String> {
+val stringTask = syncTask<Int, String> {
     name("string")
+    defaultRequestHandler { Option.fromNullable("") }
     processor {
-        it?.toString().orEmpty()
+        Option.fromNullable(it.toString())
     }
 }.build()
 
@@ -50,6 +52,6 @@ val parallelTask = parallelTask {
 val sumTask = syncTask<List<Int>, Int> {
     name("sum")
     processor {
-        it?.sum() ?: 0
+        Option.fromNullable(it.sum())
     }
 }

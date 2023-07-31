@@ -1,14 +1,13 @@
 package io.github.booster.task.impl
 
-import arrow.core.Either
 import arrow.core.Option
 import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
+import io.github.booster.task.DataWithError
 import io.github.booster.task.Task
 import io.github.booster.task.util.convertAndRecord
-import io.github.booster.task.util.findFirstError
-import io.github.booster.task.util.isAnyRight
+import io.github.booster.task.util.findExisting
 import io.github.booster.task.util.toScheduler
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
@@ -16,55 +15,53 @@ import java.util.concurrent.ExecutorService
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
-typealias ParallelAggregator<T> = (List<Either<Throwable, T?>>) -> List<T?>
-typealias ParallelRequestExceptionHandler<T> = (Throwable) -> List<T?>
+typealias ParallelAggregator<T> = (List<DataWithError<T>>) -> Option<List<T>>
+typealias ParallelRequestExceptionHandler<T> = (Throwable) -> Option<List<T>>
 
 class ParallelTask<Request, Response>(
     name: String?,
-    private val task: Task<Request?, Response>,
+    private val task: Task<Request, Response>,
     executorServiceOption: Option<ExecutorService>,
-    private val errorHandler: ParallelRequestExceptionHandler<Response>?,
-    private val aggregateHandler: ParallelAggregator<Response>,
+    private val errorHandler: Option<ParallelRequestExceptionHandler<Response>>,
+    private val aggregateHandler: Option<ParallelAggregator<Response>>,
     private val registry: MetricsRegistry,
-): Task<List<Request?>, List<Response?>> {
+): Task<List<Request>, List<Response>> {
 
     private val taskName = if (name?.isNotBlank() == true) {
         name
     } else {
-        Stream.of("homogeneous", "parallel", task.name).collect(Collectors.joining("_"))
+        Stream.of("homogeneous", "parallel", task.name)
+            .collect(Collectors.joining("_"))
     }
 
     private val schedulerOption = toScheduler(executorServiceOption)
 
-    private fun handleRequestError(t: Throwable): Mono<List<Response?>> {
-        return if (this.errorHandler != null) {
+    private fun handleRequestError(t: Throwable): Mono<Option<List<Response>>> {
+        return this.errorHandler.map { handler ->
             log.debug("booster-task - task [{}] exception handler provided, processing", this.name)
-            Mono.fromSupplier { this.errorHandler.invoke(t) }
-        } else {
+            Mono.fromSupplier { handler.invoke(t) }
+        }.getOrElse {
             log.warn("booster-task - task [{}] no exception handler, throwing exception", this.name, t)
             Mono.error(t)
         }
     }
 
-    private fun process(request: Either<Throwable, List<Request?>?>): Mono<List<Response?>> {
-        return if (request.isRight()) {
+    private fun process(request: DataWithError<List<Request>>): Mono<Option<List<Response>>> {
+        return request.map { req ->
             log.debug(
                 "booster-task - task[{}] processing parallel input: [{}]",
                 this.name,
-                request
+                req
             )
-            executeParallel(request.getOrElse { listOf() })
-        } else {
-            log.warn("booster-task - task[{}] input contains error: [{}]", this.name, request.swap().getOrNull())
-            this.handleRequestError(
-                request.swap()
-                    .getOrElse { IllegalArgumentException("left value without exception") }
-            )
+            executeParallel(req)
+        }.getOrElse {
+            log.warn("booster-task - task[{}] input contains error", this.name, it)
+            this.handleRequestError(it)
         }
     }
 
     @Suppress("UnsafeCallOnNullableType", "TooGenericExceptionCaught")
-    override fun execute(request: Mono<Either<Throwable, List<Request?>?>>): Mono<Either<Throwable, List<Response?>>> {
+    override fun execute(request: Mono<DataWithError<List<Request>>>): Mono<DataWithError<List<Response>>> {
         val sampleOption = this.registry.startSample()
 
         return this.schedulerOption.map {
@@ -75,18 +72,32 @@ class ParallelTask<Request, Response>(
             request
         }.flatMap {
             this.process(it)
-        }.convertAndRecord(log, registry, sampleOption, name)
+        }.convertAndRecord(log, this.registry, sampleOption, this.name)
     }
 
-    private fun executeParallel(requests: List<Request?>?): Mono<List<Response?>> {
+    private fun executeParallel(requests: Option<List<Request>>): Mono<Option<List<Response>>> {
 
-        val results = requests?.stream()?.map { request -> task.execute(request) }?.collect(Collectors.toList())
-        return Mono.zip(results) {
-            val convertedResponses = mutableListOf<Either<Throwable, Response?>>()
+        val processedRequests = requests.map { reqs ->
+            reqs.map { req -> this.task.execute(req) }
+        }.getOrElse {
+            listOf(this.task.execute(Option.fromNullable(null)))
+        }
+
+        return Mono.zip(processedRequests) {
+            val convertedResponses = mutableListOf<DataWithError<Response>>()
             it.forEach { item ->
-                convertedResponses.add(item as Either<Throwable, Response?>)
+                val value: DataWithError<Response>? = item as? DataWithError<Response>
+                if (value != null) {
+                    convertedResponses.add(value)
+                }
             }
-            aggregateHandler.invoke(convertedResponses)
+            this.aggregateHandler.map {
+                it.invoke(convertedResponses)
+            }.getOrElse {
+                val list = findExisting(convertedResponses)
+                require(list.isNotEmpty())
+                Option.fromNullable(list)
+            }
         }
     }
 
@@ -103,15 +114,9 @@ class ParallelTaskBuilder<Request, Response> {
     private var taskName: String? = ""
     private var metricsRegistry = MetricsRegistry()
     private var executorServiceOption: Option<ExecutorService> = Option.fromNullable(null)
-    private lateinit var elementTask: Task<Request?, Response>
-    private var errorHandler: ParallelRequestExceptionHandler<Response>? = null
-    private var aggregateHandler: ParallelAggregator<Response> = { values ->
-        if (!isAnyRight(values)) {
-            throw IllegalArgumentException(findFirstError(values))
-        } else {
-            values.filter { it.isRight() }.map { it.getOrNull() }
-        }
-    }
+    private lateinit var elementTask: Task<Request, Response>
+    private var errorHandler: Option<ParallelRequestExceptionHandler<Response>> = Option.fromNullable(null)
+    private var aggregateHandler: Option<ParallelAggregator<Response>> = Option.fromNullable(null)
 
     fun name(name: String?) {
         this.taskName = name
@@ -121,23 +126,23 @@ class ParallelTaskBuilder<Request, Response> {
         this.metricsRegistry = registry
     }
 
-    fun task(task: Task<Request?, Response>) {
+    fun task(task: Task<Request, Response>) {
         this.elementTask = task
     }
 
     fun requestErrorHandler(errorHandler: ParallelRequestExceptionHandler<Response>) {
-        this.errorHandler = errorHandler
+        this.errorHandler = Option.fromNullable(errorHandler)
     }
 
     fun aggregator(aggregator: ParallelAggregator<Response>) {
-        this.aggregateHandler = aggregator
+        this.aggregateHandler = Option.fromNullable(aggregator)
     }
 
     fun executorOption(executorServiceOption: Option<ExecutorService>) {
         this.executorServiceOption = executorServiceOption
     }
 
-    fun build(): Task<List<Request?>, List<Response?>> {
+    fun build(): Task<List<Request>, List<Response>> {
         Preconditions.checkArgument(::elementTask.isInitialized, "task not initialized")
 
         return ParallelTask(

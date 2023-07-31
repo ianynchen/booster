@@ -14,18 +14,10 @@
     <description>Booster HTTP Client Project</description>
 
     <properties>
-        <booster-commons.version>1.0.0</booster-commons.version>
-
         <springfox.version>3.0.0</springfox.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>io.github.booster</groupId>
-            <artifactId>booster-commons</artifactId>
-            <version>${booster-commons.version}</version>
-        </dependency>
-
         <!-- Springfox -->
         <dependency>
             <groupId>io.springfox</groupId>

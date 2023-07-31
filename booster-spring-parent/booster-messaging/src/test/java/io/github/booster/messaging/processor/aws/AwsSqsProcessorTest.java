@@ -7,8 +7,11 @@ import io.github.booster.messaging.config.AwsSqsSetting;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.subscriber.aws.MockAwsSubscriberFlow;
 import io.github.booster.task.Task;
+import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
+import io.github.booster.task.impl.RequestHandlers;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,12 +39,15 @@ import static org.mockito.Mockito.when;
 
 class AwsSqsProcessorTest {
 
-    private final Function1<Message, Mono<Message>> process =
-            Mono::just;
+    private final Function1<Message, Mono<Option<Message>>> process =
+            (message) -> Mono.just(Option.fromNullable(message));
 
-    private final Function1<Throwable, Message> exceptionProcess =
+    private final Function0<Option<Message>> emptyRequestHandler =
+            () -> Option.fromNullable(null);
+
+    private final Function1<Throwable, Option<Message>> requestExceptionHandler =
             (throwable) -> {
-                throw new IllegalStateException("error");
+                throw new IllegalArgumentException(throwable);
             };
 
     private final AwsSqsConfig awsSqsConfig = new AwsSqsConfig();
@@ -49,12 +55,17 @@ class AwsSqsProcessorTest {
     private final Task<Message, Message> task =
             new AsyncTask<>(
                     "test",
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    Option.fromNullable(null),
-                    new MetricsRegistry(new SimpleMeterRegistry()),
-                    this.process,
-                    this.exceptionProcess
+                    new RequestHandlers<>(
+                            Option.fromNullable(emptyRequestHandler),
+                            Option.fromNullable(requestExceptionHandler)
+                    ),
+                    new TaskExecutionContext(
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            Option.fromNullable(null),
+                            new MetricsRegistry(new SimpleMeterRegistry())
+                    ),
+                    this.process
             );
 
     @BeforeEach
@@ -195,7 +206,10 @@ class AwsSqsProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.isAcknowledged(), is(true));
                         assertThat(record.getData().messageId(), equalTo(Integer.toString(i)));
@@ -216,7 +230,10 @@ class AwsSqsProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.isAcknowledged(), is(true));
                         assertThat(record.getData().messageId(), equalTo(Integer.toString(i)));
@@ -242,7 +259,10 @@ class AwsSqsProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.isAcknowledged(), is(false));
                         assertThat(record.getData().messageId(), equalTo(Integer.toString(i)));
@@ -263,7 +283,10 @@ class AwsSqsProcessorTest {
                     assertThat(list, hasSize(5));
                     for (int i = 0; i < list.size(); i++) {
                         assertThat(list.get(i).isRight(), is(true));
-                        val record = list.get(i).getOrNull();
+                        val recordOption = list.get(i).getOrNull();
+                        assertThat(recordOption, notNullValue());
+
+                        val record = recordOption.orNull();
                         assertThat(record, notNullValue());
                         assertThat(record.isAcknowledged(), is(false));
                         assertThat(record.getData().messageId(), equalTo(Integer.toString(i)));

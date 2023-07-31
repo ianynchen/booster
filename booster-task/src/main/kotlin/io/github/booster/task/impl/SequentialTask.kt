@@ -1,8 +1,8 @@
 package io.github.booster.task.impl
 
-import arrow.core.Either
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
+import io.github.booster.task.DataWithError
 import io.github.booster.task.Task
 import io.github.booster.task.util.recordTime
 import reactor.core.publisher.Mono
@@ -11,14 +11,18 @@ import java.util.stream.Stream
 
 class SequentialTask<T1Request, IntermediateResponse, T2Response>(
     name: String?,
-    private val task1: io.github.booster.task.Task<T1Request, IntermediateResponse?>,
-    private val task2: io.github.booster.task.Task<IntermediateResponse, T2Response>,
+    private val task1: Task<T1Request, IntermediateResponse>,
+    private val task2: Task<IntermediateResponse, T2Response>,
     private val registry: MetricsRegistry,
 ): Task<T1Request, T2Response> {
 
-    private val taskName = name ?: Stream.of("seq", task1.name, task2.name).collect(Collectors.joining("_"))
+    private val taskName = if (name != null && name.isNotBlank()) {
+        name
+    } else {
+        Stream.of("seq", task1.name, task2.name).collect(Collectors.joining("_"))
+    }
 
-    override fun execute(request: Mono<Either<Throwable, T1Request?>>): Mono<Either<Throwable, T2Response>> {
+    override fun execute(request: Mono<DataWithError<T1Request>>): Mono<DataWithError<T2Response>> {
         val sampleOption = registry.startSample()
 
         // since success or failure depends on second task, not
@@ -38,7 +42,7 @@ class SequentialTaskBuilder<Request, IntermediateResponse, Response> {
 
     private var taskName: String? = ""
     private var registry = MetricsRegistry()
-    private lateinit var task0: Task<Request, IntermediateResponse?>
+    private lateinit var task0: Task<Request, IntermediateResponse>
     private lateinit var task1: Task<IntermediateResponse, Response>
 
     fun name(name: String) {
@@ -49,7 +53,7 @@ class SequentialTaskBuilder<Request, IntermediateResponse, Response> {
         this.registry = registry
     }
 
-    fun firstTask(task0: Task<Request, IntermediateResponse?>) {
+    fun firstTask(task0: Task<Request, IntermediateResponse>) {
         this.task0 = task0
     }
 

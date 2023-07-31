@@ -1,6 +1,5 @@
 package io.github.booster.commons.circuit.breaker;
 
-import arrow.core.Option;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.pool.NamedObjectPool;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -15,9 +14,9 @@ import java.util.Map;
  * This object also caches circuit breakers created and returns cached value
  * if name is the same to avoid creating duplicate circuit breakers.
  */
-public class CircuitBreakerConfig extends NamedObjectPool<Option<CircuitBreaker>> {
+public class CircuitBreakerConfig extends NamedObjectPool<CircuitBreaker> {
 
-    private static Logger LOG = LoggerFactory.getLogger(CircuitBreakerConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(CircuitBreakerConfig.class);
 
     private Map<String, CircuitBreakerSetting> settings;
 
@@ -57,14 +56,10 @@ public class CircuitBreakerConfig extends NamedObjectPool<Option<CircuitBreaker>
     }
 
     @Override
-    protected Option<CircuitBreaker> createObject(String name) {
+    protected CircuitBreaker createObject(String name) {
+        log.debug("booster-commons - cache contains [{}] entry: {}", name, this.settings.containsKey(name));
         return this.settings.containsKey(name) ?
-                this.settings.get(name).buildCircuitBreaker(name, this.registry) :
-                Option.fromNullable(null);
-    }
-
-    @Override
-    public Option<Option<CircuitBreaker>> getOption(String name) {
-        throw new UnsupportedOperationException("operation not supported");
+                this.settings.get(name).buildCircuitBreaker(name, this.registry).orNull() :
+                null;
     }
 }
