@@ -4,10 +4,9 @@ import arrow.core.Option
 import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
+import io.github.booster.task.Maybe
 import io.github.booster.task.Task
 import io.github.booster.task.util.convertAndRecord
-import io.github.booster.task.util.extractValue
 import io.vavr.Tuple
 import io.vavr.Tuple2
 import io.vavr.Tuple4
@@ -19,10 +18,10 @@ typealias OptionTuple4<E0, E1, E2, E3>
 
 typealias Tuple4WithError<E0, E1, E2, E3> =
         Tuple4<
-                DataWithError<E0>,
-                DataWithError<E1>,
-                DataWithError<E2>,
-                DataWithError<E3>
+                Maybe<E0>,
+                Maybe<E1>,
+                Maybe<E2>,
+                Maybe<E3>
                 >
 
 typealias Tuple4ExceptionHandler<Resp0, Resp1, Resp2, Resp3> =
@@ -83,8 +82,8 @@ class Tuple4Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3>(
         }
     }
 
-    override fun execute(request: Mono<DataWithError<OptionTuple4<Req0, Req1, Req2, Req3>>>):
-            Mono<DataWithError<Tuple4WithError<Resp0, Resp1, Resp2, Resp3>>> {
+    override fun execute(request: Mono<Maybe<OptionTuple4<Req0, Req1, Req2, Req3>>>):
+            Mono<Maybe<Tuple4WithError<Resp0, Resp1, Resp2, Resp3>>> {
 
         val sampleOption = this.registry.startSample()
         return request.flatMap { req ->

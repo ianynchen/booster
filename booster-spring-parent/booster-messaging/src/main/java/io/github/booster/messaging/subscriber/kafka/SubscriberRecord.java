@@ -11,6 +11,8 @@ import org.springframework.kafka.support.Acknowledgment;
  * A record is an object consumed by Kafka consumer
  * Booster messaging assumes the records are not
  * auto-acknowledged.
+ *
+ * @param <T> type of subscriber record.
  */
 @Getter
 @EqualsAndHashCode

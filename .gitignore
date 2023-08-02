@@ -227,4 +227,6 @@ replay_pid*
 booster-base-pom.iml
 booster-spring-parent/booster-http-client/booster-http-client.iml
 booster-task/booster-task.iml
-
+booster-commons/booster-commons.iml
+*.iml
+booster-integration-examples/monitoring/data/

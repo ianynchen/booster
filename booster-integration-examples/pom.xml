@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.booster</groupId>
+        <artifactId>booster-spring-parent-pom</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../booster-spring-parent/pom.xml</relativePath> <!-- lookup parent from repository -->
+    </parent>
+
+    <artifactId>booster-examples</artifactId>
+    <version>1.0.0</version>
+    <name>booster-examples</name>
+    <description>Booster Examples</description>
+    <packaging>pom</packaging>
+
+    <properties>
+        <booster-web-starter.version>2.0.0</booster-web-starter.version>
+        <booster-messaging.version>2.0.0</booster-messaging.version>
+
+        <spring-boot-maven-plugin.version>3.1.2</spring-boot-maven-plugin.version>
+    </properties>
+
+    <modules>
+        <module>dto-library</module>
+        <module>fulfillment-service</module>
+        <module>inventory-service</module>
+        <module>order-service</module>
+    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.booster</groupId>
+            <artifactId>booster-web-starter</artifactId>
+            <version>${booster-web-starter.version}</version>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,54 @@
+server:
+  port: 8084
+logging:
+  level:
+    root: INFO
+  com.ld.booster: DEBUG
+        # messaging: DEBUG
+        # example: DEBUG
+spring:
+  application:
+    name: fulfillment-service
+  cloud:
+    gcp:
+      trace:
+        pubsub:
+          enabled: true
+  zipkin:
+    enabled: true
+    sender:
+      type: otlp
+      otlp:
+        endpoint: http://tempo:55681
+booster:
+  gcp:
+    pubsub:
+      create: false
+      endpoint: "localhost:8538"
+      projectId: order-project
+      topic: orders
+      subscription: order-subscription
+  task:
+    threads:
+      settings:
+        fulfillment:
+          coreSize: 10
+          maxSize: 20
+          queueSize: 100
+          prefix: fulfillment-tp-
+        processor:
+          coreSize: 10
+          maxSize: 20
+          queueSize: 100
+          prefix: processor-tp-
+  messaging:
+    gcp:
+      subscriber:
+        settings:
+          fulfillment:
+            subscription: order-subscription
+            maxRecords: 1
+            queueSize: 2
+            waitPolicy: EXPONENTIAL
+            initialWaitMillis: 1000
+            maximumWaitMillis: 10000

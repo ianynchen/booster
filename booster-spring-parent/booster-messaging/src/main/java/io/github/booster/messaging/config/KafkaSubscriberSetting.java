@@ -12,15 +12,10 @@ import lombok.ToString;
 @ToString
 public class KafkaSubscriberSetting {
 
-    private int queueSize = 1;
-
     /**
-     * Retrieves the mssage queue size
-     * @return message queue size, at least 1
+     * message queue size, at least 1
      */
-    public int getQueueSize() {
-        return queueSize;
-    }
+    private int queueSize = 1;
 
     /**
      * Sets queue size

@@ -6,12 +6,14 @@
         <groupId>io.github.booster</groupId>
         <artifactId>booster-spring-parent-pom</artifactId>
         <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>booster-http-client</artifactId>
     <version>1.0.0</version>
     <name>booster-http-client</name>
     <description>Booster HTTP Client Project</description>
+    <packaging>jar</packaging>
 
     <properties>
         <springfox.version>3.0.0</springfox.version>
@@ -62,7 +64,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.maven.plugin.version}</version>
+                <version>${jacoco-maven-plugin.version}</version>
                 <configuration>
                     <excludes>
                         <exclude>**/*Setting.class</exclude>
