@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.Option
 import reactor.core.publisher.Mono
 
-typealias DataWithError<T> = Either<Throwable, Option<T>>
+typealias Maybe<T> = Either<Throwable, Option<T>>
 
 typealias RequestExceptionHandler<T> = (Throwable) -> Option<T>
 typealias EmptyRequestHandler<T> = () -> Option<T>
@@ -32,7 +32,7 @@ interface Task<Request, Response> {
      * @param request Request object as [Either]
      * @return returns a response with exception wrapped inside an [Either]
      */
-    fun execute(request: DataWithError<Request>) =
+    fun execute(request: Maybe<Request>) =
         execute(Mono.just(request))
 
     /**
@@ -40,7 +40,7 @@ interface Task<Request, Response> {
      * @param request Request object as [Mono]
      * @return returns a response with exception wrapped inside an [Either]
      */
-    fun execute(request: Mono<DataWithError<Request>>): Mono<DataWithError<Response>>
+    fun execute(request: Mono<Maybe<Request>>): Mono<Maybe<Response>>
 
     /**
      * Name of the task.

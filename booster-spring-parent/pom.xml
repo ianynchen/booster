@@ -17,7 +17,6 @@
 
     <properties>
         <booster-base-pom.version>1.0.0</booster-base-pom.version>
-
         <booster-commons.version>1.0.0</booster-commons.version>
     </properties>
 

@@ -4,7 +4,7 @@ import arrow.core.Option
 import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
+import io.github.booster.task.Maybe
 import io.github.booster.task.Task
 import io.github.booster.task.util.convertAndRecord
 import io.github.booster.task.util.findExisting
@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
-typealias ParallelAggregator<T> = (List<DataWithError<T>>) -> Option<List<T>>
+typealias ParallelAggregator<T> = (List<Maybe<T>>) -> Option<List<T>>
 typealias ParallelRequestExceptionHandler<T> = (Throwable) -> Option<List<T>>
 
 class ParallelTask<Request, Response>(
@@ -46,7 +46,7 @@ class ParallelTask<Request, Response>(
         }
     }
 
-    private fun process(request: DataWithError<List<Request>>): Mono<Option<List<Response>>> {
+    private fun process(request: Maybe<List<Request>>): Mono<Option<List<Response>>> {
         return request.map { req ->
             log.debug(
                 "booster-task - task[{}] processing parallel input: [{}]",
@@ -61,7 +61,7 @@ class ParallelTask<Request, Response>(
     }
 
     @Suppress("UnsafeCallOnNullableType", "TooGenericExceptionCaught")
-    override fun execute(request: Mono<DataWithError<List<Request>>>): Mono<DataWithError<List<Response>>> {
+    override fun execute(request: Mono<Maybe<List<Request>>>): Mono<Maybe<List<Response>>> {
         val sampleOption = this.registry.startSample()
 
         return this.schedulerOption.map {
@@ -84,9 +84,9 @@ class ParallelTask<Request, Response>(
         }
 
         return Mono.zip(processedRequests) {
-            val convertedResponses = mutableListOf<DataWithError<Response>>()
+            val convertedResponses = mutableListOf<Maybe<Response>>()
             it.forEach { item ->
-                val value: DataWithError<Response>? = item as? DataWithError<Response>
+                val value: Maybe<Response>? = item as? Maybe<Response>
                 if (value != null) {
                     convertedResponses.add(value)
                 }

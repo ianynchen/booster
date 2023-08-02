@@ -5,7 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.orElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
+import io.github.booster.task.Maybe
 import io.github.booster.task.EmptyRequestHandler
 import io.github.booster.task.RequestExceptionHandler
 import io.github.booster.task.Task
@@ -63,7 +63,7 @@ abstract class AbstractTask<Request, Response>(
      * @return a [Mono] of execution result.
      */
     //@Suppress("UnsafeCallOnNullableType")
-    private fun executeInternal(request: DataWithError<Request>): Mono<Option<Response>> {
+    private fun executeInternal(request: Maybe<Request>): Mono<Option<Response>> {
 
         return request.map { req ->
             log.debug("booster-task - task[{}] running with optional request values: [{}]", name, req)
@@ -123,7 +123,7 @@ abstract class AbstractTask<Request, Response>(
         }
     }
 
-    override fun execute(request: Mono<DataWithError<Request>>): Mono<DataWithError<Response>> {
+    override fun execute(request: Mono<Maybe<Request>>): Mono<Maybe<Response>> {
         val sampleOption: Option<Timer.Sample> = this.taskExecutionContext.registry.startSample()
 
         // To execute on thread provided, or calling thread.

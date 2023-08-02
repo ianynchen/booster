@@ -3,7 +3,6 @@ package io.github.booster.task.util
 import arrow.core.Either
 import arrow.core.Option
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
 import io.micrometer.core.instrument.Timer
 import org.slf4j.Logger
 import reactor.core.publisher.Mono

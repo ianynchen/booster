@@ -13,6 +13,7 @@
     <version>2.0.0</version>
     <name>booster-messaging</name>
     <description>Booster Messaging Library</description>
+    <packaging>jar</packaging>
 
     <properties>
         <booster-web-starter.version>2.0.0</booster-web-starter.version>
@@ -123,7 +124,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.maven.plugin.version}</version>
+                <version>${jacoco-maven-plugin.version}</version>
                 <configuration>
                     <excludes>
                         <exclude>**/*Setting.class</exclude>

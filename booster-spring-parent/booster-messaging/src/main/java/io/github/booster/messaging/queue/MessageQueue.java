@@ -41,7 +41,7 @@ public class MessageQueue<T> {
 
     private volatile boolean stopped;
 
-    private ExecutorService executorService;
+    private final ExecutorService executorService;
 
     public MessageQueue(
             String name,
