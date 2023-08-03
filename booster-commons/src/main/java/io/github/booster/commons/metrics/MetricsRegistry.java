@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 @Getter
 public class MetricsRegistry {
 
-    private static Logger log = LoggerFactory.getLogger(MetricsRegistry.class);
+    private static final Logger log = LoggerFactory.getLogger(MetricsRegistry.class);
 
     /**
      * Trace ID tag.
@@ -79,7 +79,7 @@ public class MetricsRegistry {
     }
 
     private String[] insertTraceTag(String... tags) {
-        if (recordTrace && !Stream.of(tags).filter(tag -> Objects.equals(tag, TRACE_ID)).findAny().isPresent()) {
+        if (recordTrace && Stream.of(tags).noneMatch(tag -> Objects.equals(tag, TRACE_ID))) {
             Span span = Span.current();
             if (span != null && span.getSpanContext().isValid()) {
                 return MetricsRegistry.createTraceTags(span, tags);
