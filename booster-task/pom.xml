@@ -17,8 +17,6 @@
     <packaging>jar</packaging>
 
     <properties>
-        <detekt-maven-plugin.version>1.23.0</detekt-maven-plugin.version>
-
         <booster-commons.version>1.0.0</booster-commons.version>
     </properties>
 
