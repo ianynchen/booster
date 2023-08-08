@@ -3,7 +3,7 @@ package io.github.booster.messaging.subscriber.aws;
 import arrow.core.Option;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.messaging.config.AwsSqsConfig;
 import io.github.booster.messaging.config.AwsSqsSetting;
@@ -83,7 +83,7 @@ class AwsSqsSubscriberTest {
                 () -> new AwsSqsSubscriber(
                         null,
                         this.awsSqsConfig,
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         this.registry,
                         new OpenTelemetryConfig(null, "test"),
                         true
@@ -95,7 +95,7 @@ class AwsSqsSubscriberTest {
                 () -> new AwsSqsSubscriber(
                         "",
                         this.awsSqsConfig,
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         this.registry,
                         new OpenTelemetryConfig(null, "test"),
                         true
@@ -107,7 +107,7 @@ class AwsSqsSubscriberTest {
                 () -> new AwsSqsSubscriber(
                         " ",
                         this.awsSqsConfig,
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         this.registry,
                         new OpenTelemetryConfig(null, "test"),
                         true
@@ -119,7 +119,7 @@ class AwsSqsSubscriberTest {
                 () -> new AwsSqsSubscriber(
                         "test",
                         null,
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         this.registry,
                         new OpenTelemetryConfig(null, "test"),
                         true
@@ -131,7 +131,7 @@ class AwsSqsSubscriberTest {
                 () -> new AwsSqsSubscriber(
                         "test",
                         new AwsSqsConfig(),
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         this.registry,
                         new OpenTelemetryConfig(null, "test"),
                         true
@@ -155,7 +155,7 @@ class AwsSqsSubscriberTest {
                 () -> new AwsSqsSubscriber(
                         "test",
                         new AwsSqsConfig(),
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         null,
                         new OpenTelemetryConfig(null, "test"),
                         true
@@ -283,7 +283,7 @@ class AwsSqsSubscriberTest {
         when(mockSetting.getQueueUrl()).thenReturn(this.queueUrl);
         when(mockSetting.getReceiverSetting()).thenReturn(new AwsSqsSetting.ReceiverSetting());
 
-        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
+        ThreadPoolConfigGeneric threadPoolConfig = new ThreadPoolConfigGeneric();
         threadPoolConfig.setSettings(Map.of("test", new ThreadPoolSetting()));
         AwsSqsSubscriber subscriber = new AwsSqsSubscriber(
                 "test",

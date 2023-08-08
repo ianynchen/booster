@@ -3,7 +3,7 @@ package io.github.booster.messaging.subscriber.gcp;
 import com.google.cloud.spring.pubsub.core.subscriber.PubSubSubscriberTemplate;
 import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.messaging.config.GcpPubSubSubscriberConfig;
 import io.github.booster.messaging.config.GcpPubSubSubscriberSetting;
@@ -62,8 +62,8 @@ class GcpPubSubPullSubscriberTest {
                 .thenReturn(List.of(mock(AcknowledgeablePubsubMessage.class)));
     }
 
-    private ThreadPoolConfig createThreadConfig() {
-        ThreadPoolConfig config = new ThreadPoolConfig();
+    private ThreadPoolConfigGeneric createThreadConfig() {
+        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
         config.setSettings(Map.of("test", new ThreadPoolSetting()));
         return config;
     }
@@ -85,7 +85,7 @@ class GcpPubSubPullSubscriberTest {
                 () -> new GcpPubSubPullSubscriber(
                         null,
                         this.template,
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         new GcpPubSubSubscriberConfig(),
                         new MetricsRegistry(new SimpleMeterRegistry()),
                         null,
@@ -98,7 +98,7 @@ class GcpPubSubPullSubscriberTest {
                 () -> new GcpPubSubPullSubscriber(
                         " ",
                         this.template,
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfigGeneric(),
                         new GcpPubSubSubscriberConfig(),
                         new MetricsRegistry(new SimpleMeterRegistry()),
                         null,
@@ -111,20 +111,7 @@ class GcpPubSubPullSubscriberTest {
                 () -> new GcpPubSubPullSubscriber(
                         "test",
                         null,
-                        new ThreadPoolConfig(),
-                        new GcpPubSubSubscriberConfig(),
-                        new MetricsRegistry(new SimpleMeterRegistry()),
-                        null,
-                        false
-                )
-        );
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new GcpPubSubPullSubscriber(
-                        "test",
-                        this.template,
-                        null,
+                        new ThreadPoolConfigGeneric(),
                         new GcpPubSubSubscriberConfig(),
                         new MetricsRegistry(new SimpleMeterRegistry()),
                         null,
@@ -137,7 +124,20 @@ class GcpPubSubPullSubscriberTest {
                 () -> new GcpPubSubPullSubscriber(
                         "test",
                         this.template,
-                        new ThreadPoolConfig(),
+                        null,
+                        new GcpPubSubSubscriberConfig(),
+                        new MetricsRegistry(new SimpleMeterRegistry()),
+                        null,
+                        false
+                )
+        );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GcpPubSubPullSubscriber(
+                        "test",
+                        this.template,
+                        new ThreadPoolConfigGeneric(),
                         null,
                         new MetricsRegistry(new SimpleMeterRegistry()),
                         null,

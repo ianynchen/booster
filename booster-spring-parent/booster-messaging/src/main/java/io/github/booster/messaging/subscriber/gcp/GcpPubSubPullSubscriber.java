@@ -5,7 +5,7 @@ import com.google.cloud.spring.pubsub.core.subscriber.PubSubSubscriberTemplate;
 import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
 import com.google.pubsub.v1.PubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.GcpPubSubSubscriberConfig;
 import io.github.booster.messaging.config.GcpPubSubSubscriberSetting;
@@ -75,7 +75,7 @@ public class GcpPubSubPullSubscriber
     public GcpPubSubPullSubscriber(
         String name,
         PubSubSubscriberTemplate subscriberTemplate,
-        ThreadPoolConfig threadPoolConfig,
+        ThreadPoolConfigGeneric threadPoolConfig,
         GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
         MetricsRegistry registry,
         OpenTelemetryConfig openTelemetryConfig,

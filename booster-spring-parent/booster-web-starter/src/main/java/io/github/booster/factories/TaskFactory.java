@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.http.client.HttpClient;
 import io.github.booster.http.client.config.HttpClientConnectionConfig;
 import io.github.booster.http.client.request.HttpClientRequestContext;
@@ -28,7 +28,7 @@ public class TaskFactory {
 
     private static final Logger log = LoggerFactory.getLogger(TaskFactory.class);
 
-    private final ThreadPoolConfig threadPoolConfig;
+    private final ThreadPoolConfigGeneric threadPoolConfig;
 
     private final RetryConfig retryConfig;
 
@@ -43,7 +43,7 @@ public class TaskFactory {
     private final Map<String, Task> httpClientTasks = new HashMap<>();
 
     public TaskFactory(
-        ThreadPoolConfig threadPoolConfig,
+        ThreadPoolConfigGeneric threadPoolConfig,
         RetryConfig retryConfig,
         CircuitBreakerConfig circuitBreakerConfig,
         HttpClientFactory httpClientFactory,
@@ -94,9 +94,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 processor
@@ -130,9 +130,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 processor
@@ -156,7 +156,7 @@ public class TaskFactory {
     /**
      * Creates a {@link Task} with {@link HttpClient} inside as processor.
      * @param name  name of the http client. The name is used to search for
-     *              {@link RetryConfig}, {@link CircuitBreakerConfig}, and {@link ThreadPoolConfig}
+     *              {@link RetryConfig}, {@link CircuitBreakerConfig}, and {@link ThreadPoolConfigGeneric}
      * @param httpClient {@link HttpClient} wrapped inside the {@link Task}
      * @param exceptionHandler exception handler for input exceptions.
      * @return {@link Task} with {@link HttpClient} wrapped inside.
@@ -182,9 +182,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 function
@@ -195,7 +195,7 @@ public class TaskFactory {
      * Retries a {@link Task} with {@link HttpClient} inside as processor from cache, if not
      * available in cache, creates it.
      * @param name  name of the http client. The name is used to search for {@link HttpClientConnectionConfig}
-     *              {@link RetryConfig}, {@link CircuitBreakerConfig}, and {@link ThreadPoolConfig}
+     *              {@link RetryConfig}, {@link CircuitBreakerConfig}, and {@link ThreadPoolConfigGeneric}
      * @return {@link Task} with {@link HttpClient} wrapped inside.
      * @param <Request> type of request object
      * @param <Response> type of response object.
@@ -210,7 +210,7 @@ public class TaskFactory {
      * Retries a {@link Task} with {@link HttpClient} inside as processor from cache, if not
      * available in cache, creates it.
      * @param name  name of the http client. The name is used to search for {@link HttpClientConnectionConfig}
-     *              {@link RetryConfig}, {@link CircuitBreakerConfig}, and {@link ThreadPoolConfig}
+     *              {@link RetryConfig}, {@link CircuitBreakerConfig}, and {@link ThreadPoolConfigGeneric}
      * @param exceptionHandler input exception handler, if null, uses default one.
      * @return {@link Task} with {@link HttpClient} wrapped inside.
      * @param <Request> type of request object
@@ -240,7 +240,7 @@ public class TaskFactory {
     /**
      * Retrieves an asynchronous {@link Task}. If not present, attempts to
      * create it first.
-     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfig},
+     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfigGeneric},
      *             {@link RetryConfig} and {@link CircuitBreakerConfig}
      * @param processor asynchronous processor for the task.
      * @return {@link Task}
@@ -257,7 +257,7 @@ public class TaskFactory {
     /**
      * Retrieves an asynchronous {@link Task}. If not present, attempts to
      * create it first.
-     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfig},
+     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfigGeneric},
      *             {@link RetryConfig} and {@link CircuitBreakerConfig}
      * @param processor asynchronous processor for the task.
      * @param exceptionHandler input exception handler. if null, a default one is used.
@@ -286,7 +286,7 @@ public class TaskFactory {
     /**
      * Retrieves an synchronous {@link Task}. If not present, attempts to
      * create it first.
-     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfig},
+     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfigGeneric},
      *             {@link RetryConfig} and {@link CircuitBreakerConfig}
      * @param processor synchronous processor for the task.
      * @return {@link Task}
@@ -303,7 +303,7 @@ public class TaskFactory {
     /**
      * Retrieves an synchronous {@link Task}. If not present, attempts to
      * create it first.
-     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfig},
+     * @param name name of the task. The name is also used to look for {@link ThreadPoolConfigGeneric},
      *             {@link RetryConfig} and {@link CircuitBreakerConfig}
      * @param processor synchronous processor for the task.
      * @param exceptionHandler input exception handler. if null, a default one is used.

@@ -5,7 +5,7 @@ import arrow.core.Option;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.example.dto.CheckoutResult;
 import io.github.booster.example.dto.LineItem;
 import io.github.booster.example.dto.Order;
@@ -41,7 +41,7 @@ public class InventoryService {
 
     @Autowired
     public InventoryService(
-            ThreadPoolConfig threadPoolConfig,
+            ThreadPoolConfigGeneric threadPoolConfig,
             RetryConfig retryConfig,
             CircuitBreakerConfig circuitBreakerConfig,
             MeterRegistry registry
@@ -57,9 +57,9 @@ public class InventoryService {
                         Option.fromNullable(null)
                 ),
                 new TaskExecutionContext(
-                        threadPoolConfig.getOption(REFILL),
-                        retryConfig.getOption(REFILL),
-                        circuitBreakerConfig.getOption(REFILL),
+                        threadPoolConfig.tryGet(REFILL),
+                        retryConfig.tryGet(REFILL),
+                        circuitBreakerConfig.tryGet(REFILL),
                         new MetricsRegistry(registry)
                 ),
                 (order) -> {
@@ -76,9 +76,9 @@ public class InventoryService {
                         Option.fromNullable(null)
                 ),
                 new TaskExecutionContext(
-                        threadPoolConfig.getOption(CHECKOUT),
-                        retryConfig.getOption(CHECKOUT),
-                        circuitBreakerConfig.getOption(CHECKOUT),
+                        threadPoolConfig.tryGet(CHECKOUT),
+                        retryConfig.tryGet(CHECKOUT),
+                        circuitBreakerConfig.tryGet(CHECKOUT),
                         new MetricsRegistry(registry)
                 ),
                 (order) -> Mono.just(Option.fromNullable(this.checkInventory(order)))

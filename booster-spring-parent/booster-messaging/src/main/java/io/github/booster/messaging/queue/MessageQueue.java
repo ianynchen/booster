@@ -3,7 +3,7 @@ package io.github.booster.messaging.queue;
 import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +45,7 @@ public class MessageQueue<T> {
 
     public MessageQueue(
             String name,
-            ThreadPoolConfig threadPoolConfig,
+            ThreadPoolConfigGeneric threadPoolConfig,
             MetricsRegistry registry,
             int size
     ) {
@@ -61,7 +61,7 @@ public class MessageQueue<T> {
 
     public MessageQueue(
             String name,
-            ThreadPoolConfig threadPoolConfig,
+            ThreadPoolConfigGeneric threadPoolConfig,
             MetricsRegistry registry,
             BlockingQueue<T> queue
     ) {

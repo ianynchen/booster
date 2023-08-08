@@ -2,7 +2,7 @@ package io.github.booster.config.thread;
 
 import arrow.core.Option;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.commons.pool.NamedObjectPool;
+import io.github.booster.commons.pool.GenericKeyedObjectPool;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +21,9 @@ import java.util.concurrent.ExecutorService;
 /**
  * Spring Configuration for thread groups.
  */
-public class ThreadPoolConfig extends NamedObjectPool<ExecutorService> implements ApplicationContextAware {
+public class ThreadPoolConfigGeneric extends GenericKeyedObjectPool<ExecutorService> implements ApplicationContextAware {
 
-    private static final Logger log = LoggerFactory.getLogger(ThreadPoolConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(ThreadPoolConfigGeneric.class);
 
     private Map<String, ThreadPoolSetting> settings = new HashMap<>();
 

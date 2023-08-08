@@ -24,7 +24,7 @@ class ThreadPoolConfigTest {
 
     @Test
     void shouldCreatePool() {
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
         config.setMetricsRegistry(new MetricsRegistry(new SimpleMeterRegistry()));
         config.setSettings(Map.of("test", setting));
 
@@ -37,7 +37,7 @@ class ThreadPoolConfigTest {
 
     @Test
     void shouldNotBreak() {
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
         config.setSettings(null);
         assertThat(config.get("abc"), nullValue());
 
@@ -49,7 +49,7 @@ class ThreadPoolConfigTest {
         ThreadPoolSetting setting = new ThreadPoolSetting();
         setting.setCoreSize(12);
         setting.setMaxSize(2);
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
         config.setSettings(Map.of("test", setting));
         assertThat(config.get("test"), notNullValue());
 
@@ -58,7 +58,7 @@ class ThreadPoolConfigTest {
 
     @Test
     void shouldCreatePoolWithNoRegistry() {
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
         config.setMetricsRegistry(null);
         config.setSettings(Map.of("test", setting));
 

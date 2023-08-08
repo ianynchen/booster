@@ -13,7 +13,7 @@ import io.github.booster.commons.util.EitherUtil;
 import io.github.booster.config.BoosterConfig;
 import io.github.booster.config.example.BoosterSampleApplication;
 import io.github.booster.config.example.dto.GreetingResponse;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.http.client.HttpClient;
 import io.github.booster.http.client.config.HttpClientConnectionConfig;
@@ -57,7 +57,7 @@ class TaskFactoryTest {
     @Autowired
     private HttpClientConnectionConfig httpClientConnectionConfig;
 
-    private ThreadPoolConfig threadPoolConfig;
+    private ThreadPoolConfigGeneric threadPoolConfig;
 
     private RetryConfig retryConfig;
 
@@ -82,7 +82,7 @@ class TaskFactoryTest {
         setting.setBaseUrl("http://www.ibm.com");
         this.httpClientConnectionConfig.setSettings(Map.of("client", setting));
 
-        this.threadPoolConfig = new ThreadPoolConfig();
+        this.threadPoolConfig = new ThreadPoolConfigGeneric();
         this.threadPoolConfig.setSettings(
                 Map.of(
                         "async", new ThreadPoolSetting(),

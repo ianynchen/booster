@@ -1,7 +1,7 @@
 package io.github.booster.messaging.subscriber.kafka;
 
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.messaging.config.KafkaSubscriberConfig;
 import io.github.booster.messaging.config.KafkaSubscriberSetting;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 
 class KafkaSubscriberTest {
 
-    private ThreadPoolConfig config = new ThreadPoolConfig();
+    private ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
 
     private MetricsRegistry registry = new MetricsRegistry(new SimpleMeterRegistry());
 

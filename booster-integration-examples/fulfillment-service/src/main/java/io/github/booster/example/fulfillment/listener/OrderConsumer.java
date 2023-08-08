@@ -3,11 +3,10 @@ package io.github.booster.example.fulfillment.listener;
 import arrow.core.Option;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.spring.pubsub.core.PubSubTemplate;
-import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.messaging.config.GcpPubSubSubscriberConfig;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.processor.gcp.GcpPubSubProcessor;
@@ -42,7 +41,7 @@ public class OrderConsumer {
     public OrderConsumer(
             PubSubTemplate template,
             ObjectMapper mapper,
-            ThreadPoolConfig threadPoolConfig,
+            ThreadPoolConfigGeneric threadPoolConfig,
             CircuitBreakerConfig circuitBreakerConfig,
             RetryConfig retryConfig,
             GcpPubSubSubscriberConfig gcpPubSubscriberConfig,
@@ -69,9 +68,9 @@ public class OrderConsumer {
                                 Option.fromNullable(null)
                         ),
                         new TaskExecutionContext(
-                                threadPoolConfig.getOption(PROCESSOR),
-                                retryConfig.getOption(PROCESSOR),
-                                circuitBreakerConfig.getOption(PROCESSOR),
+                                threadPoolConfig.tryGet(PROCESSOR),
+                                retryConfig.tryGet(PROCESSOR),
+                                circuitBreakerConfig.tryGet(PROCESSOR),
                                 metricsRegistry
                         ),
                         (message) -> {

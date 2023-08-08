@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.factories.HttpClientFactory;
 import io.github.booster.factories.TaskFactory;
 import io.github.booster.http.client.config.CustomWebClientExchangeTagsProvider;
@@ -56,10 +56,10 @@ public class BoosterConfig implements ApplicationContextAware {
 
     @Bean
     @ConfigurationProperties(prefix = "booster.task.threads")
-    public ThreadPoolConfig threadPoolConfig(
+    public ThreadPoolConfigGeneric threadPoolConfig(
             @Autowired MetricsRegistry registry
     ) {
-        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
+        ThreadPoolConfigGeneric threadPoolConfig = new ThreadPoolConfigGeneric();
         threadPoolConfig.setMetricsRegistry(registry);
         return threadPoolConfig;
     }
@@ -98,7 +98,7 @@ public class BoosterConfig implements ApplicationContextAware {
 
     @Bean
     public TaskFactory TaskFactory(
-            @Autowired ThreadPoolConfig threadPoolConfig,
+            @Autowired ThreadPoolConfigGeneric threadPoolConfig,
             @Autowired RetryConfig retryConfig,
             @Autowired CircuitBreakerConfig circuitBreakerConfig,
             @Autowired HttpClientFactory httpClientFactory,

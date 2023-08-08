@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.util.EitherUtil;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.example.dto.CheckoutResult;
 import io.github.booster.example.dto.Order;
 import io.github.booster.example.dto.OrderResult;
@@ -43,7 +43,7 @@ public class OrderService {
         PubSubTemplate template,
         InventoryClient inventoryClient,
         GcpPubsubConfig gcpPubsubConfig,
-        ThreadPoolConfig threadPoolConfig,
+        ThreadPoolConfigGeneric threadPoolConfig,
         ObjectMapper mapper,
         MeterRegistry registry,
         OpenTelemetryConfig openTelemetryConfig

@@ -4,7 +4,7 @@ import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
 import io.github.booster.config.example.BoosterSampleApplication;
-import io.github.booster.config.thread.ThreadPoolConfig;
+import io.github.booster.config.thread.ThreadPoolConfigGeneric;
 import io.github.booster.factories.TaskFactory;
 import io.github.booster.http.client.config.HttpClientConnectionConfig;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -26,7 +26,7 @@ class BoosterConfigTest {
     private MetricsRegistry registry;
 
     @Autowired
-    private ThreadPoolConfig threadPoolConfig;
+    private ThreadPoolConfigGeneric threadPoolConfig;
 
     @Autowired
     private RetryConfig retryConfig;
