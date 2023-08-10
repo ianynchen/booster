@@ -5,7 +5,7 @@ import arrow.core.Option;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.example.dto.CheckoutResult;
 import io.github.booster.example.dto.LineItem;
 import io.github.booster.example.dto.Order;
@@ -41,7 +41,7 @@ public class InventoryService {
 
     @Autowired
     public InventoryService(
-            ThreadPoolConfigGeneric threadPoolConfig,
+            ThreadPoolConfig threadPoolConfig,
             RetryConfig retryConfig,
             CircuitBreakerConfig circuitBreakerConfig,
             MeterRegistry registry

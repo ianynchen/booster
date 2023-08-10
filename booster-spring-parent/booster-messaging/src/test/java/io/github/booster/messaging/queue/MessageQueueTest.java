@@ -2,7 +2,7 @@ package io.github.booster.messaging.queue;
 
 import arrow.core.Option;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
@@ -33,20 +33,20 @@ class MessageQueueTest {
     @Test
     void shouldFailCreate() {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
+        ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MessageQueue(null, new ThreadPoolConfigGeneric(), new MetricsRegistry(), 2)
+                () -> new MessageQueue(null, new ThreadPoolConfig(), new MetricsRegistry(), 2)
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MessageQueue("", new ThreadPoolConfigGeneric(), new MetricsRegistry(), 2)
+                () -> new MessageQueue("", new ThreadPoolConfig(), new MetricsRegistry(), 2)
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MessageQueue(" ", new ThreadPoolConfigGeneric(), new MetricsRegistry(), 2)
+                () -> new MessageQueue(" ", new ThreadPoolConfig(), new MetricsRegistry(), 2)
         );
         assertThrows(
                 IllegalArgumentException.class,
@@ -91,11 +91,11 @@ class MessageQueueTest {
     @Test
     void shouldCreate() {
         assertThat(
-                new MessageQueue<Integer>("abc", new ThreadPoolConfigGeneric(), new MetricsRegistry(), 2),
+                new MessageQueue<Integer>("abc", new ThreadPoolConfig(), new MetricsRegistry(), 2),
                 notNullValue()
         );
         assertThat(
-                new MessageQueue<Integer>("abc", new ThreadPoolConfigGeneric(), null, 2),
+                new MessageQueue<Integer>("abc", new ThreadPoolConfig(), null, 2),
                 notNullValue()
         );
     }
@@ -121,7 +121,7 @@ class MessageQueueTest {
     @Test
     void shouldExecute() {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
+        ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
         MessageQueue<Integer> queue = new MessageQueue<>(
                 "test",
@@ -135,7 +135,7 @@ class MessageQueueTest {
 
     @Test
     void shouldExecuteWithoutThreadPool() {
-        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
+        ThreadPoolConfig config = new ThreadPoolConfig();
         MessageQueue<Integer> queue = new MessageQueue<>(
                 "test",
                 config,
@@ -149,7 +149,7 @@ class MessageQueueTest {
     @Test
     void shouldExecuteAndHandleTakeError() throws InterruptedException {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
+        ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
 
         BlockingQueue<Integer> blockingQueue = createMockQueue();
@@ -188,7 +188,7 @@ class MessageQueueTest {
     @Test
     void shouldHandlePutError() throws InterruptedException {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfigGeneric config = new ThreadPoolConfigGeneric();
+        ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
 
         BlockingQueue<Integer> blockingQueue = createExceptionQueue();

@@ -3,7 +3,7 @@ package io.github.booster.messaging.subscriber.kafka;
 import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.KafkaSubscriberConfig;
 import io.github.booster.messaging.queue.MessageQueue;
@@ -32,13 +32,13 @@ public class KafkaSubscriber<T> implements SubscriberFlow<SubscriberRecord<T>> {
     /**
      * Constructs a subscriber
      * @param name name of subscriber. the name is also used to get thread pool to be used for message queue.
-     * @param threadPoolConfig {@link ThreadPoolConfigGeneric} to get the thread pool from.
+     * @param threadPoolConfig {@link ThreadPoolConfig} to get the thread pool from.
      * @param kafkaSubscriberConfig {@link KafkaSubscriberConfig} that defines message queue capacity.
      * @param registry to record metrics.
      */
     public KafkaSubscriber(
             String name,
-            ThreadPoolConfigGeneric threadPoolConfig,
+            ThreadPoolConfig threadPoolConfig,
             KafkaSubscriberConfig kafkaSubscriberConfig,
             MetricsRegistry registry
     ) {

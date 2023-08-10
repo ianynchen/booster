@@ -1,9 +1,9 @@
 package io.github.booster.commons.circuit.breaker
 
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.commons.pool.GenericKeyedObjectPool
-import io.github.booster.commons.pool.KeyedObjectPool
-import io.github.booster.commons.pool.KeyedPoolObjectFactory
+import io.github.booster.commons.cache.GenericKeyedObjectCache
+import io.github.booster.commons.cache.KeyedObjectCache
+import io.github.booster.commons.cache.KeyedCacheObjectFactory
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.slf4j.LoggerFactory
 
@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory
  * if name is the same to avoid creating duplicate circuit breakers.
  */
 class CircuitBreakerConfig @JvmOverloads constructor(settings: Map<String, CircuitBreakerSetting>? = null) :
-    KeyedPoolObjectFactory<String, CircuitBreaker>, KeyedObjectPool<String, CircuitBreaker> {
+    KeyedCacheObjectFactory<String, CircuitBreaker>, KeyedObjectCache<String, CircuitBreaker> {
 
     private var settings: Map<String, CircuitBreakerSetting> = mapOf()
     private var registry: MetricsRegistry? = null
-    private lateinit var pool: KeyedObjectPool<String, CircuitBreaker>
+    private lateinit var pool: KeyedObjectCache<String, CircuitBreaker>
 
     /**
      * Constructor with default settings.
@@ -42,7 +42,7 @@ class CircuitBreakerConfig @JvmOverloads constructor(settings: Map<String, Circu
      */
     fun setSettings(settings: Map<String, CircuitBreakerSetting>?) {
         this.settings = settings ?: mapOf()
-        this.pool = GenericKeyedObjectPool(this)
+        this.pool = GenericKeyedObjectCache(this)
     }
 
     /**
@@ -58,4 +58,5 @@ class CircuitBreakerConfig @JvmOverloads constructor(settings: Map<String, Circu
     }
 
     override fun get(key: String): CircuitBreaker? = this.pool[key]
+    override fun getKeys(): Set<String> = this.pool.getKeys()
 }

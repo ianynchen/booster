@@ -5,18 +5,13 @@ import arrow.core.Option.Companion.fromNullable
 import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.commons.pool.KeyedPoolObjectFactory
 import io.github.resilience4j.core.IntervalFunction
 import io.github.resilience4j.micrometer.tagged.TaggedRetryMetrics
 import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
-import lombok.AllArgsConstructor
-import lombok.Builder
-import lombok.NoArgsConstructor
 import lombok.ToString
-import org.apache.commons.lang3.StringUtils
 import java.time.Duration
 
 /**

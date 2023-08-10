@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.factories.HttpClientFactory;
 import io.github.booster.factories.TaskFactory;
@@ -71,7 +71,7 @@ public interface SqsUtil {
                 awsSqsConfig,
                 new OpenTelemetryConfig(null, serviceName),
                 new TaskFactory(
-                        new ThreadPoolConfigGeneric(),
+                        new ThreadPoolConfig(),
                         new RetryConfig(),
                         new CircuitBreakerConfig(),
                         new HttpClientFactory(
@@ -91,7 +91,7 @@ public interface SqsUtil {
             String name,
             AwsSqsConfig awsSqsConfig
     ) {
-        ThreadPoolConfigGeneric threadPoolConfig = new ThreadPoolConfigGeneric();
+        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
         threadPoolConfig.setSettings(Map.of(name, new ThreadPoolSetting()));
         return new AwsSqsSubscriber(
                 name,

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.factories.HttpClientFactory;
 import io.github.booster.factories.TaskFactory;
 import io.github.booster.http.client.config.HttpClientConnectionConfig;
@@ -94,7 +94,7 @@ class AwsSqsPublisherTest {
                         awsSqsConfig,
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -117,7 +117,7 @@ class AwsSqsPublisherTest {
                         awsSqsConfig,
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -140,7 +140,7 @@ class AwsSqsPublisherTest {
                         awsSqsConfig,
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -163,7 +163,7 @@ class AwsSqsPublisherTest {
                         null,
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -186,7 +186,7 @@ class AwsSqsPublisherTest {
                         new AwsSqsConfig(),
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -222,7 +222,7 @@ class AwsSqsPublisherTest {
                         awsSqsConfig,
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -256,7 +256,7 @@ class AwsSqsPublisherTest {
                         awsSqsConfig,
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -279,7 +279,7 @@ class AwsSqsPublisherTest {
                         awsSqsConfig,
                         null,
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(
@@ -302,7 +302,7 @@ class AwsSqsPublisherTest {
                         awsSqsConfig,
                         new OpenTelemetryConfig(null, "test"),
                         new TaskFactory(
-                                new ThreadPoolConfigGeneric(),
+                                new ThreadPoolConfig(),
                                 new RetryConfig(),
                                 new CircuitBreakerConfig(),
                                 new HttpClientFactory(

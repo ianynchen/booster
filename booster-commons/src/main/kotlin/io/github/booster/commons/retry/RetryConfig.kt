@@ -1,9 +1,9 @@
 package io.github.booster.commons.retry
 
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.commons.pool.GenericKeyedObjectPool
-import io.github.booster.commons.pool.KeyedObjectPool
-import io.github.booster.commons.pool.KeyedPoolObjectFactory
+import io.github.booster.commons.cache.GenericKeyedObjectCache
+import io.github.booster.commons.cache.KeyedObjectCache
+import io.github.booster.commons.cache.KeyedCacheObjectFactory
 import io.github.resilience4j.retry.Retry
 import org.slf4j.LoggerFactory
 
@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory
  * Provides a central repository for [Retry] management.
  */
 class RetryConfig @JvmOverloads constructor(settings: Map<String, RetrySetting>? = null) :
-    KeyedPoolObjectFactory<String, Retry>, KeyedObjectPool<String, Retry> {
+    KeyedCacheObjectFactory<String, Retry>, KeyedObjectCache<String, Retry> {
 
     private var settings: Map<String, RetrySetting>
 
     private var registry: MetricsRegistry? = null
 
-    private var pool: GenericKeyedObjectPool<String, Retry>
+    private var pool: GenericKeyedObjectCache<String, Retry>
 
     /**
      * Constructor with default retry settings.
@@ -25,7 +25,7 @@ class RetryConfig @JvmOverloads constructor(settings: Map<String, RetrySetting>?
      */
     init {
         this.settings = settings ?: HashMap()
-        this.pool = GenericKeyedObjectPool(this)
+        this.pool = GenericKeyedObjectCache(this)
     }
 
     override fun create(key: String): Retry? {
@@ -39,7 +39,7 @@ class RetryConfig @JvmOverloads constructor(settings: Map<String, RetrySetting>?
 
     fun setSettings(settings: Map<String, RetrySetting>?) {
         this.settings = settings ?: HashMap()
-        this.pool = GenericKeyedObjectPool(this)
+        this.pool = GenericKeyedObjectCache(this)
     }
 
     fun setMetricsRegistry(registry: MetricsRegistry?) {
@@ -49,4 +49,6 @@ class RetryConfig @JvmOverloads constructor(settings: Map<String, RetrySetting>?
     companion object {
         private val log = LoggerFactory.getLogger(RetryConfig::class.java)
     }
+
+    override fun getKeys(): Set<String> = this.pool.getKeys()
 }

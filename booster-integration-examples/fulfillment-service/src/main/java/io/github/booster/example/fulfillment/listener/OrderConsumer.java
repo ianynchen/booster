@@ -6,7 +6,7 @@ import com.google.cloud.spring.pubsub.core.PubSubTemplate;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.messaging.config.GcpPubSubSubscriberConfig;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.processor.gcp.GcpPubSubProcessor;
@@ -41,7 +41,7 @@ public class OrderConsumer {
     public OrderConsumer(
             PubSubTemplate template,
             ObjectMapper mapper,
-            ThreadPoolConfigGeneric threadPoolConfig,
+            ThreadPoolConfig threadPoolConfig,
             CircuitBreakerConfig circuitBreakerConfig,
             RetryConfig retryConfig,
             GcpPubSubSubscriberConfig gcpPubSubscriberConfig,

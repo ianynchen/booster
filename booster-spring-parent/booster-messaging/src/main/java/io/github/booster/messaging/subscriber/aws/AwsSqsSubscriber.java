@@ -2,7 +2,7 @@ package io.github.booster.messaging.subscriber.aws;
 
 import com.google.api.client.util.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.AwsSqsConfig;
 import io.github.booster.messaging.config.AwsSqsSetting;
@@ -68,7 +68,7 @@ public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscribe
     public AwsSqsSubscriber(
             String name,
             AwsSqsConfig awsSqsConfig,
-            ThreadPoolConfigGeneric threadPoolConfig,
+            ThreadPoolConfig threadPoolConfig,
             MetricsRegistry registry,
             OpenTelemetryConfig openTelemetryConfig,
             boolean manuallyInjectTrace

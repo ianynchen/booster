@@ -5,7 +5,7 @@ import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.util.EitherUtil;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.publisher.PublisherRecord;
@@ -68,12 +68,12 @@ public class ReactiveKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @param registry to record metrics
      */
     public ReactiveKafkaPublisher(
-        String name,
-        KafkaSender<String, T> kafkaSender,
-        ThreadPoolConfigGeneric threadPoolConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            KafkaSender<String, T> kafkaSender,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
         Preconditions.checkArgument(kafkaSender != null, "kafka sender cannot be null");

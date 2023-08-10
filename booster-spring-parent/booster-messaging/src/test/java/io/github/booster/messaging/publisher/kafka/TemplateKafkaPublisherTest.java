@@ -1,7 +1,7 @@
 package io.github.booster.messaging.publisher.kafka;
 
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.messaging.Greeting;
 import io.github.booster.messaging.publisher.PublisherRecord;
@@ -31,13 +31,13 @@ class TemplateKafkaPublisherTest {
 
     private KafkaTemplate<String, Greeting> template;
     
-    private ThreadPoolConfigGeneric threadPoolConfig;
+    private ThreadPoolConfig threadPoolConfig;
 
     @BeforeEach
     void setup() {
         this.template = mock(KafkaTemplate.class);
 
-        this.threadPoolConfig = new ThreadPoolConfigGeneric();
+        this.threadPoolConfig = new ThreadPoolConfig();
         this.threadPoolConfig.setSettings(
                 Map.of("test", new ThreadPoolSetting())
         );

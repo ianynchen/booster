@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.example.dto.CheckoutResult;
 import io.github.booster.example.order.component.InventoryClient;
@@ -61,7 +61,7 @@ class MockApplicationTest {
 
     @BeforeEach
     void setup() {
-        ThreadPoolConfigGeneric threadPoolConfig = new ThreadPoolConfigGeneric();
+        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
         ThreadPoolSetting threadPoolSetting = new ThreadPoolSetting();
         threadPoolSetting.setCoreSize(10);
         threadPoolSetting.setMaxSize(10);

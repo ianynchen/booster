@@ -5,7 +5,7 @@ import com.google.cloud.spring.pubsub.core.subscriber.PubSubSubscriberTemplate;
 import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
 import com.google.pubsub.v1.PubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.GcpPubSubSubscriberConfig;
 import io.github.booster.messaging.config.GcpPubSubSubscriberSetting;
@@ -73,13 +73,13 @@ public class GcpPubSubPullSubscriber
     private final boolean manuallyInjectTrace;
 
     public GcpPubSubPullSubscriber(
-        String name,
-        PubSubSubscriberTemplate subscriberTemplate,
-        ThreadPoolConfigGeneric threadPoolConfig,
-        GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            PubSubSubscriberTemplate subscriberTemplate,
+            ThreadPoolConfig threadPoolConfig,
+            GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
         Preconditions.checkArgument(subscriberTemplate != null, "subscriber template cannot be null");

@@ -7,7 +7,7 @@ import com.google.cloud.spring.pubsub.support.converter.JacksonPubSubMessageConv
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.pubsub.v1.PubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.config.thread.ThreadPoolSetting;
 import io.github.booster.messaging.Greeting;
 import io.github.booster.messaging.publisher.PublisherRecord;
@@ -50,7 +50,7 @@ class GcpPubSubPublisherTest {
 
     private PubSubPublisherTemplate publisherTemplate;
 
-    private ThreadPoolConfigGeneric threadPoolConfig;
+    private ThreadPoolConfig threadPoolConfig;
 
     @BeforeEach
     void setup() {
@@ -58,7 +58,7 @@ class GcpPubSubPublisherTest {
         when(this.publisherTemplate.getMessageConverter())
                 .thenReturn(new JacksonPubSubMessageConverter(new ObjectMapper()));
 
-        this.threadPoolConfig = new ThreadPoolConfigGeneric();
+        this.threadPoolConfig = new ThreadPoolConfig();
         this.threadPoolConfig.setSettings(
                 Map.of("test", new ThreadPoolSetting())
         );

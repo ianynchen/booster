@@ -7,7 +7,7 @@ import com.google.cloud.spring.pubsub.core.publisher.PubSubPublisherTemplate;
 import com.google.pubsub.v1.PubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.util.EitherUtil;
-import io.github.booster.config.thread.ThreadPoolConfigGeneric;
+import io.github.booster.config.thread.ThreadPoolConfig;
 import io.github.booster.messaging.MessagingMetricsConstants;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.publisher.PublisherRecord;
@@ -65,19 +65,19 @@ public class GcpPubSubPublisher<T> implements MessagePublisher<PubsubRecord<T>> 
     /**
      * Constructs a GCP pub/sub subscriber. Name
      * of the subscriber is also used to retrieve thread pools from
-     * {@link ThreadPoolConfigGeneric} to run {@link PubSubPublisherTemplate#publish(String, PubsubMessage)} on.
+     * {@link ThreadPoolConfig} to run {@link PubSubPublisherTemplate#publish(String, PubsubMessage)} on.
      * @param name name of subscriber and name of thread pool to use
      * @param template {@link PubSubPublisherTemplate} to publish
-     * @param threadPoolConfig {@link ThreadPoolConfigGeneric} to create threads to run publish on.
+     * @param threadPoolConfig {@link ThreadPoolConfig} to create threads to run publish on.
      * @param registry to record metrics.
      */
     public GcpPubSubPublisher(
-        String name,
-        PubSubPublisherTemplate template,
-        ThreadPoolConfigGeneric threadPoolConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            PubSubPublisherTemplate template,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(template != null, "PubSubPublisherTemplate cannot be null");
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
