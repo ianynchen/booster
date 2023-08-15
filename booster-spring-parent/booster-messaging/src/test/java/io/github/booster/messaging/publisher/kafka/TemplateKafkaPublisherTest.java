@@ -37,9 +37,9 @@ class TemplateKafkaPublisherTest {
     void setup() {
         this.template = mock(KafkaTemplate.class);
 
-        this.threadPoolConfig = new ThreadPoolConfig();
+        this.threadPoolConfig = new ThreadPoolConfig(null, null);
         this.threadPoolConfig.setSettings(
-                Map.of("test", new ThreadPoolSetting(null, null, null, null))
+                Map.of("test", new ThreadPoolSetting())
         );
     }
 

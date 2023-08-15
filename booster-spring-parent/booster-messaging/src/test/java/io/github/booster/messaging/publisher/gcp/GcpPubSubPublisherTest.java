@@ -58,9 +58,9 @@ class GcpPubSubPublisherTest {
         when(this.publisherTemplate.getMessageConverter())
                 .thenReturn(new JacksonPubSubMessageConverter(new ObjectMapper()));
 
-        this.threadPoolConfig = new ThreadPoolConfig();
+        this.threadPoolConfig = new ThreadPoolConfig(null, null);
         this.threadPoolConfig.setSettings(
-                Map.of("test", new ThreadPoolSetting(null, null, null, null))
+                Map.of("test", new ThreadPoolSetting())
         );
     }
 

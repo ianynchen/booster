@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 
 class KafkaSubscriberTest {
 
-    private ThreadPoolConfig config = new ThreadPoolConfig();
+    private ThreadPoolConfig config = new ThreadPoolConfig(null, null);
 
     private MetricsRegistry registry = new MetricsRegistry(new SimpleMeterRegistry());
 
@@ -31,7 +31,8 @@ class KafkaSubscriberTest {
 
     @BeforeEach
     private void setup() {
-        ThreadPoolSetting setting = new ThreadPoolSetting(2, null, null, null);
+        ThreadPoolSetting setting = new ThreadPoolSetting();
+        setting.setMaxSize(2);
         this.config.setSettings(Map.of("test", setting));
         this.kafkaSubscriberConfig.setSettings(Map.of("test", new KafkaSubscriberSetting()));
     }
@@ -96,7 +97,7 @@ class KafkaSubscriberTest {
                         this.registry
                 )
         );
-        this.config.setSettings(Map.of("abc", new ThreadPoolSetting(null, null, null, null)));
+        this.config.setSettings(Map.of("abc", new ThreadPoolSetting()));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new KafkaSubscriber<>(
@@ -107,7 +108,7 @@ class KafkaSubscriberTest {
                 )
         );
 
-        this.config.setSettings(Map.of("test", new ThreadPoolSetting(null, null, null, null)));
+        this.config.setSettings(Map.of("test", new ThreadPoolSetting()));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new KafkaSubscriber<>(

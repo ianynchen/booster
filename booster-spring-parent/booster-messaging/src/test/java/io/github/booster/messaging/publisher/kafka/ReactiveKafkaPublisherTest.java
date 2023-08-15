@@ -37,9 +37,9 @@ class ReactiveKafkaPublisherTest {
     void setup() {
         this.sender = mock(KafkaSender.class);
 
-        this.threadPoolConfig = new ThreadPoolConfig();
+        this.threadPoolConfig = new ThreadPoolConfig(null, null);
         this.threadPoolConfig.setSettings(
-                Map.of("test", new ThreadPoolSetting(null, null, null, null))
+                Map.of("test", new ThreadPoolSetting())
         );
     }
 

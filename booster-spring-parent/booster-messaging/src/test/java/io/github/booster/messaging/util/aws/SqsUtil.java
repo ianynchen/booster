@@ -71,7 +71,7 @@ public interface SqsUtil {
                 awsSqsConfig,
                 new OpenTelemetryConfig(null, serviceName),
                 new TaskFactory(
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfig(null, null),
                         new RetryConfig(),
                         new CircuitBreakerConfig(),
                         new HttpClientFactory(
@@ -91,8 +91,8 @@ public interface SqsUtil {
             String name,
             AwsSqsConfig awsSqsConfig
     ) {
-        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
-        threadPoolConfig.setSettings(Map.of(name, new ThreadPoolSetting(null, null, null, null)));
+        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig(null, null);
+        threadPoolConfig.setSettings(Map.of(name, new ThreadPoolSetting()));
         return new AwsSqsSubscriber(
                 name,
                 awsSqsConfig,

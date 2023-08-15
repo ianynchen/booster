@@ -6,28 +6,29 @@ booster:
     threads:
       settings:
         test:
-          coreSize: 50
-          maxSize: 200
+          coreSize: 20
+          maxSize: 50
           queueSize: 1000
+          prefix: test-pl-
     circuit-breakers:
       settings:
         test:
-          failureRateThreshold: 40
-          slowCallRateThreshold: 15
-          slowCallDurationThreshold: 20000
+          failureRateThreshold: 60
+          slowCallRateThreshold: 70
+          slowCallDurationThreshold: 30000
           permittedNumberOfCallsInHalfOpenState: 15
-          maxWaitDurationInHalfOpenState: 15
-          slidingWindowType: TIME_BASED
-          slidingWindowSize: 20
-          minimumNumberOfCalls: 10
-          waitDurationInOpenState: 10000
+          maxWaitDurationInHalfOpenState: 10
+          slidingWindowSize: 200
+          minimumNumberOfCalls: 30
+          waitDurationInOpenState: 20000
           automaticTransitionFromOpenToHalfOpenEnabled: true
+          slidingWindowType: TIME_BASED
     retries:
       settings:
         test:
-          backOffPolicy: EXPONENTIAL
+          initialBackOffMillis: 1000
           maxAttempts: 5
-          initialBackOffMillis: 20
+          backOffPolicy: EXPONENTIAL
   http:
     clients:
       connections:
@@ -44,3 +45,7 @@ booster:
             sslHandshakeTimeoutMillis: 1000
             maxInMemorySizeMB: 1000
             responseTimeoutInMillis: 1000
+            pool:
+              maxConnections: 200
+              maxIdleTimeMillis: 10000
+              maxLifeTimeMillis: 10000
