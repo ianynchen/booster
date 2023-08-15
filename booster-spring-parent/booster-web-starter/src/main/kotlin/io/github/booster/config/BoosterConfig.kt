@@ -29,6 +29,7 @@ import org.springframework.web.reactive.function.client.WebClient
  */
 @Configuration
 class BoosterConfig : ApplicationContextAware {
+
     private var applicationContext: ApplicationContext? = null
 
     /**
@@ -49,23 +50,24 @@ class BoosterConfig : ApplicationContextAware {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.threads")
+    @ConfigurationProperties(prefix = "booster.tasks.threads")
     fun threadPoolConfig(
         @Autowired registry: MetricsRegistry
     ): ThreadPoolConfig {
-        val threadPoolConfig = ThreadPoolConfig()
-        threadPoolConfig.setMetricsRegistry(registry)
-        return threadPoolConfig
+        return ThreadPoolConfig(
+            applicationContext,
+            registry
+        )
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.circuit-breaker")
+    @ConfigurationProperties(prefix = "booster.tasks.circuit-breakers")
     fun circuitBreakerConfig(): CircuitBreakerConfig {
         return CircuitBreakerConfig()
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.http.client.connection")
+    @ConfigurationProperties(prefix = "booster.http.clients.connections")
     fun httpClientConnectionConfig(): HttpClientConnectionConfig {
         return HttpClientConnectionConfig(applicationContext)
     }
@@ -76,7 +78,7 @@ class BoosterConfig : ApplicationContextAware {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.retry")
+    @ConfigurationProperties(prefix = "booster.tasks.retries")
     fun retryConfig(): RetryConfig {
         return RetryConfig()
     }

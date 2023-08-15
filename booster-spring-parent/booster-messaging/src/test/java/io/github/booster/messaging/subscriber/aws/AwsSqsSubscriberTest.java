@@ -284,7 +284,7 @@ class AwsSqsSubscriberTest {
         when(mockSetting.getReceiverSetting()).thenReturn(new AwsSqsSetting.ReceiverSetting());
 
         ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
-        threadPoolConfig.setSettings(Map.of("test", new ThreadPoolSetting()));
+        threadPoolConfig.setSettings(Map.of("test", new ThreadPoolSetting(null, null, null, null)));
         AwsSqsSubscriber subscriber = new AwsSqsSubscriber(
                 "test",
                 mockConfig,

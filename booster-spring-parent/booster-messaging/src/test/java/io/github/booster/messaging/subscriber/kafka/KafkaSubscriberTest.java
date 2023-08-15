@@ -31,8 +31,7 @@ class KafkaSubscriberTest {
 
     @BeforeEach
     private void setup() {
-        ThreadPoolSetting setting = new ThreadPoolSetting();
-        setting.setCoreSize(2);
+        ThreadPoolSetting setting = new ThreadPoolSetting(2, null, null, null);
         this.config.setSettings(Map.of("test", setting));
         this.kafkaSubscriberConfig.setSettings(Map.of("test", new KafkaSubscriberSetting()));
     }
@@ -97,7 +96,7 @@ class KafkaSubscriberTest {
                         this.registry
                 )
         );
-        this.config.setSettings(Map.of("abc", new ThreadPoolSetting()));
+        this.config.setSettings(Map.of("abc", new ThreadPoolSetting(null, null, null, null)));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new KafkaSubscriber<>(
@@ -108,7 +107,7 @@ class KafkaSubscriberTest {
                 )
         );
 
-        this.config.setSettings(Map.of("test", new ThreadPoolSetting()));
+        this.config.setSettings(Map.of("test", new ThreadPoolSetting(null, null, null, null)));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new KafkaSubscriber<>(

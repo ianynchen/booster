@@ -51,10 +51,10 @@ class HttpClientImplTest {
         setting.setBaseUrl("http://127.0.0.1:" + this.port + "/v1/hello");
         setting.setConnectionTimeoutMillis(1000);
         setting.setMaxInMemorySizeMB(1000);
-        setting.setReadTimeoutMillis(1000);
+        setting.setReadTimeoutMillis(5000);
         setting.setUseSSL(false);
         setting.setResponseTimeoutInMillis(1000L);
-        setting.setWriteTimeoutMillis(1000);
+        setting.setWriteTimeoutMillis(5000);
 
         HttpClientConnectionSetting.ConnectionPoolSetting poolSetting = new HttpClientConnectionSetting.ConnectionPoolSetting();
         poolSetting.setMaxConnections(1000);

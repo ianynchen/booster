@@ -7,6 +7,7 @@ import io.github.booster.commons.cache.GenericKeyedObjectCache
 import io.github.booster.commons.cache.KeyedCacheObjectFactory
 import io.github.booster.commons.cache.KeyedObjectCache
 import io.github.booster.commons.metrics.MetricsRegistry
+import io.micrometer.core.instrument.MeterRegistry
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.sleuth.instrument.async.LazyTraceThreadPoolTaskExecutor
@@ -18,18 +19,24 @@ import java.util.concurrent.ExecutorService
 /**
  * Spring Configuration for thread groups.
  */
-class ThreadPoolConfig :
+class ThreadPoolConfig(
+    applicationContext: ApplicationContext?,
+    registry: MetricsRegistry?
+) :
     KeyedCacheObjectFactory<String, ExecutorService>,
-    KeyedObjectCache<String, ExecutorService>,
-    ApplicationContextAware {
+    KeyedObjectCache<String, ExecutorService> {
 
-    private var settings: Map<String, ThreadPoolSetting> = mapOf()
-    private var registry: Option<MetricsRegistry> = fromNullable(null)
-    private var applicationContext: Option<ApplicationContext> = fromNullable(null)
+    private var settings: Map<String, ThreadPoolSetting>
     private var pool: KeyedObjectCache<String, ExecutorService>
+
+    private val registry: Option<MetricsRegistry>
+    private val applicationContext: Option<ApplicationContext>
 
     init {
         this.pool = GenericKeyedObjectCache(this)
+        this.applicationContext = fromNullable(applicationContext)
+        this.registry = fromNullable(registry)
+        this.settings = mapOf()
     }
 
     /**
@@ -40,6 +47,12 @@ class ThreadPoolConfig :
         this.settings = settings ?: mapOf()
         this.pool = GenericKeyedObjectCache(this)
     }
+
+    /**
+     * Gets all settings
+     * @return map of setting name and settings.
+     */
+    fun getSettings() = this.settings
 
     /**
      * Retrieves original setting.
@@ -58,14 +71,6 @@ class ThreadPoolConfig :
             val threadPool = this.pool[key]!!
             threadPool.shutdown()
         }
-    }
-
-    fun setMetricsRegistry(registry: MetricsRegistry?) {
-        this.registry = fromNullable(registry)
-    }
-
-    override fun setApplicationContext(applicationContext: ApplicationContext) {
-        this.applicationContext = fromNullable(applicationContext)
     }
 
     companion object {

@@ -17,10 +17,14 @@ import io.github.booster.http.client.config.HttpClientConnectionSetting;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.test.StepVerifier;
 
@@ -43,6 +47,9 @@ import static org.hamcrest.Matchers.notNullValue;
                 "booster.http.client.connection.settings.inventory.baseUrl=http://localhost:8082"
         }
 )
+@ExtendWith(SpringExtension.class)
+@EnableConfigurationProperties
+@TestPropertySource("classpath:application.yml")
 class MockApplicationTest {
 
     @LocalServerPort
@@ -62,9 +69,7 @@ class MockApplicationTest {
     @BeforeEach
     void setup() {
         ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
-        ThreadPoolSetting threadPoolSetting = new ThreadPoolSetting();
-        threadPoolSetting.setCoreSize(10);
-        threadPoolSetting.setMaxSize(10);
+        ThreadPoolSetting threadPoolSetting = new ThreadPoolSetting(10, 10, null, null);
         threadPoolConfig.setSettings(Map.of("inventory", threadPoolSetting));
 
         HttpClientConnectionConfig httpClientConnectionConfig = new HttpClientConnectionConfig(this.applicationContext);
@@ -114,7 +119,7 @@ class MockApplicationTest {
         StepVerifier.create(this.inventoryClient.invoke(TestData.createBadOrder()))
                 .consumeNextWith(either -> {
                     assertThat(either, instanceOf(Either.Right.class));
-                    CheckoutResult result = either.orNull();
+                    CheckoutResult result = either.getOrNull();
                     assertThat(result, notNullValue());
                     assertThat(result.getItems(), hasSize(2));
 

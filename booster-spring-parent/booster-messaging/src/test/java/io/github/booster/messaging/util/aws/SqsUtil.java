@@ -92,7 +92,7 @@ public interface SqsUtil {
             AwsSqsConfig awsSqsConfig
     ) {
         ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
-        threadPoolConfig.setSettings(Map.of(name, new ThreadPoolSetting()));
+        threadPoolConfig.setSettings(Map.of(name, new ThreadPoolSetting(null, null, null, null)));
         return new AwsSqsSubscriber(
                 name,
                 awsSqsConfig,

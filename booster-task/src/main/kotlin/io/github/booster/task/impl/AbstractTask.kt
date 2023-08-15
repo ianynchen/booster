@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
 import io.github.booster.task.Maybe
 import io.github.booster.task.EmptyRequestHandler
+import io.github.booster.task.ExecutionType
 import io.github.booster.task.RequestExceptionHandler
 import io.github.booster.task.Task
 import io.github.booster.task.TaskExecutionContext
@@ -127,15 +128,25 @@ abstract class AbstractTask<Request, Response>(
     override fun execute(request: Mono<Maybe<Request>>): Mono<Maybe<Response>> {
         val sampleOption: Option<Timer.Sample> = this.taskExecutionContext.registry.startSample()
 
-        // To execute on thread provided, or calling thread.
-        return this.scheduler.map {
-            log.debug("booster-task - task[{}] using thread pool", name)
-            request.publishOn(it)
-        }.getOrElse {
-            log.debug("booster-task - task[{}] using calling thread", name)
-            request
-        }.flatMap {
-            this.executeInternal(it)
+        return if (this.taskExecutionContext.executionType == ExecutionType.PUBLISH_ON) {
+            // To execute on thread provided, or calling thread.
+            this.scheduler.map {
+                log.debug("booster-task - task[{}] using thread pool", name)
+                request.publishOn(it)
+            }.getOrElse {
+                log.debug("booster-task - task[{}] using calling thread", name)
+                request
+            }.flatMap {
+                this.executeInternal(it)
+            }
+        } else {
+            this.scheduler.map {
+                request.flatMap { req -> this.executeInternal(req) }.subscribeOn(it)
+            }.getOrElse {
+                request.flatMap {
+                    this.executeInternal(it)
+                }
+            }
         }.convertAndRecord(log, this.taskExecutionContext.registry, sampleOption, name)
     }
 

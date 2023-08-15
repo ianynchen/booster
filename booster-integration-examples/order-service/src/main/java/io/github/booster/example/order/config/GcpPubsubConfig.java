@@ -18,8 +18,8 @@ import com.google.cloud.spring.pubsub.support.DefaultPublisherFactory;
 import com.google.cloud.spring.pubsub.support.DefaultSubscriberFactory;
 import com.google.cloud.spring.pubsub.support.PublisherFactory;
 import com.google.cloud.spring.pubsub.support.SubscriberFactory;
-import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.SubscriptionName;
 import com.google.pubsub.v1.TopicName;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -97,9 +97,15 @@ public class GcpPubsubConfig {
                 .setTransportChannelProvider(channelProvider)
                 .setCredentialsProvider(credentialsProvider)
                 .build();
-        SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(subscriptionAdminSettings);
-        ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(this.projectId, subscriptionId);
-        subscriptionAdminClient.createSubscription(subscriptionName, TopicName.of(this.projectId, topicId), PushConfig.getDefaultInstance(), 10);
+        try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(subscriptionAdminSettings)) {
+            SubscriptionName subscriptionName = SubscriptionName.of(this.projectId, subscriptionId);
+            subscriptionAdminClient.createSubscription(
+                    subscriptionName,
+                    TopicName.of(this.projectId, topicId),
+                    PushConfig.getDefaultInstance(),
+                    10
+            );
+        }
 
         log.info("order service - subscription [{}] created for topic: [{}], project: [{}]", subscriptionId, topicId, this.projectId);
     }

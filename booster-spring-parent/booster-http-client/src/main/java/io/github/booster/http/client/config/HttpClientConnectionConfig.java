@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -47,6 +48,10 @@ public class HttpClientConnectionConfig {
 
     public void setSettings(Map<String, HttpClientConnectionSetting> settings) {
         this.settings = settings == null ? Map.of() : settings;
+    }
+
+    public Map<String, HttpClientConnectionSetting> getSettings() {
+        return this.settings == null ? Map.of() : this.settings;
     }
 
     /**

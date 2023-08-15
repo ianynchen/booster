@@ -30,6 +30,7 @@ public class OrderService {
     public static final String FULFILLMENT = "fulfillment";
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+    public static final String ORDER = "order";
 
     private final GcpPubSubPublisher<String> publisher;
 
@@ -52,7 +53,7 @@ public class OrderService {
         this.gcpPubsubConfig = gcpPubsubConfig;
         this.mapper = mapper;
         this.publisher = new GcpPubSubPublisher<>(
-                FULFILLMENT,
+                ORDER,
                 template.getPubSubPublisherTemplate(),
                 threadPoolConfig,
                 metricsRegistry,
@@ -112,7 +113,7 @@ public class OrderService {
             );
         }
 
-        boolean allInStock = checkoutResult.getItems().stream().allMatch(item -> item.isInStock());
+        boolean allInStock = checkoutResult.getItems().stream().allMatch(CheckoutResult.Item::isInStock);
         log.info("order service - order: [{}] all in stock: [{}], checkout result: [{}]", order, allInStock, checkoutResult);
 
         if (!allInStock) {
@@ -128,7 +129,6 @@ public class OrderService {
 
         try {
             String payload = this.mapper.writeValueAsString(order);
-            PubsubRecord<String> record = new PubsubRecord<>(payload);
 
             log.info("order service - all in stock, sending to pub/sub");
             return this.publisher.publish(

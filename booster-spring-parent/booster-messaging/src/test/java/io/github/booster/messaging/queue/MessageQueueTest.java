@@ -32,7 +32,7 @@ class MessageQueueTest {
 
     @Test
     void shouldFailCreate() {
-        ThreadPoolSetting setting = new ThreadPoolSetting();
+        ThreadPoolSetting setting = new ThreadPoolSetting(null, null, null, null);
         ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
 
@@ -120,7 +120,7 @@ class MessageQueueTest {
 
     @Test
     void shouldExecute() {
-        ThreadPoolSetting setting = new ThreadPoolSetting();
+        ThreadPoolSetting setting = new ThreadPoolSetting(null, null, null, null);
         ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
         MessageQueue<Integer> queue = new MessageQueue<>(
@@ -148,7 +148,7 @@ class MessageQueueTest {
 
     @Test
     void shouldExecuteAndHandleTakeError() throws InterruptedException {
-        ThreadPoolSetting setting = new ThreadPoolSetting();
+        ThreadPoolSetting setting = new ThreadPoolSetting(null, null, null, null);
         ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
 
@@ -187,7 +187,7 @@ class MessageQueueTest {
 
     @Test
     void shouldHandlePutError() throws InterruptedException {
-        ThreadPoolSetting setting = new ThreadPoolSetting();
+        ThreadPoolSetting setting = new ThreadPoolSetting(null, null, null, null);
         ThreadPoolConfig config = new ThreadPoolConfig();
         config.setSettings(Map.of("test", setting));
 

@@ -26,8 +26,7 @@ internal class ThreadPoolConfigTest {
 
     @Test
     fun shouldCreatePool() {
-        val config = ThreadPoolConfig()
-        config.setMetricsRegistry(MetricsRegistry(SimpleMeterRegistry()))
+        val config = ThreadPoolConfig(null, MetricsRegistry(SimpleMeterRegistry()))
         config.setSettings(mapOf(Pair("test", this.setting!!)))
         assertThat(config["abc"], nullValue())
         val service = config["test"]
@@ -38,7 +37,7 @@ internal class ThreadPoolConfigTest {
 
     @Test
     fun shouldNotBreak() {
-        val config = ThreadPoolConfig()
+        val config = ThreadPoolConfig(null, null)
         config.setSettings(null)
         assertThat(config["abc"], nullValue())
         assertThat(config.getSetting("abc"), nullValue())
@@ -52,7 +51,7 @@ internal class ThreadPoolConfigTest {
             null,
             null
         )
-        val config = ThreadPoolConfig()
+        val config = ThreadPoolConfig(null, null)
         config.setSettings(mapOf(Pair("test", setting)))
         assertThat(config["test"], notNullValue())
         assertThat(config.getSetting("test"), notNullValue())
@@ -60,8 +59,7 @@ internal class ThreadPoolConfigTest {
 
     @Test
     fun shouldCreatePoolWithNoRegistry() {
-        val config = ThreadPoolConfig()
-        config.setMetricsRegistry(null)
+        val config = ThreadPoolConfig(null, null)
         config.setSettings(mapOf(Pair("test", this.setting!!)))
         assertThat(config["abc"], nullValue())
         val service = config["test"]

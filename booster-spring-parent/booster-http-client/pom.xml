@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>booster-http-client</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <name>booster-http-client</name>
     <description>Booster HTTP Client Project</description>
     <packaging>jar</packaging>

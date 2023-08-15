@@ -156,14 +156,26 @@ public class HttpClientConnectionSetting {
          */
         private Long maxLifeTimeMillis;
 
+        /**
+         * Max number of connections for connection pool
+         * @return Max number of connections for connection pool
+         */
         public Integer getMaxConnections() {
             return maxConnections;
         }
 
+        /**
+         * Max number of connections for connection pool
+         * @param maxConnections Max number of connections for connection pool
+         */
         public void setMaxConnections(Integer maxConnections) {
             this.maxConnections = (maxConnections == null || maxConnections <= 0) ? DEFAULT_MAX_CONNECTIONS : maxConnections;
         }
 
+        /**
+         * Max idle time in milliseconds
+         * @return max idle time in milliseconds
+         */
         public Long getMaxIdleTimeMillis() {
             return maxIdleTimeMillis;
         }
@@ -228,7 +240,7 @@ public class HttpClientConnectionSetting {
 
     /**
      * Timeout in milliseconds before a connection can be established. If 0 or less, use default value.
-     * @return
+     * @return Timeout in milliseconds before a connection can be established. If 0 or less, use default value.
      */
     public int getConnectionTimeoutMillis() {
         return connectionTimeoutMillis < 0 ? DEFAULT_CONNECTION_TIMEOUT_MS : connectionTimeoutMillis;
@@ -240,7 +252,7 @@ public class HttpClientConnectionSetting {
 
     /**
      * Read timeout in milliseconds. If 0 or less, use default value.
-     * @return
+     * @return Read timeout in milliseconds. If 0 or less, use default value.
      */
     public int getReadTimeoutMillis() {
         return readTimeoutMillis < 0 ? DEFAULT_READ_TIMEOUT_MS : readTimeoutMillis;
@@ -252,7 +264,7 @@ public class HttpClientConnectionSetting {
 
     /**
      * Write timeout in milliseconds. If 0 or less, use default value.
-     * @return
+     * @return Write timeout in milliseconds. If 0 or less, use default value.
      */
     public int getWriteTimeoutMillis() {
         return writeTimeoutMillis < 0 ? DEFAULT_WRITE_TIMEOUT_MS : writeTimeoutMillis;

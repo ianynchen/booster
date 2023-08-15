@@ -69,7 +69,7 @@ internal class TaskFactoryTest {
         val setting = HttpClientConnectionSetting()
         setting.baseUrl = "http://www.ibm.com"
         httpClientConnectionConfig!!.setSettings(mapOf(Pair("client", setting)))
-        threadPoolConfig = ThreadPoolConfig()
+        threadPoolConfig = ThreadPoolConfig(null, registry)
         threadPoolConfig!!.setSettings(
             mapOf(
                 Pair("async", ThreadPoolSetting(null, null, null, null)),
@@ -77,7 +77,6 @@ internal class TaskFactoryTest {
                 Pair("client", ThreadPoolSetting(null, null, null, null))
             )
         )
-        threadPoolConfig!!.setMetricsRegistry(registry)
         retryConfig = RetryConfig()
         retryConfig!!.setSettings(
             mapOf(Pair("client", RetrySetting()))

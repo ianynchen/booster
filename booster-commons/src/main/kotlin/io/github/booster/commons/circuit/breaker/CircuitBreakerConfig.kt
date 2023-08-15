@@ -30,7 +30,7 @@ class CircuitBreakerConfig @JvmOverloads constructor(settings: Map<String, Circu
     override fun create(key: String): CircuitBreaker? {
         log.debug("booster-commons - cache contains [{}] entry: {}", key, settings.containsKey(key))
         return if (settings.containsKey(key)) {
-            settings[key]!!.buildCircuitBreaker(key, registry).orNull()
+            settings[key]!!.buildCircuitBreaker(key, registry).orNull
         } else {
             null
         }
@@ -44,6 +44,8 @@ class CircuitBreakerConfig @JvmOverloads constructor(settings: Map<String, Circu
         this.settings = settings ?: mapOf()
         this.pool = GenericKeyedObjectCache(this)
     }
+
+    fun getSettings() = this.settings
 
     /**
      * Sets [MetricsRegistry] object

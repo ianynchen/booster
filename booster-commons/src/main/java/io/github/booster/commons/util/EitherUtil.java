@@ -4,6 +4,9 @@ import arrow.core.Either;
 import arrow.core.EitherKt;
 import com.google.common.base.Preconditions;
 
+/**
+ * {@link Either} related utility methods for Java classes.
+ */
 public interface EitherUtil {
 
     /**

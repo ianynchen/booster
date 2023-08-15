@@ -39,7 +39,7 @@ class ReactiveKafkaPublisherTest {
 
         this.threadPoolConfig = new ThreadPoolConfig();
         this.threadPoolConfig.setSettings(
-                Map.of("test", new ThreadPoolSetting())
+                Map.of("test", new ThreadPoolSetting(null, null, null, null))
         );
     }
 

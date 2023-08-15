@@ -1,6 +1,7 @@
 package io.github.booster.http.client.request;
 
 import io.vavr.Tuple;
+import io.vavr.Tuple2;
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
@@ -8,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * User context to be included as part of web request
@@ -61,16 +63,16 @@ public class UserContext {
      * @return a {@link Map} with all non-blank fields. Empty if none of the fields exist.
      */
     public Map<String, String> createHeaders() {
-        return List.of(
+        return Stream.of(
                 Tuple.of(DEVICE_TYPE_HEADER, this.deviceType),
                 Tuple.of(ACCEPT_LANGUAGE_HEADER, this.acceptLanguage),
                 Tuple.of(BUSINESS_AGENT_HEADER, this.businessAgent),
                 Tuple.of(TENANT_HEADER, this.tenant)
-        ).stream()
-                .filter(tuple -> StringUtils.isNotBlank(tuple._2()))
-                .collect(Collectors.toMap(
-                        tuple -> tuple._1(),
-                        tuple -> tuple._2()
-                ));
+        ).filter(tuple ->
+                StringUtils.isNotBlank(tuple._2())
+        ).collect(Collectors.toMap(
+                Tuple2::_1,
+                Tuple2::_2
+        ));
     }
 }

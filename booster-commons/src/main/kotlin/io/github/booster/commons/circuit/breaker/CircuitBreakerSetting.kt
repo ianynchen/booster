@@ -38,7 +38,8 @@ class CircuitBreakerSetting {
         get() = if (field <= 0 || field > ONE_HUNDRED_PERCENT) DEFAULT_FAILURE_THRESHOLD else field
         set(failureRateThreshold) {
             field =
-                if (failureRateThreshold <= 0 || failureRateThreshold > ONE_HUNDRED_PERCENT) DEFAULT_FAILURE_THRESHOLD else failureRateThreshold
+                if (failureRateThreshold <= 0 || failureRateThreshold > ONE_HUNDRED_PERCENT) DEFAULT_FAILURE_THRESHOLD
+                else failureRateThreshold
         }
     var slowCallRateThreshold = 0 // 100
         /**
@@ -53,7 +54,10 @@ class CircuitBreakerSetting {
         get() = if (field <= 0 || field > ONE_HUNDRED_PERCENT) DEFAULT_SLOW_CALL_THRESHOLD else field
         set(slowCallRateThreshold) {
             field =
-                if (slowCallRateThreshold <= 0 || slowCallRateThreshold > ONE_HUNDRED_PERCENT) DEFAULT_SLOW_CALL_THRESHOLD else slowCallRateThreshold
+                if (slowCallRateThreshold <= 0 || slowCallRateThreshold > ONE_HUNDRED_PERCENT)
+                    DEFAULT_SLOW_CALL_THRESHOLD
+                else
+                    slowCallRateThreshold
         }
     var slowCallDurationThreshold = 0 // 60000[ms]
         /**
@@ -76,7 +80,8 @@ class CircuitBreakerSetting {
         get() = if (field <= 0) DEFAULT_PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE else field
         set(permittedNumberOfCallsInHalfOpenState) {
             field =
-                if (permittedNumberOfCallsInHalfOpenState <= 0) DEFAULT_PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE else permittedNumberOfCallsInHalfOpenState
+                if (permittedNumberOfCallsInHalfOpenState <= 0) DEFAULT_PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE
+                else permittedNumberOfCallsInHalfOpenState
         }
     var maxWaitDurationInHalfOpenState = 0 // 0[ms]
         /**
@@ -90,9 +95,10 @@ class CircuitBreakerSetting {
         get() = if (field <= 0) DEFAULT_MAX_WAIT_DURATION_IN_HALF_OPEN_STATE else field
         set(maxWaitDurationInHalfOpenState) {
             field =
-                if (maxWaitDurationInHalfOpenState <= 0) DEFAULT_MAX_WAIT_DURATION_IN_HALF_OPEN_STATE else maxWaitDurationInHalfOpenState
+                if (maxWaitDurationInHalfOpenState <= 0) DEFAULT_MAX_WAIT_DURATION_IN_HALF_OPEN_STATE
+                else maxWaitDurationInHalfOpenState
         }
-    private var slidingWindowType: SlidingWindowType? = null // COUNT_BASED
+
     var slidingWindowSize = 0 // 100
         /**
          * Configures the size of the sliding window which is used to
@@ -106,10 +112,14 @@ class CircuitBreakerSetting {
         }
     var minimumNumberOfCalls = 0 // 100
         /**
-         * Configures the minimum number of calls which are required (per sliding window period)
+         * Configures the minimum number of calls which are required
+         * (per sliding window period)
          * before the CircuitBreaker can calculate the error rate or slow call rate.
-         * For example, if minimumNumberOfCalls is 10, then at least 10 calls must be recorded, before the failure rate can be calculated.
-         * If only 9 calls have been recorded the CircuitBreaker will not transition to open even if all 9 calls have failed.
+         * For example, if minimumNumberOfCalls is 10, then at least 10
+         * calls must be recorded,
+         * before the failure rate can be calculated.
+         * If only 9 calls have been recorded the CircuitBreaker will not transition
+         * to open even if all 9 calls have failed.
          *
          * @return  minimum number of calls required to calculate error rate or slow rate.
          */
@@ -150,19 +160,13 @@ class CircuitBreakerSetting {
      *
      * @return  sliding window type, either count based or time based.
      */
-    fun getSlidingWindowType(): SlidingWindowType {
-        return if (slidingWindowType == null) SlidingWindowType.COUNT_BASED else slidingWindowType!!
-    }
 
-    fun setSlidingWindowType(slidingWindowType: SlidingWindowType?) {
-        this.slidingWindowType = slidingWindowType ?: SlidingWindowType.COUNT_BASED
-    }
-    /**
-     * Builds a resilience4j circuit breaker with metrics reported.
-     * @param name name of the circuit breaker.
-     * @param metricsRegistry [MetricsRegistry]
-     * @return optional circuit breaker.
-     */
+    var slidingWindowType: SlidingWindowType? = SlidingWindowType.COUNT_BASED
+        get() = field
+        set(slidingWindowType: SlidingWindowType?) {
+            field = slidingWindowType ?: SlidingWindowType.COUNT_BASED
+        }
+
     /**
      * Builds a resilience4j circuit breaker without reporting metrics.
      * @param name name of the circuit breaker.
@@ -170,7 +174,7 @@ class CircuitBreakerSetting {
      */
     @JvmOverloads
     fun buildCircuitBreaker(
-        name: String?,
+        name: String,
         metricsRegistry: MetricsRegistry? = MetricsRegistry(null)
     ): Option<CircuitBreaker> {
         Preconditions.checkArgument(StringUtils.isNotEmpty(name), "name cannot be null")
@@ -180,7 +184,11 @@ class CircuitBreakerSetting {
             .slowCallDurationThreshold(Duration.ofMillis(slowCallDurationThreshold.toLong()))
             .permittedNumberOfCallsInHalfOpenState(permittedNumberOfCallsInHalfOpenState)
             .maxWaitDurationInHalfOpenState(Duration.ofMillis(maxWaitDurationInHalfOpenState.toLong()))
-            .slidingWindowType(if (slidingWindowType == SlidingWindowType.COUNT_BASED) CircuitBreakerConfig.SlidingWindowType.COUNT_BASED else CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+            .slidingWindowType(
+                if (slidingWindowType == SlidingWindowType.COUNT_BASED)
+                    CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
+                else
+                    CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
             .slidingWindowSize(slidingWindowSize)
             .minimumNumberOfCalls(minimumNumberOfCalls)
             .waitDurationInOpenState(Duration.ofMillis(waitDurationInOpenState.toLong()))
@@ -191,7 +199,7 @@ class CircuitBreakerSetting {
         val circuitBreakerRegistry = CircuitBreakerRegistry.of(config)
         if (metricsRegistry != null && metricsRegistry.registryOption.orNull() != null) {
             TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(circuitBreakerRegistry)
-                .bindTo(metricsRegistry.registryOption.orNull())
+                .bindTo(metricsRegistry.registryOption.orNull()!!)
         }
         return Option.of(circuitBreakerRegistry.circuitBreaker(name, config))
     }

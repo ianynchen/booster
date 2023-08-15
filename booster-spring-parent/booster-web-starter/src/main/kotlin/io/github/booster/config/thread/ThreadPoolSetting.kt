@@ -1,12 +1,9 @@
 package io.github.booster.config.thread
 
-import lombok.ToString
-
 const val DEFAULT_CORE_SIZE = 10
 const val DEFAULT_MAX_SIZE = 20
 const val DEFAULT_QUEUE_SIZE = 100
 
-@ToString
 data class ThreadPoolSetting (
     val coreSize: Int?,
     val maxSize: Int?,

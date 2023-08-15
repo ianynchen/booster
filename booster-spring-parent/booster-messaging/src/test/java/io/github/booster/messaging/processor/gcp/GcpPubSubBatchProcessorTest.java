@@ -4,6 +4,7 @@ import arrow.core.Option;
 import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.messaging.subscriber.gcp.MockGcpBatchSubscriberFlow;
+import io.github.booster.task.ExecutionType;
 import io.github.booster.task.Task;
 import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
@@ -68,7 +69,8 @@ class GcpPubSubBatchProcessorTest {
                             Option.fromNullable(null),
                             Option.fromNullable(null),
                             Option.fromNullable(null),
-                            new MetricsRegistry(new SimpleMeterRegistry())
+                            new MetricsRegistry(new SimpleMeterRegistry()),
+                            ExecutionType.PUBLISH_ON
                     ),
                     this.process
             );
@@ -84,7 +86,8 @@ class GcpPubSubBatchProcessorTest {
                             Option.fromNullable(null),
                             Option.fromNullable(null),
                             Option.fromNullable(null),
-                            new MetricsRegistry(new SimpleMeterRegistry())
+                            new MetricsRegistry(new SimpleMeterRegistry()),
+                            ExecutionType.PUBLISH_ON
                     ),
                     this.partialFailureProcess
             );
@@ -100,7 +103,8 @@ class GcpPubSubBatchProcessorTest {
                             Option.fromNullable(null),
                             Option.fromNullable(null),
                             Option.fromNullable(null),
-                            new MetricsRegistry(new SimpleMeterRegistry())
+                            new MetricsRegistry(new SimpleMeterRegistry()),
+                            ExecutionType.PUBLISH_ON
                     ),
                     this.exceptionProcess
             );

@@ -22,7 +22,7 @@ logging:
       booster:
         example: DEBUG
 booster:
-  task:
+  tasks:
     threads:
       settings:
         checkout:

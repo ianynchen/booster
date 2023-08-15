@@ -64,7 +64,7 @@ class GcpPubSubPullSubscriberTest {
 
     private ThreadPoolConfig createThreadConfig() {
         ThreadPoolConfig config = new ThreadPoolConfig();
-        config.setSettings(Map.of("test", new ThreadPoolSetting()));
+        config.setSettings(Map.of("test", new ThreadPoolSetting(null, null, null, null)));
         return config;
     }
 

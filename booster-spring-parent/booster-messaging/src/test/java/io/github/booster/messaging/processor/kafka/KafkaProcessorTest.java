@@ -5,6 +5,7 @@ import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.messaging.processor.ProcessResult;
 import io.github.booster.messaging.subscriber.kafka.MockKafkaSubscriberFlow;
 import io.github.booster.messaging.subscriber.kafka.SubscriberRecord;
+import io.github.booster.task.ExecutionType;
 import io.github.booster.task.Task;
 import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
@@ -48,7 +49,8 @@ class KafkaProcessorTest {
                             Option.fromNullable(null),
                             Option.fromNullable(null),
                             Option.fromNullable(null),
-                            new MetricsRegistry(new SimpleMeterRegistry())
+                            new MetricsRegistry(new SimpleMeterRegistry()),
+                            ExecutionType.PUBLISH_ON
                     ),
                     process
             );
@@ -161,7 +163,8 @@ class KafkaProcessorTest {
                                 Option.fromNullable(null),
                                 Option.fromNullable(null),
                                 Option.fromNullable(null),
-                                new MetricsRegistry(new SimpleMeterRegistry())
+                                new MetricsRegistry(new SimpleMeterRegistry()),
+                                ExecutionType.PUBLISH_ON
                         ),
                         this.errorProcess
                 ),
@@ -188,7 +191,8 @@ class KafkaProcessorTest {
                                 Option.fromNullable(null),
                                 Option.fromNullable(null),
                                 Option.fromNullable(null),
-                                new MetricsRegistry(new SimpleMeterRegistry())
+                                new MetricsRegistry(new SimpleMeterRegistry()),
+                                ExecutionType.PUBLISH_ON
                         ),
                         this.errorProcess
                 ),
