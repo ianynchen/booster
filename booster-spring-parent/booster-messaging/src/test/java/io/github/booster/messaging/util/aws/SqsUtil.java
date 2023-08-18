@@ -23,7 +23,6 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.CreateQueueResponse;
-import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 
 import java.util.Map;
 
@@ -72,7 +71,7 @@ public interface SqsUtil {
                 awsSqsConfig,
                 new OpenTelemetryConfig(null, serviceName),
                 new TaskFactory(
-                        new ThreadPoolConfig(),
+                        new ThreadPoolConfig(null, null),
                         new RetryConfig(),
                         new CircuitBreakerConfig(),
                         new HttpClientFactory(
@@ -92,7 +91,7 @@ public interface SqsUtil {
             String name,
             AwsSqsConfig awsSqsConfig
     ) {
-        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
+        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig(null, null);
         threadPoolConfig.setSettings(Map.of(name, new ThreadPoolSetting()));
         return new AwsSqsSubscriber(
                 name,

@@ -68,12 +68,12 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @param registry to record metrics
      */
     public TemplateKafkaPublisher(
-        String name,
-        KafkaTemplate<String, T> kafkaTemplate,
-        ThreadPoolConfig threadPoolConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            KafkaTemplate<String, T> kafkaTemplate,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
         Preconditions.checkArgument(kafkaTemplate != null, "kafka template cannot be null");

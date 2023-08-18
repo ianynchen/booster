@@ -57,9 +57,9 @@ public class InventoryService {
                         Option.fromNullable(null)
                 ),
                 new TaskExecutionContext(
-                        threadPoolConfig.getOption(REFILL),
-                        retryConfig.getOption(REFILL),
-                        circuitBreakerConfig.getOption(REFILL),
+                        threadPoolConfig.tryGet(REFILL),
+                        retryConfig.tryGet(REFILL),
+                        circuitBreakerConfig.tryGet(REFILL),
                         new MetricsRegistry(registry)
                 ),
                 (order) -> {
@@ -76,9 +76,9 @@ public class InventoryService {
                         Option.fromNullable(null)
                 ),
                 new TaskExecutionContext(
-                        threadPoolConfig.getOption(CHECKOUT),
-                        retryConfig.getOption(CHECKOUT),
-                        circuitBreakerConfig.getOption(CHECKOUT),
+                        threadPoolConfig.tryGet(CHECKOUT),
+                        retryConfig.tryGet(CHECKOUT),
+                        circuitBreakerConfig.tryGet(CHECKOUT),
                         new MetricsRegistry(registry)
                 ),
                 (order) -> Mono.just(Option.fromNullable(this.checkInventory(order)))

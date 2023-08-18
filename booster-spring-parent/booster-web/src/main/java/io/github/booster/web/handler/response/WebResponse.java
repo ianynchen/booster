@@ -12,6 +12,7 @@ import io.github.booster.web.handler.ExceptionConverter;
 import io.vavr.Tuple2;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public class WebResponse<T> {
      * Builder class for {@link WebResponse}
      * @param <T> type of actual response body
      */
+    @NoArgsConstructor
     @JsonPOJOBuilder(withPrefix = "")
     public static class WebResponseBuilder<T> {
 
@@ -112,26 +114,27 @@ public class WebResponse<T> {
         if (either == null) {
             log.warn("booster-web - either is null, building empty response body");
             return ResponseEntity.status(HttpStatus.OK.value()).build();
-        } else if (either.isRight()) {
-            log.debug("booster-web - either is right value: [{}], building response body", either);
-            return ResponseEntity.status(HttpStatus.OK.value())
-                    .body(
-                            WebResponse.builder()
-                                    .response(EitherKt.getOrElse(either, o -> Option.fromNullable(null)).orNull())
-                                    .build()
-                    );
         } else {
-            log.debug("booster-web - either is left value: [{}], building error response", either);
-            Throwable t = either.swap().getOrNull();
+            return EitherKt.getOrElse(either.map(responseOption -> {
+                log.debug("booster-web - either is right value: [{}], building response body", either);
+                return ResponseEntity.status(HttpStatus.OK.value())
+                        .body(
+                                WebResponse.builder()
+                                        .response(responseOption.orNull())
+                                        .build()
+                        );
+            }), (throwable) -> {
+                log.debug("booster-web - either is left value: [{}], building error response", either);
 
-            if (t == null) {
-                log.warn("booster-web - either is left, but no error, building empty response body");
-                return ResponseEntity.status(HttpStatus.OK.value()).build();
-            }
-            Tuple2<ErrorResponse, HttpStatus> errorTuple = ErrorResponse.builder()
-                    .buildFromThrowable(t, exceptionConverter);
-            return ResponseEntity.status(errorTuple._2())
-                    .body(WebResponse.builder().error(errorTuple._1()).build());
+                if (throwable == null) {
+                    log.warn("booster-web - either is left, but no error, building empty response body");
+                    return ResponseEntity.status(HttpStatus.OK.value()).build();
+                }
+                Tuple2<ErrorResponse, HttpStatus> errorTuple = ErrorResponse.builder()
+                        .buildFromThrowable(throwable, exceptionConverter);
+                return ResponseEntity.status(errorTuple._2())
+                        .body(WebResponse.builder().error(errorTuple._1()).build());
+            });
         }
     }
 }

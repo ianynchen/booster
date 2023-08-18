@@ -33,20 +33,20 @@ class MessageQueueTest {
     @Test
     void shouldFailCreate() {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfig config = new ThreadPoolConfig(null, null);
         config.setSettings(Map.of("test", setting));
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MessageQueue(null, new ThreadPoolConfig(), new MetricsRegistry(), 2)
+                () -> new MessageQueue(null, new ThreadPoolConfig(null, null), new MetricsRegistry(), 2)
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MessageQueue("", new ThreadPoolConfig(), new MetricsRegistry(), 2)
+                () -> new MessageQueue("", new ThreadPoolConfig(null, null), new MetricsRegistry(), 2)
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MessageQueue(" ", new ThreadPoolConfig(), new MetricsRegistry(), 2)
+                () -> new MessageQueue(" ", new ThreadPoolConfig(null, null), new MetricsRegistry(), 2)
         );
         assertThrows(
                 IllegalArgumentException.class,
@@ -91,11 +91,11 @@ class MessageQueueTest {
     @Test
     void shouldCreate() {
         assertThat(
-                new MessageQueue<Integer>("abc", new ThreadPoolConfig(), new MetricsRegistry(), 2),
+                new MessageQueue<Integer>("abc", new ThreadPoolConfig(null, null), new MetricsRegistry(), 2),
                 notNullValue()
         );
         assertThat(
-                new MessageQueue<Integer>("abc", new ThreadPoolConfig(), null, 2),
+                new MessageQueue<Integer>("abc", new ThreadPoolConfig(null, null), null, 2),
                 notNullValue()
         );
     }
@@ -121,7 +121,7 @@ class MessageQueueTest {
     @Test
     void shouldExecute() {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfig config = new ThreadPoolConfig(null, null);
         config.setSettings(Map.of("test", setting));
         MessageQueue<Integer> queue = new MessageQueue<>(
                 "test",
@@ -135,7 +135,7 @@ class MessageQueueTest {
 
     @Test
     void shouldExecuteWithoutThreadPool() {
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfig config = new ThreadPoolConfig(null, null);
         MessageQueue<Integer> queue = new MessageQueue<>(
                 "test",
                 config,
@@ -149,7 +149,7 @@ class MessageQueueTest {
     @Test
     void shouldExecuteAndHandleTakeError() throws InterruptedException {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfig config = new ThreadPoolConfig(null, null);
         config.setSettings(Map.of("test", setting));
 
         BlockingQueue<Integer> blockingQueue = createMockQueue();
@@ -188,7 +188,7 @@ class MessageQueueTest {
     @Test
     void shouldHandlePutError() throws InterruptedException {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        ThreadPoolConfig config = new ThreadPoolConfig();
+        ThreadPoolConfig config = new ThreadPoolConfig(null, null);
         config.setSettings(Map.of("test", setting));
 
         BlockingQueue<Integer> blockingQueue = createExceptionQueue();

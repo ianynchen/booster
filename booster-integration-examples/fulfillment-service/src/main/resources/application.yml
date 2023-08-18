@@ -28,7 +28,7 @@ booster:
       projectId: order-project
       topic: orders
       subscription: order-subscription
-  task:
+  tasks:
     threads:
       settings:
         fulfillment:

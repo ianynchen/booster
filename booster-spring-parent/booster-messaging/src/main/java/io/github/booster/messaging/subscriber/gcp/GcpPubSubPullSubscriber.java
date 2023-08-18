@@ -73,13 +73,13 @@ public class GcpPubSubPullSubscriber
     private final boolean manuallyInjectTrace;
 
     public GcpPubSubPullSubscriber(
-        String name,
-        PubSubSubscriberTemplate subscriberTemplate,
-        ThreadPoolConfig threadPoolConfig,
-        GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            PubSubSubscriberTemplate subscriberTemplate,
+            ThreadPoolConfig threadPoolConfig,
+            GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
         Preconditions.checkArgument(subscriberTemplate != null, "subscriber template cannot be null");

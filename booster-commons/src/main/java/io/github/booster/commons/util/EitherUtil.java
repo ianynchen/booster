@@ -4,6 +4,9 @@ import arrow.core.Either;
 import arrow.core.EitherKt;
 import com.google.common.base.Preconditions;
 
+/**
+ * {@link Either} related utility methods for Java classes.
+ */
 public interface EitherUtil {
 
     /**
@@ -13,7 +16,7 @@ public interface EitherUtil {
      * @param <T> Type of right value.
      */
     static <T> Either<Throwable, T> convertThrowable(Throwable t) {
-        return new Either.Left<>(t);
+        return new Either.Left<Throwable>(t);
     }
 
     /**
@@ -23,7 +26,7 @@ public interface EitherUtil {
      * @param <T> Type of right value.
      */
     static <T> Either<Throwable, T> convertData(T data) {
-        return new Either.Right<>(data);
+        return new Either.Right<T>(data);
     }
 
     /**

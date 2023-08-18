@@ -1,5 +1,6 @@
 package io.github.booster.factories;
 
+import arrow.core.Either;
 import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
@@ -19,10 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class TaskFactory {
 
@@ -43,11 +46,11 @@ public class TaskFactory {
     private final Map<String, Task> httpClientTasks = new HashMap<>();
 
     public TaskFactory(
-        ThreadPoolConfig threadPoolConfig,
-        RetryConfig retryConfig,
-        CircuitBreakerConfig circuitBreakerConfig,
-        HttpClientFactory httpClientFactory,
-        MetricsRegistry registry
+            ThreadPoolConfig threadPoolConfig,
+            RetryConfig retryConfig,
+            CircuitBreakerConfig circuitBreakerConfig,
+            HttpClientFactory httpClientFactory,
+            MetricsRegistry registry
     ) {
         this.threadPoolConfig = threadPoolConfig;
         this.registry = registry;
@@ -94,9 +97,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 processor
@@ -130,9 +133,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 processor
@@ -182,9 +185,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 function

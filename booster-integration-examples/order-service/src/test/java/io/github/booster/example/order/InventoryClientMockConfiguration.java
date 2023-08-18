@@ -1,5 +1,6 @@
 package io.github.booster.example.order;
 
+import arrow.core.Option;
 import io.github.booster.commons.util.EitherUtil;
 import io.github.booster.example.dto.CheckoutResult;
 import io.github.booster.example.dto.LineItem;
@@ -42,7 +43,7 @@ public class InventoryClientMockConfiguration {
                         }
                         result.getItems().add(item);
                     }
-                    return Mono.just(EitherUtil.convertData(result));
+                    return Mono.just(EitherUtil.convertData(Option.fromNullable(result)));
                 });
         return inventoryClient;
     }

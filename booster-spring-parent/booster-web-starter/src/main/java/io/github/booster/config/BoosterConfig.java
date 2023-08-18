@@ -55,23 +55,24 @@ public class BoosterConfig implements ApplicationContextAware {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.threads")
+    @ConfigurationProperties(prefix = "booster.tasks.threads")
     public ThreadPoolConfig threadPoolConfig(
             @Autowired MetricsRegistry registry
     ) {
-        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
-        threadPoolConfig.setMetricsRegistry(registry);
-        return threadPoolConfig;
+        return new ThreadPoolConfig(
+                this.applicationContext,
+                registry
+        );
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.circuit-breaker")
+    @ConfigurationProperties(prefix = "booster.tasks.circuit-breakers")
     public CircuitBreakerConfig circuitBreakerConfig() {
         return new CircuitBreakerConfig();
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.http.client.connection")
+    @ConfigurationProperties(prefix = "booster.http.clients.connections")
     public HttpClientConnectionConfig httpClientConnectionConfig() {
         return new HttpClientConnectionConfig(this.applicationContext);
     }
@@ -82,7 +83,7 @@ public class BoosterConfig implements ApplicationContextAware {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.retry")
+    @ConfigurationProperties(prefix = "booster.tasks.retries")
     public RetryConfig retryConfig() {
         return new RetryConfig();
     }

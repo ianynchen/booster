@@ -32,20 +32,20 @@ public class GreetingController {
         Task<GreetingResponse, GreetingResponse> task =
                 taskFactory.getSyncTask(
                         "greeting",
-                        greet -> Option.fromNullable(
-                                GreetingResponse.builder()
-                                        .from("server")
-                                        .greeting(greet.getGreeting())
-                                        .build()
-                        )
+                        greet ->
+                                Option.fromNullable(
+                                        GreetingResponse.builder()
+                                                .from("server")
+                                                .greeting(greet.getGreeting())
+                                                .build()
+                                ),
+                        null
                 );
         return task.execute(
-                Option.fromNullable(
-                        GreetingResponse.builder()
-                                .from(from)
-                                .greeting(greeting)
-                                .build()
-                )
+                GreetingResponse.builder()
+                        .from(from)
+                        .greeting(greeting)
+                        .build()
         );
     }
 }

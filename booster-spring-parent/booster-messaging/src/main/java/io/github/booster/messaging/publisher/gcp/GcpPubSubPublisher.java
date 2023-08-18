@@ -72,12 +72,12 @@ public class GcpPubSubPublisher<T> implements MessagePublisher<PubsubRecord<T>> 
      * @param registry to record metrics.
      */
     public GcpPubSubPublisher(
-        String name,
-        PubSubPublisherTemplate template,
-        ThreadPoolConfig threadPoolConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            PubSubPublisherTemplate template,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(template != null, "PubSubPublisherTemplate cannot be null");
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");

@@ -17,14 +17,14 @@
 
     <properties>
         <booster-base-pom.version>1.0.0</booster-base-pom.version>
-        <booster-commons.version>1.0.0</booster-commons.version>
+        <booster-commons.version>2.0.0</booster-commons.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>io.github.booster</groupId>
             <artifactId>booster-commons</artifactId>
-            <version>1.0.0</version>
+            <version>${booster-commons.version}</version>
         </dependency>
 
         <!-- spring boot/cloud -->

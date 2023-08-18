@@ -3,7 +3,6 @@ package io.github.booster.example.fulfillment.listener;
 import arrow.core.Option;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.spring.pubsub.core.PubSubTemplate;
-import com.google.cloud.spring.pubsub.support.AcknowledgeablePubsubMessage;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
 import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.commons.retry.RetryConfig;
@@ -69,9 +68,9 @@ public class OrderConsumer {
                                 Option.fromNullable(null)
                         ),
                         new TaskExecutionContext(
-                                threadPoolConfig.getOption(PROCESSOR),
-                                retryConfig.getOption(PROCESSOR),
-                                circuitBreakerConfig.getOption(PROCESSOR),
+                                threadPoolConfig.tryGet(PROCESSOR),
+                                retryConfig.tryGet(PROCESSOR),
+                                circuitBreakerConfig.tryGet(PROCESSOR),
                                 metricsRegistry
                         ),
                         (message) -> {
