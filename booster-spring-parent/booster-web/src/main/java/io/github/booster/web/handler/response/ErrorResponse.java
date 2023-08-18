@@ -11,6 +11,7 @@ import io.vavr.Tuple2;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,7 @@ public class ErrorResponse {
     @JsonProperty("stack_trace")
     private String stackTrace;
 
+    @NoArgsConstructor
     @JsonPOJOBuilder(withPrefix = "")
     public static class ErrorResponseBuilder {
 

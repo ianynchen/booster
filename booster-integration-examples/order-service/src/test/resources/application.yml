@@ -29,7 +29,7 @@ booster:
       projectId: order-project
       topic: orders
       subscription: order-subscription
-  task:
+  tasks:
     threads:
       settings:
         inventory:
@@ -48,8 +48,8 @@ booster:
           queueSize: 100
           prefix: order-tp-
   http:
-    client:
-      connection:
+    clients:
+      connections:
         settings:
           inventory:
             baseUrl: http://localhost:8082

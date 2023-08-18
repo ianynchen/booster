@@ -12,6 +12,7 @@ import io.github.booster.web.handler.ExceptionConverter;
 import io.vavr.Tuple2;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public class WebResponse<T> {
      * Builder class for {@link WebResponse}
      * @param <T> type of actual response body
      */
+    @NoArgsConstructor
     @JsonPOJOBuilder(withPrefix = "")
     public static class WebResponseBuilder<T> {
 
