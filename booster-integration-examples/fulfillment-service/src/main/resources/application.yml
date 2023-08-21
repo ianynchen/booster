@@ -2,18 +2,11 @@ server:
   port: 8084
 logging:
   level:
-    root: INFO
-  com.ld.booster: DEBUG
-        # messaging: DEBUG
-        # example: DEBUG
+    root: DEBUG
+    com.ld.booster: DEBUG
 spring:
   application:
     name: fulfillment-service
-  cloud:
-    gcp:
-      trace:
-        pubsub:
-          enabled: true
   zipkin:
     enabled: true
     sender:
