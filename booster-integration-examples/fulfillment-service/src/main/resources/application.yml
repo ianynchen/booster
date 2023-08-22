@@ -2,7 +2,7 @@ server:
   port: 8084
 logging:
   level:
-    root: DEBUG
+    root: INFO
     com.ld.booster: DEBUG
 spring:
   application:
