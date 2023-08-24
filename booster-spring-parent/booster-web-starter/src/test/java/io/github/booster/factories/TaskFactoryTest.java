@@ -133,7 +133,7 @@ class TaskFactoryTest {
         assertThat(task, notNullValue());
         assertThat(task2, notNullValue());
         assertThat(task3, notNullValue());
-        assertThat(task, sameInstance(task3));
+        assertThat(task, not(sameInstance(task3)));
         assertThat(task, not(sameInstance(task2)));
 
         StepVerifier.create(task.execute("hello"))
@@ -167,7 +167,7 @@ class TaskFactoryTest {
         assertThat(task, notNullValue());
         assertThat(task2, notNullValue());
         assertThat(task3, notNullValue());
-        assertThat(task, sameInstance(task3));
+        assertThat(task, not(sameInstance(task3)));
         assertThat(task, not(sameInstance(task2)));
 
         StepVerifier.create(task.execute("hello"))
@@ -241,7 +241,7 @@ class TaskFactoryTest {
                 () -> this.factory.getHttpTask("client2")
         );
 
-        assertThat(this.factory.getHttpTask("client"), sameInstance(task));
+        assertThat(this.factory.getHttpTask("client"), not(sameInstance(task)));
 
         Either<Throwable, Option<HttpClientRequestContext<Object, GreetingResponse>>> request =
                 EitherUtil.convertThrowable(new IllegalArgumentException());
