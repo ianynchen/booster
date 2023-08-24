@@ -1,6 +1,5 @@
 package io.github.booster.factories;
 
-import arrow.core.Either;
 import arrow.core.Option;
 import com.google.common.base.Preconditions;
 import io.github.booster.commons.circuit.breaker.CircuitBreakerConfig;
@@ -20,12 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
 
 public class TaskFactory {
 
@@ -40,10 +34,6 @@ public class TaskFactory {
     private final HttpClientFactory httpClientFactory;
 
     private final MetricsRegistry registry;
-
-    private final Map<String, Task> simpleTasks = new HashMap<>();
-
-    private final Map<String, Task> httpClientTasks = new HashMap<>();
 
     public TaskFactory(
             ThreadPoolConfig threadPoolConfig,
@@ -223,21 +213,13 @@ public class TaskFactory {
             String name,
             Function1<Throwable, Option<ResponseEntity<Response>>> exceptionHandler
     ) {
-        synchronized (this.httpClientTasks) {
-            if (this.httpClientTasks.containsKey(name)) {
-                log.debug("booster-starter - http task already exists for: [{}]", name);
-                return this.httpClientTasks.get(name);
-            } else {
-                log.debug("booster-starter - creating http task for: [{}]", name);
-                HttpClient<Request, Response> httpClient = this.httpClientFactory.get(name);
-                Preconditions.checkNotNull(httpClient, "HTTP client cannot be null");
-                Task<HttpClientRequestContext<Request, Response>, ResponseEntity<Response>> task =
-                        this.createHttpClientTask(name, httpClient, exceptionHandler);
-                Preconditions.checkNotNull(task, "task cannot be null");
-                this.httpClientTasks.put(name, task);
-                return task;
-            }
-        }
+        log.debug("booster-starter - creating http task for: [{}]", name);
+        HttpClient<Request, Response> httpClient = this.httpClientFactory.get(name);
+        Preconditions.checkNotNull(httpClient, "HTTP client cannot be null");
+        Task<HttpClientRequestContext<Request, Response>, ResponseEntity<Response>> task =
+                this.createHttpClientTask(name, httpClient, exceptionHandler);
+        Preconditions.checkNotNull(task, "task cannot be null");
+        return task;
     }
 
     /**
@@ -273,17 +255,8 @@ public class TaskFactory {
             Function1<Request, Mono<Option<Response>>> processor,
             Function1<Throwable, Option<Response>> exceptionHandler
     ) {
-        synchronized (this.simpleTasks) {
-            if (this.simpleTasks.containsKey(name)) {
-                log.debug("booster-starter - async task already exists for: [{}]", name);
-                return (Task<Request, Response>) this.simpleTasks.get(name);
-            } else {
-                log.debug("booster-starter - creating async task for: [{}]", name);
-                Task<Request, Response> task = this.createAsyncTask(name, processor, exceptionHandler);
-                this.simpleTasks.put(name, task);
-                return task;
-            }
-        }
+        log.debug("booster-starter - creating async task for: [{}]", name);
+        return this.createAsyncTask(name, processor, exceptionHandler);
     }
 
     /**
@@ -319,16 +292,7 @@ public class TaskFactory {
             Function1<Request, Option<Response>> processor,
             Function1<Throwable, Option<Response>> exceptionHandler
     ) {
-        synchronized (this.simpleTasks) {
-            if (this.simpleTasks.containsKey(name)) {
-                log.debug("booster-starter - sync task already exists for: [{}]", name);
-                return (Task<Request, Response>) this.simpleTasks.get(name);
-            } else {
-                log.debug("booster-starter - creating sync task for: [{}]", name);
-                Task<Request, Response> task = this.createSyncTask(name, processor, exceptionHandler);
-                this.simpleTasks.put(name, task);
-                return task;
-            }
-        }
+        log.debug("booster-starter - creating sync task for: [{}]", name);
+        return this.createSyncTask(name, processor, exceptionHandler);
     }
 }

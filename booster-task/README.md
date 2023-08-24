@@ -1,9 +1,6 @@
 # Booster Task
 
-Java asynchronous task execution. Part of 
-[Booster Project Initiative](https://confluence.lblw.cloud/display/BPF/Booster+Family+Project+Initiative).
-
-Detailed documentation see [Booster Task](https://confluence.lblw.cloud/display/BPF/Booster+Task)
+Java asynchronous task execution.
 
 ## Purpose
 Booster-task supports easy construction of sequential or parallel tasks that can be executed asynchronously.
@@ -88,7 +85,7 @@ val task = sequentialTask {
 }.build()
 ```
 
-As each task may already have its dedicated threads, there is no need to provide thread pool for a 
+As each sub-task may already have its dedicated threads, there is no need to provide thread pool for a 
 sequential or chained task.
 
 A sequential task also provides a task name based on the two tasks that are connected, hence naming 
@@ -163,7 +160,8 @@ Of the 4 types of tasks above, only the simple task can be run on dedicated thre
 ### Execution of Tasks in Dedicated Threads 
 
 One only has the option to provide a dedicated thread pool if one creates a simple task, or inherit
-from ```AbstractTask```. This is done deliberately.
+from ```AbstractTask```. This is done deliberately such that no threads are created
+unnecessarily.
 
 ### Error Recovery 
 
