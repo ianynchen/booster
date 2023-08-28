@@ -31,13 +31,30 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 /**
- * GCO pub/sub publisher
+ * GCP pub/sub publisher
  * @param <T> type of actual payload to be sent.
  */
 public class GcpPubSubPublisher<T> implements MessagePublisher<PubsubRecord<T>> {
 
+    /**
+     * {@link TextMapSetter} for GCP pub/sub messages
+     */
     protected static class GcpPubSubTextMapSetter implements TextMapSetter<Map<String, String>> {
 
+        /**
+         * Default constructor
+         */
+        public GcpPubSubTextMapSetter() {
+            super();
+        }
+
+        /**
+         * Sets tracing fields.
+         * @param carrier holds propagation fields. For example, an outgoing message or http request. To
+         *     facilitate implementations as java lambdas, this parameter may be null.
+         * @param key the key of the field.
+         * @param value the value of the field.
+         */
         @Override
         public void set(@Nullable Map<String, String> carrier, String key, String value) {
             if (carrier != null) {
@@ -70,14 +87,17 @@ public class GcpPubSubPublisher<T> implements MessagePublisher<PubsubRecord<T>> 
      * @param template {@link PubSubPublisherTemplate} to publish
      * @param threadPoolConfig {@link ThreadPoolConfig} to create threads to run publish on.
      * @param registry to record metrics.
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for tracing
+     * @param manuallyInjectTrace whether to manually inject trace or leave
+     *                            to OTEL instrumentation.
      */
     public GcpPubSubPublisher(
-        String name,
-        PubSubPublisherTemplate template,
-        ThreadPoolConfig threadPoolConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            PubSubPublisherTemplate template,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(template != null, "PubSubPublisherTemplate cannot be null");
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");

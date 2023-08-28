@@ -24,9 +24,23 @@ import springfox.documentation.spring.web.plugins.Docket;
 
 import java.util.List;
 
+/**
+ * Creates beans
+ */
 @Configuration
 public class BoosterWebConfig {
 
+    /**
+     * Default constructor
+     */
+    public BoosterWebConfig() {
+    }
+
+    /**
+     * Creates {@link ExceptionConverter} to handle exceptions
+     * @param handlers {@link List} of {@link ExceptionHandler}s to handle specific {@link Throwable}
+     * @return {@link ExceptionConverter} instance
+     */
     @Bean
     public ExceptionConverter exceptionConverter(
             @Autowired(required = false)
@@ -35,6 +49,13 @@ public class BoosterWebConfig {
         return new ExceptionConverter(handlers);
     }
 
+    /**
+     * Creates a {@link ResponseHandler} to reformat web endpoint responses
+     * @param serverCodecConfigurer {@link ServerCodecConfigurer}
+     * @param requestedContentTypeResolver {@link RequestedContentTypeResolver}
+     * @param exceptionConverter {@link ExceptionConverter}
+     * @return {@link ResponseHandler} instance
+     */
     @Bean
     public ResponseHandler responseHandler(
             @Autowired ServerCodecConfigurer serverCodecConfigurer,
@@ -48,6 +69,13 @@ public class BoosterWebConfig {
         );
     }
 
+    /**
+     * Springfox swagger document generation. Converts
+     * Mono&lt;Either&lt;Throwable, Option&lt;T&gt;&gt;&gt;
+     * to WebResponse&lt;T&gt; for swagger document.
+     * @param typeResolver {@link TypeResolver} to resolve types
+     * @return {@link Docket}
+     */
     @Bean
     public Docket api(TypeResolver typeResolver) {
 

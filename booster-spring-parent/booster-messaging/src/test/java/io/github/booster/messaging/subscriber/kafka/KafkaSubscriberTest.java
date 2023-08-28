@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 
 class KafkaSubscriberTest {
 
-    private ThreadPoolConfig config = new ThreadPoolConfig();
+    private ThreadPoolConfig config = new ThreadPoolConfig(null, null);
 
     private MetricsRegistry registry = new MetricsRegistry(new SimpleMeterRegistry());
 
@@ -32,7 +32,7 @@ class KafkaSubscriberTest {
     @BeforeEach
     private void setup() {
         ThreadPoolSetting setting = new ThreadPoolSetting();
-        setting.setCoreSize(2);
+        setting.setMaxSize(2);
         this.config.setSettings(Map.of("test", setting));
         this.kafkaSubscriberConfig.setSettings(Map.of("test", new KafkaSubscriberSetting()));
     }

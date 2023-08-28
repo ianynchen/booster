@@ -4,10 +4,9 @@ import arrow.core.Option
 import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
+import io.github.booster.task.Maybe
 import io.github.booster.task.Task
 import io.github.booster.task.util.convertAndRecord
-import io.github.booster.task.util.extractValue
 import io.vavr.Tuple
 import io.vavr.Tuple8
 import org.slf4j.LoggerFactory
@@ -19,14 +18,14 @@ typealias OptionTuple8<E0, E1, E2, E3, E4, E5, E6, E7> =
 
 typealias Tuple8WithError<E0, E1, E2, E3, E4, E5, E6, E7> =
         Tuple8<
-                DataWithError<E0>,
-                DataWithError<E1>,
-                DataWithError<E2>,
-                DataWithError<E3>,
-                DataWithError<E4>,
-                DataWithError<E5>,
-                DataWithError<E6>,
-                DataWithError<E7>
+                Maybe<E0>,
+                Maybe<E1>,
+                Maybe<E2>,
+                Maybe<E3>,
+                Maybe<E4>,
+                Maybe<E5>,
+                Maybe<E6>,
+                Maybe<E7>
                 >
 
 typealias Tuple8ExceptionHandler<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7> =
@@ -107,8 +106,8 @@ class Tuple8Task<Req0, Resp0, Req1, Resp1, Req2, Resp2, Req3, Resp3,
         }
     }
 
-    override fun execute(request: Mono<DataWithError<OptionTuple8<Req0, Req1, Req2, Req3, Req4, Req5, Req6, Req7>>>):
-            Mono<DataWithError<Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>>> {
+    override fun execute(request: Mono<Maybe<OptionTuple8<Req0, Req1, Req2, Req3, Req4, Req5, Req6, Req7>>>):
+            Mono<Maybe<Tuple8WithError<Resp0, Resp1, Resp2, Resp3, Resp4, Resp5, Resp6, Resp7>>> {
 
         val sampleOption = this.registry.startSample()
         return request.flatMap { req ->

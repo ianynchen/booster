@@ -1,6 +1,9 @@
 package io.github.booster.http.client.config;
 
 import com.google.common.base.Preconditions;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -123,7 +126,9 @@ public class HttpClientConnectionSetting {
     /**
      * HTTP connection pool settings.
      */
+    @Getter
     @ToString
+    @EqualsAndHashCode
     public static class ConnectionPoolSetting {
 
         /**
@@ -156,26 +161,32 @@ public class HttpClientConnectionSetting {
          */
         private Long maxLifeTimeMillis;
 
-        public Integer getMaxConnections() {
-            return maxConnections;
+        /**
+         * Default constructor
+         */
+        public ConnectionPoolSetting() {
         }
 
+        /**
+         * Max number of connections for connection pool
+         * @param maxConnections Max number of connections for connection pool
+         */
         public void setMaxConnections(Integer maxConnections) {
             this.maxConnections = (maxConnections == null || maxConnections <= 0) ? DEFAULT_MAX_CONNECTIONS : maxConnections;
         }
 
-        public Long getMaxIdleTimeMillis() {
-            return maxIdleTimeMillis;
-        }
-
+        /**
+         * Sets maximum idle time for connections
+         * @param maxIdleTimeMillis maximum idle time for connections in milliseconds
+         */
         public void setMaxIdleTimeMillis(Long maxIdleTimeMillis) {
             this.maxIdleTimeMillis = maxIdleTimeMillis == null ? DEFAULT_MAX_IDLE_TIME_MILLIS : maxIdleTimeMillis;
         }
 
-        public Long getMaxLifeTimeMillis() {
-            return maxLifeTimeMillis;
-        }
-
+        /**
+         * Sets maximum life time
+         * @param maxLifeTimeMillis maximum life time of connections in milliseconds
+         */
         public void setMaxLifeTimeMillis(Long maxLifeTimeMillis) {
             this.maxLifeTimeMillis = maxLifeTimeMillis == null ? DEFAULT_MAX_LIFE_TIME_MILLIS : maxLifeTimeMillis;
         }
@@ -184,6 +195,7 @@ public class HttpClientConnectionSetting {
     /**
      * Base URL to be used by {@link WebClient}
      */
+    @Getter
     private String baseUrl;
 
     private int connectionTimeoutMillis;
@@ -192,8 +204,12 @@ public class HttpClientConnectionSetting {
 
     private int writeTimeoutMillis;
 
+    @Getter
+    @Setter
     private boolean useSSL;
 
+    @Getter
+    @Setter
     private boolean followRedirects;
 
     private int sslHandshakeTimeoutMillis;
@@ -203,19 +219,22 @@ public class HttpClientConnectionSetting {
      */
     private int maxInMemorySizeMB;
 
+    @Getter
+    @Setter
     private Long responseTimeoutInMillis;
-
 
     private ConnectionPoolSetting pool = new ConnectionPoolSetting();
 
     /**
-     * Base URL for HTTP client.
-     * @return
+     * Default constructor
      */
-    public String getBaseUrl() {
-        return this.baseUrl;
+    public HttpClientConnectionSetting() {
     }
 
+    /**
+     * Sets base URL
+     * @param url base url to be used
+     */
     public void setBaseUrl(String url) {
         Preconditions.checkArgument(StringUtils.isNotBlank(url), "url cannot be blank");
         try {
@@ -228,50 +247,50 @@ public class HttpClientConnectionSetting {
 
     /**
      * Timeout in milliseconds before a connection can be established. If 0 or less, use default value.
-     * @return
+     * @return Timeout in milliseconds before a connection can be established. If 0 or less, use default value.
      */
     public int getConnectionTimeoutMillis() {
         return connectionTimeoutMillis < 0 ? DEFAULT_CONNECTION_TIMEOUT_MS : connectionTimeoutMillis;
     }
 
+    /**
+     * Sets connection timeout
+     * @param connectionTimeoutMillis connection timeout in milliseconds
+     */
     public void setConnectionTimeoutMillis(int connectionTimeoutMillis) {
         this.connectionTimeoutMillis = connectionTimeoutMillis < 0 ? DEFAULT_CONNECTION_TIMEOUT_MS : connectionTimeoutMillis;
     }
 
     /**
      * Read timeout in milliseconds. If 0 or less, use default value.
-     * @return
+     * @return Read timeout in milliseconds. If 0 or less, use default value.
      */
     public int getReadTimeoutMillis() {
         return readTimeoutMillis < 0 ? DEFAULT_READ_TIMEOUT_MS : readTimeoutMillis;
     }
 
+    /**
+     * Sets read timeout
+     * @param readTimeoutMillis read timeout in milliseconds
+     */
     public void setReadTimeoutMillis(int readTimeoutMillis) {
         this.readTimeoutMillis = readTimeoutMillis < 0 ? DEFAULT_READ_TIMEOUT_MS : readTimeoutMillis;
     }
 
     /**
      * Write timeout in milliseconds. If 0 or less, use default value.
-     * @return
+     * @return Write timeout in milliseconds. If 0 or less, use default value.
      */
     public int getWriteTimeoutMillis() {
         return writeTimeoutMillis < 0 ? DEFAULT_WRITE_TIMEOUT_MS : writeTimeoutMillis;
     }
 
+    /**
+     * Sets write timeout
+     * @param writeTimeoutMillis write timeout in milliseconds
+     */
     public void setWriteTimeoutMillis(int writeTimeoutMillis) {
         this.writeTimeoutMillis = writeTimeoutMillis < 0 ? DEFAULT_WRITE_TIMEOUT_MS : writeTimeoutMillis;
-    }
-
-    /**
-     * Is using SSL?
-     * @return true if yes, false otherwise
-     */
-    public boolean isUseSSL() {
-        return useSSL;
-    }
-
-    public void setUseSSL(boolean useSSL) {
-        this.useSSL = useSSL;
     }
 
     /**
@@ -282,39 +301,44 @@ public class HttpClientConnectionSetting {
         return pool == null ? new ConnectionPoolSetting() : pool;
     }
 
+    /**
+     * Sets connection pool setting
+     * @param pool connection pool setting to be used, if null, a new one with default values is generated
+     */
     public void setPool(ConnectionPoolSetting pool) {
         this.pool = pool == null ? new ConnectionPoolSetting() : pool;
     }
 
+    /**
+     * Retrieves maximum in memory size
+     * @return maximum in memory size in MB
+     */
     public int getMaxInMemorySizeMB() {
-        return maxInMemorySizeMB;
+        return this.maxInMemorySizeMB <= 0?
+                DEFAULT_MAX_IN_MEMORY_SIZE_MB : this.maxInMemorySizeMB;
     }
 
+    /**
+     * Sets max in memory size
+     * @param maxInMemorySizeMB maximum in memory size in MB
+     */
     public void setMaxInMemorySizeMB(int maxInMemorySizeMB) {
-        this.maxInMemorySizeMB = maxInMemorySizeMB < DEFAULT_MAX_IN_MEMORY_SIZE_MB ? DEFAULT_MAX_IN_MEMORY_SIZE_MB : maxInMemorySizeMB;
+        this.maxInMemorySizeMB = maxInMemorySizeMB <= 0 ? DEFAULT_MAX_IN_MEMORY_SIZE_MB : maxInMemorySizeMB;
     }
 
-    public Long getResponseTimeoutInMillis() {
-        return responseTimeoutInMillis;
-    }
-
-    public void setResponseTimeoutInMillis(Long responseTimeoutInMillis) {
-        this.responseTimeoutInMillis = responseTimeoutInMillis;
-    }
-
+    /**
+     * Gets SSL handshake timeout
+     * @return SSL handshake timeout in milliseconds
+     */
     public int getSslHandshakeTimeoutMillis() {
         return sslHandshakeTimeoutMillis <= 0 ? DEFAULT_HANDSHAKE_TIMEOUT_MS : sslHandshakeTimeoutMillis;
     }
 
+    /**
+     * Sets SSL handshake timeout
+     * @param sslHandshakeTimeoutMillis SSL handshake timeout in milliseconds
+     */
     public void setSslHandshakeTimeoutMillis(int sslHandshakeTimeoutMillis) {
         this.sslHandshakeTimeoutMillis = sslHandshakeTimeoutMillis <= 0 ? DEFAULT_HANDSHAKE_TIMEOUT_MS : sslHandshakeTimeoutMillis;
-    }
-
-    public boolean isFollowRedirects() {
-        return followRedirects;
-    }
-
-    public void setFollowRedirects(boolean followRedirects) {
-        this.followRedirects = followRedirects;
     }
 }

@@ -5,8 +5,9 @@ import arrow.core.getOrElse
 import arrow.core.orElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
+import io.github.booster.task.Maybe
 import io.github.booster.task.EmptyRequestHandler
+import io.github.booster.task.ExecutionType
 import io.github.booster.task.RequestExceptionHandler
 import io.github.booster.task.Task
 import io.github.booster.task.TaskExecutionContext
@@ -22,6 +23,11 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Scheduler
 
+/**
+ * Default handlers for request edge cases
+ * @param emptyRequestHandler handler for empty request option
+ * @param requestExceptionHandler handler for request exception
+ */
 data class RequestHandlers<Response>(
     val emptyRequestHandler: Option<EmptyRequestHandler<Response>>,
     val requestExceptionHandler: Option<RequestExceptionHandler<Response>>
@@ -30,9 +36,9 @@ data class RequestHandlers<Response>(
 /**
  * Base class for all tasks. Every task being executed supports optional
  * [Retry] and [CircuitBreaker].
- * @param <Request> Request object type.
- * @param <Response> Response object type.
-</Response></Request> */
+ * @param [Request] Request object type.
+ * @param [Response] Response object type.
+ */
 abstract class AbstractTask<Request, Response>(
     name: String,
     private val requestHandlers: RequestHandlers<Response>,
@@ -43,15 +49,9 @@ abstract class AbstractTask<Request, Response>(
 
     /**
      * Constructor
-     * @param name name of the task.
-     * @param executorServiceOption optional thread to run the task on. if absent, the executor is run on calling thread
-     * @param retryOption optional [Retry] to allow retry of current task. If not provided, no retry will be attempted.
-     * @param circuitBreakerOption optional [CircuitBreaker] to allow circuit breaking on current task. If
-     * not provided, no circuit breaker will be used.
-     * @param registry [MetricsRegistry] to record metrics.
      */
     init {
-        Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank")
+        Preconditions.checkArgument(name.isNotBlank(), "name cannot be blank")
         this.taskName = name
         // Create a scheduler from ExecutorService, then monitor it for metrics.
         this.scheduler = toScheduler(taskExecutionContext.executorServiceOption)
@@ -63,13 +63,14 @@ abstract class AbstractTask<Request, Response>(
      * @return a [Mono] of execution result.
      */
     //@Suppress("UnsafeCallOnNullableType")
-    private fun executeInternal(request: DataWithError<Request>): Mono<Option<Response>> {
+    private fun executeInternal(request: Maybe<Request>): Mono<Option<Response>> {
 
         return request.map { req ->
             log.debug("booster-task - task[{}] running with optional request values: [{}]", name, req)
             var response = req.map {
                 this.handleRequest(it)
             }.getOrElse {
+                // handles empty requests with [RequestHandlers#emptyRequestHandler]
                 Mono.just(
                     this.requestHandlers.emptyRequestHandler.map {
                         it.invoke()
@@ -88,7 +89,7 @@ abstract class AbstractTask<Request, Response>(
                 )
                 response.transformDeferred(RetryOperator.of(retry))
             }.getOrElse {
-                log.debug("booster-task - task[{}] withtout retry", name)
+                log.debug("booster-task - task[{}] without retry", name)
                 response
             }
 
@@ -106,6 +107,7 @@ abstract class AbstractTask<Request, Response>(
             }
             response
         }.getOrElse {
+            // handles request exceptions.
             log.warn("booster-task - task[{}] input has exception", name, it)
             Mono.fromSupplier { handleRequestException(it) }
         }
@@ -123,18 +125,28 @@ abstract class AbstractTask<Request, Response>(
         }
     }
 
-    override fun execute(request: Mono<DataWithError<Request>>): Mono<DataWithError<Response>> {
+    override fun execute(request: Mono<Maybe<Request>>): Mono<Maybe<Response>> {
         val sampleOption: Option<Timer.Sample> = this.taskExecutionContext.registry.startSample()
 
-        // To execute on thread provided, or calling thread.
-        return this.scheduler.map {
-            log.debug("booster-task - task[{}] using thread pool", name)
-            request.publishOn(it)
-        }.getOrElse {
-            log.debug("booster-task - task[{}] using calling thread", name)
-            request
-        }.flatMap {
-            this.executeInternal(it)
+        return if (this.taskExecutionContext.executionType == ExecutionType.PUBLISH_ON) {
+            // To execute on thread provided, or calling thread.
+            this.scheduler.map {
+                log.debug("booster-task - task[{}] using thread pool", name)
+                request.publishOn(it)
+            }.getOrElse {
+                log.debug("booster-task - task[{}] using calling thread", name)
+                request
+            }.flatMap {
+                this.executeInternal(it)
+            }
+        } else {
+            this.scheduler.map {
+                request.flatMap { req -> this.executeInternal(req) }.subscribeOn(it)
+            }.getOrElse {
+                request.flatMap {
+                    this.executeInternal(it)
+                }
+            }
         }.convertAndRecord(log, this.taskExecutionContext.registry, sampleOption, name)
     }
 

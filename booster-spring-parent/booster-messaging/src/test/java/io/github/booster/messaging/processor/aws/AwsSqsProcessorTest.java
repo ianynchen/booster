@@ -6,6 +6,7 @@ import io.github.booster.messaging.config.AwsSqsConfig;
 import io.github.booster.messaging.config.AwsSqsSetting;
 import io.github.booster.messaging.config.OpenTelemetryConfig;
 import io.github.booster.messaging.subscriber.aws.MockAwsSubscriberFlow;
+import io.github.booster.task.ExecutionType;
 import io.github.booster.task.Task;
 import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
@@ -63,7 +64,8 @@ class AwsSqsProcessorTest {
                             Option.fromNullable(null),
                             Option.fromNullable(null),
                             Option.fromNullable(null),
-                            new MetricsRegistry(new SimpleMeterRegistry())
+                            new MetricsRegistry(new SimpleMeterRegistry()),
+                            ExecutionType.PUBLISH_ON
                     ),
                     this.process
             );

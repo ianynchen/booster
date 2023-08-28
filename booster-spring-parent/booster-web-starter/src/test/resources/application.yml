@@ -1,0 +1,51 @@
+server:
+  name: sample-app
+  port: 8080
+booster:
+  tasks:
+    threads:
+      settings:
+        test:
+          coreSize: 20
+          maxSize: 50
+          queueSize: 1000
+          prefix: test-pl-
+    circuit-breakers:
+      settings:
+        test:
+          failureRateThreshold: 60
+          slowCallRateThreshold: 70
+          slowCallDurationThreshold: 30000
+          permittedNumberOfCallsInHalfOpenState: 15
+          maxWaitDurationInHalfOpenState: 10
+          slidingWindowSize: 200
+          minimumNumberOfCalls: 30
+          waitDurationInOpenState: 20000
+          automaticTransitionFromOpenToHalfOpenEnabled: true
+          slidingWindowType: TIME_BASED
+    retries:
+      settings:
+        test:
+          initialBackOffMillis: 1000
+          maxAttempts: 5
+          backOffPolicy: EXPONENTIAL
+  http:
+    clients:
+      connections:
+        settings:
+          def:
+            baseUrl: "http://abc.com"
+          test:
+            baseUrl: "http://test.com"
+            connectionTimeoutMillis: 1000
+            readTimeoutMillis: 1000
+            writeTimeoutMillis: 1000
+            useSSL: true
+            followRedirects: true
+            sslHandshakeTimeoutMillis: 1000
+            maxInMemorySizeMB: 1000
+            responseTimeoutInMillis: 1000
+            pool:
+              maxConnections: 200
+              maxIdleTimeMillis: 10000
+              maxLifeTimeMillis: 10000

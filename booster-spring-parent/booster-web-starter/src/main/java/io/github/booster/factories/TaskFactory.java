@@ -21,9 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * Generates {@link Task}
+ */
 public class TaskFactory {
 
     private static final Logger log = LoggerFactory.getLogger(TaskFactory.class);
@@ -38,16 +38,20 @@ public class TaskFactory {
 
     private final MetricsRegistry registry;
 
-    private final Map<String, Task> simpleTasks = new HashMap<>();
-
-    private final Map<String, Task> httpClientTasks = new HashMap<>();
-
+    /**
+     * Constructs a {@link TaskFactory}
+     * @param threadPoolConfig {@link ThreadPoolConfig} for {@link Task}
+     * @param retryConfig {@link RetryConfig} for {@link Task}
+     * @param circuitBreakerConfig {@link CircuitBreakerConfig} for {@link Task}
+     * @param httpClientFactory {@link HttpClientFactory} to create HTTP client {@link Task}
+     * @param registry {@link MetricsRegistry} to record metrics.
+     */
     public TaskFactory(
-        ThreadPoolConfig threadPoolConfig,
-        RetryConfig retryConfig,
-        CircuitBreakerConfig circuitBreakerConfig,
-        HttpClientFactory httpClientFactory,
-        MetricsRegistry registry
+            ThreadPoolConfig threadPoolConfig,
+            RetryConfig retryConfig,
+            CircuitBreakerConfig circuitBreakerConfig,
+            HttpClientFactory httpClientFactory,
+            MetricsRegistry registry
     ) {
         this.threadPoolConfig = threadPoolConfig;
         this.registry = registry;
@@ -94,9 +98,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 processor
@@ -130,9 +134,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 processor
@@ -182,9 +186,9 @@ public class TaskFactory {
                         Option.fromNullable(exceptionHandler)
                 ),
                 new TaskExecutionContext(
-                        this.threadPoolConfig.getOption(name),
-                        this.retryConfig.getOption(name),
-                        this.circuitBreakerConfig.getOption(name),
+                        this.threadPoolConfig.tryGet(name),
+                        this.retryConfig.tryGet(name),
+                        this.circuitBreakerConfig.tryGet(name),
                         this.registry
                 ),
                 function
@@ -220,21 +224,13 @@ public class TaskFactory {
             String name,
             Function1<Throwable, Option<ResponseEntity<Response>>> exceptionHandler
     ) {
-        synchronized (this.httpClientTasks) {
-            if (this.httpClientTasks.containsKey(name)) {
-                log.debug("booster-starter - http task already exists for: [{}]", name);
-                return this.httpClientTasks.get(name);
-            } else {
-                log.debug("booster-starter - creating http task for: [{}]", name);
-                HttpClient<Request, Response> httpClient = this.httpClientFactory.get(name);
-                Preconditions.checkNotNull(httpClient, "HTTP client cannot be null");
-                Task<HttpClientRequestContext<Request, Response>, ResponseEntity<Response>> task =
-                        this.createHttpClientTask(name, httpClient, exceptionHandler);
-                Preconditions.checkNotNull(task, "task cannot be null");
-                this.httpClientTasks.put(name, task);
-                return task;
-            }
-        }
+        log.debug("booster-starter - creating http task for: [{}]", name);
+        HttpClient<Request, Response> httpClient = this.httpClientFactory.get(name);
+        Preconditions.checkNotNull(httpClient, "HTTP client cannot be null");
+        Task<HttpClientRequestContext<Request, Response>, ResponseEntity<Response>> task =
+                this.createHttpClientTask(name, httpClient, exceptionHandler);
+        Preconditions.checkNotNull(task, "task cannot be null");
+        return task;
     }
 
     /**
@@ -270,17 +266,8 @@ public class TaskFactory {
             Function1<Request, Mono<Option<Response>>> processor,
             Function1<Throwable, Option<Response>> exceptionHandler
     ) {
-        synchronized (this.simpleTasks) {
-            if (this.simpleTasks.containsKey(name)) {
-                log.debug("booster-starter - async task already exists for: [{}]", name);
-                return (Task<Request, Response>) this.simpleTasks.get(name);
-            } else {
-                log.debug("booster-starter - creating async task for: [{}]", name);
-                Task<Request, Response> task = this.createAsyncTask(name, processor, exceptionHandler);
-                this.simpleTasks.put(name, task);
-                return task;
-            }
-        }
+        log.debug("booster-starter - creating async task for: [{}]", name);
+        return this.createAsyncTask(name, processor, exceptionHandler);
     }
 
     /**
@@ -316,16 +303,7 @@ public class TaskFactory {
             Function1<Request, Option<Response>> processor,
             Function1<Throwable, Option<Response>> exceptionHandler
     ) {
-        synchronized (this.simpleTasks) {
-            if (this.simpleTasks.containsKey(name)) {
-                log.debug("booster-starter - sync task already exists for: [{}]", name);
-                return (Task<Request, Response>) this.simpleTasks.get(name);
-            } else {
-                log.debug("booster-starter - creating sync task for: [{}]", name);
-                Task<Request, Response> task = this.createSyncTask(name, processor, exceptionHandler);
-                this.simpleTasks.put(name, task);
-                return task;
-            }
-        }
+        log.debug("booster-starter - creating sync task for: [{}]", name);
+        return this.createSyncTask(name, processor, exceptionHandler);
     }
 }

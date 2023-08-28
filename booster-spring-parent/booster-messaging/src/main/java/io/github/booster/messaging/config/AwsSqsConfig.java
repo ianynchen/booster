@@ -7,16 +7,34 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * AWS SQS configuration
+ */
 public class AwsSqsConfig {
 
     private Map<String, AwsSqsSetting> settings = new HashMap<>();
 
     private final Map<String, SqsClient> cachedClients = new HashMap<>();
 
+    /**
+     * Default constructor
+     */
+    public AwsSqsConfig() {
+    }
+
+    /**
+     * Allows spring to set settings from config
+     * @param settings {@link Map} of {@link AwsSqsSetting}
+     */
     public void setSettings(Map<String, AwsSqsSetting> settings) {
         this.settings = settings == null ? Map.of() : settings;
     }
 
+    /**
+     * Retrieves {@link AwsSqsSetting} by name
+     * @param name name of setting in interest
+     * @return {@link AwsSqsSetting} or null
+     */
     public AwsSqsSetting get(String name) {
         if (name == null) {
             return null;
@@ -24,6 +42,11 @@ public class AwsSqsConfig {
         return this.settings.get(name);
     }
 
+    /**
+     * Retrieves an optional {@link SqsClient}
+     * @param name name of {@link AwsSqsSetting} to create {@link SqsClient}
+     * @return {@link Option} of {@link SqsClient}
+     */
     public Option<SqsClient> getClient(String name) {
         synchronized (this.cachedClients) {
             if (StringUtils.isBlank(name)) {

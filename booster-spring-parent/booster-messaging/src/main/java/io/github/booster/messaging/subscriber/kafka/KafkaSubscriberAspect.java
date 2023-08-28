@@ -32,7 +32,14 @@ import java.util.stream.Stream;
 @Aspect
 public class KafkaSubscriberAspect {
 
+    /**
+     * OTEL trace state field
+     */
     public static final String TRACESTATE = "tracestate";
+
+    /**
+     * OTEL baggage field
+     */
     public static final String BAGGAGE = "baggage";
 
     static class KafkaListenerTextMapGetter implements TextMapGetter<ConsumerRecord<?, ?>> {
@@ -61,23 +68,34 @@ public class KafkaSubscriberAspect {
 
     private KafkaListenerTextMapGetter getter = new KafkaListenerTextMapGetter();
 
+    /**
+     * Constructs aspect
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for trace
+     */
     public KafkaSubscriberAspect(OpenTelemetryConfig openTelemetryConfig) {
         this.openTelemetryConfig = openTelemetryConfig;
     }
 
+    /**
+     * Defines {@link Pointcut} on all public methods
+     */
     @Pointcut("execution(public * *(..)) && @annotation(org.springframework.kafka.annotation.KafkaListener)")
     public void anyPublicListener() {
 
     }
 
+    /**
+     * When Kafka listener receives a record, insert trace manually
+     * @param joinPoint {@link ProceedingJoinPoint}
+     */
     @Around("anyPublicListener()")
     public void kafkaListener(ProceedingJoinPoint joinPoint) {
 
-        ConsumerRecord record = null;
+        ConsumerRecord<?, ?> record = null;
 
         for (Object a: joinPoint.getArgs()) {
             if (a instanceof ConsumerRecord) {
-                record = (ConsumerRecord) a;
+                record = (ConsumerRecord<?, ?>) a;
                 break;
             }
         }

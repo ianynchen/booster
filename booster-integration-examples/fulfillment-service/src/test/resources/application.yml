@@ -1,0 +1,37 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: fulfillment
+booster:
+  gcp:
+    pubsub:
+      create: true
+      endpoint: localhost:8538
+      projectId: order-project
+      topic: orders
+      subscription: order-subscription
+  task:
+    threads:
+      settings:
+        fulfillment:
+          coreSize: 10
+          maxSize: 20
+          queueSize: 100
+          prefix: fulfillment
+        processor:
+          coreSize: 10
+          maxSize: 20
+          queueSize: 100
+          prefix: processor
+  messaging:
+    gcp:
+      subscriber:
+        settings:
+          fulfillment:
+            subscription: order-subscription
+            maxRecords: 1
+            queueSize: 2
+            waitPolicy: EXPONENTIAL
+            initialWaitMillis: 1000
+            maximumWaitMillis: 10000

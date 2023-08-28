@@ -6,6 +6,7 @@ import io.github.booster.commons.metrics.MetricsRegistry;
 import io.github.booster.messaging.processor.ProcessResult;
 import io.github.booster.messaging.publisher.PublisherRecord;
 import io.github.booster.messaging.subscriber.gcp.MockGcpSubscriberFlow;
+import io.github.booster.task.ExecutionType;
 import io.github.booster.task.Task;
 import io.github.booster.task.TaskExecutionContext;
 import io.github.booster.task.impl.AsyncTask;
@@ -54,7 +55,8 @@ class GcpPubSubProcessorTest {
                             Option.fromNullable(null),
                             Option.fromNullable(null),
                             Option.fromNullable(null),
-                            new MetricsRegistry(new SimpleMeterRegistry())
+                            new MetricsRegistry(new SimpleMeterRegistry()),
+                            ExecutionType.PUBLISH_ON
                     ),
                     process
             );

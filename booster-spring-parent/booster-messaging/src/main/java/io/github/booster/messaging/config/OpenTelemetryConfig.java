@@ -18,6 +18,9 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 
+/**
+ * OpenTelemetry configuration
+ */
 public class OpenTelemetryConfig {
 
     private static final String INSTRUMENTATION_NAME = "booster-messaging";
@@ -25,6 +28,13 @@ public class OpenTelemetryConfig {
 
     private final OpenTelemetry openTelemetry;
 
+    /**
+     * Constructor to create an {@link OpenTelemetryConfig}
+     * @param openTelemetry an {@link OpenTelemetry} object. If this is not null,
+     *                      the instance will be used to generate and get trace info. Otherwise
+     *                      a new instance will be created and used.
+     * @param serviceName name of the service
+     */
     public OpenTelemetryConfig(
             OpenTelemetry openTelemetry,
             String serviceName
@@ -71,12 +81,20 @@ public class OpenTelemetryConfig {
         }
     }
 
+    /**
+     * Gets {@link Tracer}
+     * @return {@link Tracer}
+     */
     public Tracer getTracer() {
         return this.openTelemetry
                 .getTracerProvider()
                 .get(INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION);
     }
 
+    /**
+     * Gets {@link OpenTelemetry}
+     * @return {@link OpenTelemetry}
+     */
     public OpenTelemetry getOpenTelemetry() {
         return this.openTelemetry;
     }

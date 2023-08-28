@@ -15,8 +15,10 @@ import lombok.NonNull;
 import lombok.ToString;
 import org.springframework.http.HttpStatus;
 
+/**
+ * Error response object in Restful endpoints returns.
+ */
 @Getter
-@AllArgsConstructor
 @ToString
 @EqualsAndHashCode
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -47,6 +49,28 @@ public class ErrorResponse {
     @JsonProperty("stack_trace")
     private String stackTrace;
 
+    /**
+     * All args constructor
+     * @param errorCode error code
+     * @param message error message
+     * @param detailedReason details reason of error
+     * @param stackTrace stack trace associated
+     */
+    protected ErrorResponse(
+            String errorCode,
+            String message,
+            String detailedReason,
+            String stackTrace
+    ) {
+        this.errorCode = errorCode;
+        this.message = message;
+        this.detailedReason = detailedReason;
+        this.stackTrace = stackTrace;
+    }
+
+    /**
+     * Builder for {@link ErrorResponse}
+     */
     @JsonPOJOBuilder(withPrefix = "")
     public static class ErrorResponseBuilder {
 
@@ -61,27 +85,57 @@ public class ErrorResponse {
         @JsonProperty("stack_trace")
         private String stackTrace;
 
-        protected ErrorResponseBuilder errorCode(String errorCode) {
+        /**
+         * Default constructor that does nothing.
+         */
+        public ErrorResponseBuilder() {
+        }
+
+        /**
+         * Sets error code
+         * @param errorCode error code
+         * @return {@link ErrorResponseBuilder}
+         */
+        public ErrorResponseBuilder errorCode(String errorCode) {
             this.errorCode = errorCode;
             return this;
         }
 
-        protected ErrorResponseBuilder message(String message) {
+        /**
+         * Sets error message
+         * @param message error message
+         * @return {@link ErrorResponseBuilder}
+         */
+        public ErrorResponseBuilder message(String message) {
             this.message = message;
             return this;
         }
 
-        protected ErrorResponseBuilder detailedReason(String detailedReason) {
+        /**
+         * Sets detailed reason for failure
+         * @param detailedReason detailed reason for failure
+         * @return {@link ErrorResponseBuilder}
+         */
+        public ErrorResponseBuilder detailedReason(String detailedReason) {
             this.detailedReason = detailedReason;
             return this;
         }
 
-        protected ErrorResponseBuilder stackTrace(String stackTrace) {
+        /**
+         * Sets stack trace
+         * @param stackTrace stack trace info
+         * @return {@link ErrorResponseBuilder}
+         */
+        public ErrorResponseBuilder stackTrace(String stackTrace) {
             this.stackTrace = stackTrace;
             return this;
         }
 
-        protected ErrorResponse build() {
+        /**
+         * Builds an {@link ErrorResponse}
+         * @return {@link ErrorResponse}
+         */
+        public ErrorResponse build() {
             return new ErrorResponse(
                     errorCode,
                     message,
@@ -90,6 +144,13 @@ public class ErrorResponse {
             );
         }
 
+        /**
+         * Builds an {@link ErrorResponse} and {@link HttpStatus} from
+         * a {@link Throwable} and {@link ExceptionConverter}
+         * @param throwable {@link Throwable} to be converted from
+         * @param exceptionConverter {@link ExceptionConverter} used to convert
+         * @return {@link Tuple2} of {@link ErrorResponse} and {@link HttpStatus}
+         */
         public Tuple2<ErrorResponse, HttpStatus> buildFromThrowable(
                 @NonNull Throwable throwable,
                 @NonNull ExceptionConverter exceptionConverter
@@ -114,12 +175,16 @@ public class ErrorResponse {
     }
 
     /**
-     * Allows stack trace to be cleared in productoin.
+     * Allows stack trace to be cleared in production.
      */
     public void clearStackTrace() {
         this.stackTrace = "";
     }
 
+    /**
+     * Creates a {@link ErrorResponseBuilder} instance
+     * @return {@link ErrorResponseBuilder}
+     */
     public static ErrorResponseBuilder builder() {
         return new ErrorResponseBuilder();
     }

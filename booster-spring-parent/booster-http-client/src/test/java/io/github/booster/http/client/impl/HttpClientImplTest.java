@@ -9,7 +9,6 @@ import io.github.booster.http.client.config.HttpClientConnectionSetting;
 import io.github.booster.http.client.config.MockConfig;
 import io.github.booster.http.client.controller.MockController;
 import io.github.booster.http.client.request.HttpClientRequestContext;
-import io.github.booster.http.client.request.UserContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.metrics.web.reactive.client.WebClientExchangeTagsProvider;
@@ -17,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -51,10 +51,10 @@ class HttpClientImplTest {
         setting.setBaseUrl("http://127.0.0.1:" + this.port + "/v1/hello");
         setting.setConnectionTimeoutMillis(1000);
         setting.setMaxInMemorySizeMB(1000);
-        setting.setReadTimeoutMillis(1000);
+        setting.setReadTimeoutMillis(5000);
         setting.setUseSSL(false);
         setting.setResponseTimeoutInMillis(1000L);
-        setting.setWriteTimeoutMillis(1000);
+        setting.setWriteTimeoutMillis(5000);
 
         HttpClientConnectionSetting.ConnectionPoolSetting poolSetting = new HttpClientConnectionSetting.ConnectionPoolSetting();
         poolSetting.setMaxConnections(1000);
@@ -67,6 +67,12 @@ class HttpClientImplTest {
         return config;
     }
 
+    private HttpHeaders createHeaders(String language) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ACCEPT_LANGUAGE, language);
+        return headers;
+    }
+
     @Test
     void shouldGetResponseByClass() {
         HttpClient<Object, MockController.Greeting> client = new HttpClientImpl<Object, MockController.Greeting>(
@@ -77,12 +83,11 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<Object, MockController.Greeting> request = HttpClientRequestContext.<Object, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.GET)
+                .headers(createHeaders("en"))
                 .path("/{name}")
                 .pathVariables(Map.of("name", "Jim"))
                 .responseClass(MockController.Greeting.class)
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -97,12 +102,11 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<Object, MockController.Greeting> request = HttpClientRequestContext.<Object, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.GET)
+                .headers(createHeaders("en"))
                 .path("/{name}")
                 .pathVariables(Map.of("name", "Jim"))
                 .responseReference(new ParameterizedTypeReference<MockController.Greeting>() {})
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -117,14 +121,13 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<Object, MockController.Greeting> request = HttpClientRequestContext.<Object, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.GET)
+                .headers(createHeaders("en"))
                 .path("/query")
                 .queryParameters(
                         Map.of("name", List.of("Jim"))
                 )
                 .responseClass(MockController.Greeting.class)
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -139,15 +142,14 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<MockController.Greeting, MockController.Greeting> request = HttpClientRequestContext.<MockController.Greeting, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.GET)
+                .headers(createHeaders("en"))
                 .path("/query")
                 .queryParameters(
                         Map.of("name", List.of("Jim"))
                 )
                 .requestReference(new ParameterizedTypeReference<>() {})
                 .responseClass(MockController.Greeting.class)
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -162,12 +164,11 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<MockController.Greeting, MockController.Greeting> request = HttpClientRequestContext.<MockController.Greeting, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.POST)
+                .headers(createHeaders("en"))
                 .path("/")
                 .request(new MockController.Greeting("", "Jim", "Server"))
                 .responseReference(new ParameterizedTypeReference<>() {})
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -182,15 +183,14 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<MockController.Greeting, MockController.Greeting> request = HttpClientRequestContext.<MockController.Greeting, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.GET)
+                .headers(createHeaders("en"))
                 .path("/query")
                 .queryParameters(
                         Map.of("name", List.of("Jim"))
                 )
                 .requestReference(new ParameterizedTypeReference<>() {})
                 .responseReference(new ParameterizedTypeReference<>() {})
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -205,12 +205,11 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<MockController.Greeting, MockController.Greeting> request = HttpClientRequestContext.<MockController.Greeting, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.POST)
+                .headers(createHeaders("en"))
                 .path("/")
                 .request(new MockController.Greeting("", "Jim", "Server"))
                 .responseClass(MockController.Greeting.class)
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -225,13 +224,12 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<MockController.Greeting, MockController.Greeting> request = HttpClientRequestContext.<MockController.Greeting, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.POST)
+                .headers(createHeaders("en"))
                 .path("/")
                 .request(new MockController.Greeting("", "Jim", "Server"))
                 .requestReference(new ParameterizedTypeReference<MockController.Greeting>() {})
                 .responseClass(MockController.Greeting.class)
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -246,13 +244,12 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<MockController.Greeting, MockController.Greeting> request = HttpClientRequestContext.<MockController.Greeting, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.POST)
+                .headers(createHeaders("en"))
                 .path("/")
                 .request(new MockController.Greeting("", "Jim", "Server"))
                 .requestReference(new ParameterizedTypeReference<>() {})
                 .responseReference(new ParameterizedTypeReference<>() {})
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         verifyResult(client.invoke(request));
     }
@@ -316,12 +313,11 @@ class HttpClientImplTest {
 
         HttpClientRequestContext<MockController.Greeting, MockController.Greeting> request = HttpClientRequestContext.<MockController.Greeting, MockController.Greeting>builder()
                 .requestMethod(HttpMethod.POST)
+                .headers(createHeaders("en"))
                 .path("")
                 .request(new MockController.Greeting())
                 .requestReference(new ParameterizedTypeReference<>() {})
-                .userContext(
-                        UserContext.builder().acceptLanguage("en").build()
-                ).build();
+                .build();
 
         assertThrows(IllegalArgumentException.class, () -> client.invoke(request));
     }

@@ -20,7 +20,9 @@ public class GcpPubSubProcessor extends AbstractProcessor<AcknowledgeablePubsubM
      * Constructs a {@link GcpPubSubProcessor}
      * @param subscriberFlow {@link SubscriberFlow} to listen to.
      * @param processTask {@link Task} used to process GCP pub/sub events
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for metrics
      * @param registry metrics recording.
+     * @param manuallyInjectTrace whether to manually inject trace or rely upon OTEL instrumentation
      */
     public GcpPubSubProcessor(
             SubscriberFlow<AcknowledgeablePubsubMessage> subscriberFlow,

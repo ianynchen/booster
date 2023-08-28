@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -38,6 +39,10 @@ public class HttpClientConnectionConfig {
 
     private final ApplicationContext applicationContext;
 
+    /**
+     * Constructor
+     * @param applicationContext {@link ApplicationContext} to add custom metrics
+     */
     public HttpClientConnectionConfig(
             ApplicationContext applicationContext
     ) {
@@ -45,15 +50,27 @@ public class HttpClientConnectionConfig {
         this.settings = Map.of();
     }
 
+    /**
+     * Sets settings
+     * @param settings {@link Map} of keys and {@link HttpClientConnectionSetting}s
+     */
     public void setSettings(Map<String, HttpClientConnectionSetting> settings) {
         this.settings = settings == null ? Map.of() : settings;
+    }
+
+    /**
+     * Gets all settings
+     * @return {@link Map} of keys and {@link HttpClientConnectionSetting}
+     */
+    public Map<String, HttpClientConnectionSetting> getSettings() {
+        return this.settings == null ? Map.of() : this.settings;
     }
 
     /**
      * Creates a reactive {@link WebClient}. Each WebClient object is cached in the
      * configuration object and if one with the same name is already created, the previously
      * created instance will be returned.
-     *
+     * @param webClientBuilder {@link WebClient.Builder} instance for trace injection
      * @param name name of {@link WebClient}
      * @return {@link WebClient} created
      */

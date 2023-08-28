@@ -36,18 +36,37 @@ import java.util.concurrent.atomic.AtomicReference;
 abstract public class AbstractBatchProcessor<T> {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractProcessor.class);
+
+    /**
+     * Acknowledgement failure metric name.
+     */
     public static final String ACK_FAILURE = "ack_failure";
 
     private final String type;
 
+    /**
+     * {@link BatchSubscriberFlow}
+     */
     protected final BatchSubscriberFlow<T> subscriberFlow;
 
+    /**
+     * {@link Task} to process received records.
+     */
     private final Task<List<T>, List<T>> processTask;
 
+    /**
+     * {@link OpenTelemetryConfig} object used to get tracing context
+     */
     protected final OpenTelemetryConfig openTelemetryConfig;
 
+    /**
+     * {@link MetricsRegistry} to record metrics
+     */
     protected final MetricsRegistry registry;
 
+    /**
+     * should programmatically inject trace?
+     */
     protected final boolean manuallyInjectTrace;
 
     /**
@@ -55,7 +74,9 @@ abstract public class AbstractBatchProcessor<T> {
      * @param type type of {@link AbstractBatchProcessor}, either Kafka or GCP pub/sub
      * @param subscriberFlow {@link BatchSubscriberFlow} to listen to.
      * @param processTask {@link Task} used to process events.
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} object used to get tracing context
      * @param registry metrics recording.
+     * @param manuallyInjectTrace should programmatically inject trace?
      */
     public AbstractBatchProcessor(
             String type,
@@ -77,12 +98,27 @@ abstract public class AbstractBatchProcessor<T> {
         this.manuallyInjectTrace = manuallyInjectTrace;
     }
 
+    /**
+     * Creates a tracing context from pulled records
+     * @param records records pulled.
+     * @return tracing context. This should be non-null.
+     */
     abstract protected Context createContext(List<T> records);
 
+    /**
+     * Creates a {@link Span} from {@link Context}
+     * @param context {@link Context} to be used to create {@link Span}
+     * @return {@link Span}
+     */
     protected Span createSpan(Context context) {
         return TraceHelper.createSpan(this.openTelemetryConfig, context);
     }
 
+    /**
+     * Creates a {@link Scope} for the {@link Span}
+     * @param childSpan {@link Span} to be used as current span
+     * @return {@link Scope} of the current span.
+     */
     protected Scope createScope(Span childSpan) {
         return childSpan.makeCurrent();
     }
@@ -90,6 +126,7 @@ abstract public class AbstractBatchProcessor<T> {
     /**
      * Acknowledges a list of records after successful processing.
      * @param records records to be acknowledged.
+     * @return number of records successfully acknowledged.
      */
     abstract protected int acknowledge(List<T> records);
 
@@ -219,6 +256,7 @@ abstract public class AbstractBatchProcessor<T> {
 
     /**
      * Start listening on {@link BatchSubscriberFlow}
+     * @return a {@link Flux} of {@link BatchProcessResult}
      */
     public Flux<Either<Throwable, Option<BatchProcessResult<T>>>> process() {
         AtomicReference<Span> spanReference = new AtomicReference<>();
@@ -258,6 +296,11 @@ abstract public class AbstractBatchProcessor<T> {
                 });
     }
 
+    /**
+     * Gets name of processor. The name is used to get thread pool for
+     * the processor.
+     * @return name of processor
+     */
     protected String getName() {
         return this.subscriberFlow.getName();
     }

@@ -13,6 +13,7 @@
     <version>2.0.0</version>
     <name>booster-messaging</name>
     <description>Booster Messaging Library</description>
+    <packaging>jar</packaging>
 
     <properties>
         <booster-web-starter.version>2.0.0</booster-web-starter.version>
@@ -28,6 +29,12 @@
             <groupId>io.github.booster</groupId>
             <artifactId>booster-web-starter</artifactId>
             <version>${booster-web-starter.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
 
         <!-- messaging libraries -->
@@ -123,7 +130,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.maven.plugin.version}</version>
+                <version>${jacoco-maven-plugin.version}</version>
                 <configuration>
                     <excludes>
                         <exclude>**/*Setting.class</exclude>
@@ -156,6 +163,26 @@
                     <execution>
                         <id>default-deploy</id>
                         <phase>deploy</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <source>src/main/java</source>
+                                <source>target/generated-sources/annotations</source>
+                            </sourceDirs>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

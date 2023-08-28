@@ -37,13 +37,34 @@ import java.util.concurrent.ExecutorService;
 public class GcpPubSubPullSubscriber
         implements SubscriberFlow<AcknowledgeablePubsubMessage>, BatchSubscriberFlow<AcknowledgeablePubsubMessage> {
 
+    /**
+     * {@link TextMapGetter} to get tracing from GCP pub/sub messages
+     */
     public static class GcpPubSubTextMapGetter implements TextMapGetter<PubsubMessage> {
 
+        /**
+         * Default constructor
+         */
+        public GcpPubSubTextMapGetter() {
+            super();
+        }
+
+        /**
+         * Get all keys for message attributes
+         * @param carrier carrier of propagation fields, such as an http request.
+         * @return Get all keys for message attributes
+         */
         @Override
         public Iterable<String> keys(PubsubMessage carrier) {
             return carrier.getAttributesMap().keySet();
         }
 
+        /**
+         * Get tracing related field values from attribute map
+         * @param carrier carrier of propagation fields, such as an http request.
+         * @param key the key of the field.
+         * @return value associated with the key
+         */
         @Nullable
         @Override
         public String get(@Nullable PubsubMessage carrier, String key) {
@@ -54,6 +75,9 @@ public class GcpPubSubPullSubscriber
 
     private static final Logger log = LoggerFactory.getLogger(GcpPubSubPullSubscriber.class);
 
+    /**
+     * Gets trace
+     */
     public static final GcpPubSubTextMapGetter GETTER = new GcpPubSubTextMapGetter();
 
     private final PubSubSubscriberTemplate subscriberTemplate;
@@ -72,14 +96,25 @@ public class GcpPubSubPullSubscriber
 
     private final boolean manuallyInjectTrace;
 
+    /**
+     * Constructs a {@link GcpPubSubPullSubscriber}
+     * @param name name of the {@link GcpPubSubPullSubscriber}. Name is
+     *             also used to get thread pools and subscriber configuration.
+     * @param subscriberTemplate {@link PubSubSubscriberTemplate} to perform subscriber operations
+     * @param threadPoolConfig {@link ThreadPoolConfig} for subscriber
+     * @param gcpPubSubSubscriberConfig {@link GcpPubSubSubscriberConfig} configuration settings
+     * @param registry {@link MetricsRegistry} for metrics reporting
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for tracing
+     * @param manuallyInjectTrace whether to manually record traces or rely on OTEL instrumentation
+     */
     public GcpPubSubPullSubscriber(
-        String name,
-        PubSubSubscriberTemplate subscriberTemplate,
-        ThreadPoolConfig threadPoolConfig,
-        GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            PubSubSubscriberTemplate subscriberTemplate,
+            ThreadPoolConfig threadPoolConfig,
+            GcpPubSubSubscriberConfig gcpPubSubSubscriberConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
         Preconditions.checkArgument(subscriberTemplate != null, "subscriber template cannot be null");
@@ -203,6 +238,10 @@ public class GcpPubSubPullSubscriber
                 });
     }
 
+    /**
+     * Name of the subscriber
+     * @return name of the subscriber
+     */
     @Override
     public String getName() {
         return this.name;

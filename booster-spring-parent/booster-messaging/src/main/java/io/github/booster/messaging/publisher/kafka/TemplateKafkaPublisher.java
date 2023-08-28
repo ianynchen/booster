@@ -66,14 +66,16 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @param kafkaTemplate {@link KafkaTemplate} to actually send messages.
      * @param threadPoolConfig thread pool to provide threads for send. the named thread pool must be present.
      * @param registry to record metrics
+     * @param openTelemetryConfig used to inject trace
+     * @param manuallyInjectTrace whether to manually inject trace or leave it to OTEL instrumentation
      */
     public TemplateKafkaPublisher(
-        String name,
-        KafkaTemplate<String, T> kafkaTemplate,
-        ThreadPoolConfig threadPoolConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            KafkaTemplate<String, T> kafkaTemplate,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
         Preconditions.checkArgument(kafkaTemplate != null, "kafka template cannot be null");

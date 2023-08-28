@@ -2,7 +2,7 @@ package io.github.booster.task.impl
 
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
+import io.github.booster.task.Maybe
 import io.github.booster.task.Task
 import io.github.booster.task.util.recordTime
 import reactor.core.publisher.Mono
@@ -22,7 +22,7 @@ class SequentialTask<T1Request, IntermediateResponse, T2Response>(
         Stream.of("seq", task1.name, task2.name).collect(Collectors.joining("_"))
     }
 
-    override fun execute(request: Mono<DataWithError<T1Request>>): Mono<DataWithError<T2Response>> {
+    override fun execute(request: Mono<Maybe<T1Request>>): Mono<Maybe<T2Response>> {
         val sampleOption = registry.startSample()
 
         // since success or failure depends on second task, not

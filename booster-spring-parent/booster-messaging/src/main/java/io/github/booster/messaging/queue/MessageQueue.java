@@ -41,8 +41,19 @@ public class MessageQueue<T> {
 
     private volatile boolean stopped;
 
-    private ExecutorService executorService;
+    private final ExecutorService executorService;
 
+    /**
+     * Constructor for message queue
+     * @param name name of the queue. Queue consumers will be run on a thread pool
+     *             with the same name.
+     * @param threadPoolConfig {@link ThreadPoolConfig} where the thread pool queue consumers
+     *                                                 run on will be running on
+     * @param registry {@link MetricsRegistry} to record metrics
+     * @param size message queue capacity. Once the queue is full, write operations to
+     *             the queue will be blocked. Once queue is empty, read operations will
+     *             be blocked.
+     */
     public MessageQueue(
             String name,
             ThreadPoolConfig threadPoolConfig,
@@ -59,6 +70,15 @@ public class MessageQueue<T> {
         this.executorService = threadPoolConfig.get(name);
     }
 
+    /**
+     * Constructor for message queue
+     * @param name name of the queue. Queue consumers will be run on a thread pool
+     *             with the same name.
+     * @param threadPoolConfig {@link ThreadPoolConfig} where the thread pool queue consumers
+     *                                                 run on will be running on
+     * @param registry {@link MetricsRegistry} to record metrics
+     * @param queue {@link BlockingQueue} instance
+     */
     public MessageQueue(
             String name,
             ThreadPoolConfig threadPoolConfig,

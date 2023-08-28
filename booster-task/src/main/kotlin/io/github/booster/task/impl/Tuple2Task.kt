@@ -4,7 +4,7 @@ import arrow.core.Option
 import arrow.core.getOrElse
 import com.google.common.base.Preconditions
 import io.github.booster.commons.metrics.MetricsRegistry
-import io.github.booster.task.DataWithError
+import io.github.booster.task.Maybe
 import io.github.booster.task.Task
 import io.github.booster.task.util.convertAndRecord
 import io.vavr.Tuple
@@ -15,11 +15,11 @@ import reactor.core.publisher.Mono
 typealias OptionTuple2<E0, E1> = Tuple2<Option<E0>, Option<E1>>
 
 typealias Tuple2WithError<E0, E1> =
-    Tuple2<DataWithError<E0>, DataWithError<E1>>
+    Tuple2<Maybe<E0>, Maybe<E1>>
 
 typealias Tuple2ExceptionHandler<Resp0, Resp1> = (Throwable) -> Tuple2WithError<Resp0, Resp1>
 typealias Tuple2Aggregator<Resp0, Resp1> =
-        (DataWithError<Resp0>, DataWithError<Resp1>) -> Tuple2WithError<Resp0, Resp1>
+        (Maybe<Resp0>, Maybe<Resp1>) -> Tuple2WithError<Resp0, Resp1>
 
 internal class Tuple2Task<Req0, Resp0, Req1, Resp1>(
     name: String,
@@ -76,8 +76,8 @@ internal class Tuple2Task<Req0, Resp0, Req1, Resp1>(
     }
 
     override fun execute(
-        request: Mono<DataWithError<OptionTuple2<Req0, Req1>>>
-    ): Mono<DataWithError<Tuple2WithError<Resp0, Resp1>>> {
+        request: Mono<Maybe<OptionTuple2<Req0, Req1>>>
+    ): Mono<Maybe<Tuple2WithError<Resp0, Resp1>>> {
 
         val sampleOption = this.registry.startSample()
         return request.flatMap { req ->

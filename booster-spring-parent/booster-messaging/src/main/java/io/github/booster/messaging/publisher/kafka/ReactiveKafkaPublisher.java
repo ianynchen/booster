@@ -66,14 +66,16 @@ public class ReactiveKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @param kafkaSender {@link KafkaSender} to actually send messages.
      * @param threadPoolConfig thread pool to provide threads for send. the named thread pool must be present.
      * @param registry to record metrics
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param manuallyInjectTrace whether to manually inject traces
      */
     public ReactiveKafkaPublisher(
-        String name,
-        KafkaSender<String, T> kafkaSender,
-        ThreadPoolConfig threadPoolConfig,
-        MetricsRegistry registry,
-        OpenTelemetryConfig openTelemetryConfig,
-        boolean manuallyInjectTrace
+            String name,
+            KafkaSender<String, T> kafkaSender,
+            ThreadPoolConfig threadPoolConfig,
+            MetricsRegistry registry,
+            OpenTelemetryConfig openTelemetryConfig,
+            boolean manuallyInjectTrace
     ) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "name cannot be blank");
         Preconditions.checkArgument(kafkaSender != null, "kafka sender cannot be null");

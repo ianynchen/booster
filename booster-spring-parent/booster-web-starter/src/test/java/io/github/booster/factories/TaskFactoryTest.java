@@ -25,10 +25,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +40,7 @@ import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -82,7 +83,7 @@ class TaskFactoryTest {
         setting.setBaseUrl("http://www.ibm.com");
         this.httpClientConnectionConfig.setSettings(Map.of("client", setting));
 
-        this.threadPoolConfig = new ThreadPoolConfig();
+        this.threadPoolConfig = new ThreadPoolConfig(null, this.registry);
         this.threadPoolConfig.setSettings(
                 Map.of(
                         "async", new ThreadPoolSetting(),
@@ -90,7 +91,6 @@ class TaskFactoryTest {
                         "client", new ThreadPoolSetting()
                 )
         );
-        this.threadPoolConfig.setMetricsRegistry(this.registry);
 
         this.retryConfig = new RetryConfig();
         this.retryConfig.setSettings(
@@ -133,7 +133,7 @@ class TaskFactoryTest {
         assertThat(task, notNullValue());
         assertThat(task2, notNullValue());
         assertThat(task3, notNullValue());
-        assertThat(task, sameInstance(task3));
+        assertThat(task, not(sameInstance(task3)));
         assertThat(task, not(sameInstance(task2)));
 
         StepVerifier.create(task.execute("hello"))
@@ -167,7 +167,7 @@ class TaskFactoryTest {
         assertThat(task, notNullValue());
         assertThat(task2, notNullValue());
         assertThat(task3, notNullValue());
-        assertThat(task, sameInstance(task3));
+        assertThat(task, not(sameInstance(task3)));
         assertThat(task, not(sameInstance(task2)));
 
         StepVerifier.create(task.execute("hello"))
@@ -195,7 +195,7 @@ class TaskFactoryTest {
                         )
                 );
 
-        this.mockHttpClientFactory = Mockito.mock(HttpClientFactory.class);
+        this.mockHttpClientFactory = mock(HttpClientFactory.class);
         when(this.mockHttpClientFactory.get(anyString())).thenReturn(this.mockHttpClient);
 
         this.factoryWithMock = new TaskFactory(
@@ -241,7 +241,7 @@ class TaskFactoryTest {
                 () -> this.factory.getHttpTask("client2")
         );
 
-        assertThat(this.factory.getHttpTask("client"), sameInstance(task));
+        assertThat(this.factory.getHttpTask("client"), not(sameInstance(task)));
 
         Either<Throwable, Option<HttpClientRequestContext<Object, GreetingResponse>>> request =
                 EitherUtil.convertThrowable(new IllegalArgumentException());

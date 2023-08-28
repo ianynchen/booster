@@ -7,10 +7,31 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
+/**
+ * Holds all {@link ExceptionHandler} available and converts any {@link Throwable} to
+ * a {@link WebException}
+ */
 public class ExceptionConverter {
 
+    /**
+     * A default {@link ExceptionHandler} in case a {@link Throwable} cannot
+     * be handled by any of the registered {@link ExceptionHandler}s
+     */
     public static class GenericExceptionHandler implements ExceptionHandler<Throwable> {
 
+        /**
+         * Constructs a default {@link ExceptionHandler} for all
+         * {@link Throwable}
+         */
+        public GenericExceptionHandler() {
+            super();
+        }
+
+        /**
+         * Handles any {@link Throwable} to generate an internal server error
+         * @param exception generic Java exception
+         * @return {@link WebException}
+         */
         @Override
         public WebException handle(@NonNull Throwable exception) {
             return this.createResponse(
@@ -20,6 +41,10 @@ public class ExceptionConverter {
             );
         }
 
+        /**
+         * Handles all {@link Throwable}
+         * @return {@link Class} of {@link Throwable}
+         */
         @Override
         public Class<Throwable> handles() {
             return Throwable.class;
@@ -30,6 +55,10 @@ public class ExceptionConverter {
 
     private final GenericExceptionHandler genericExceptionHandler = new GenericExceptionHandler();
 
+    /**
+     * Constructor with a list of {@link ExceptionHandler}s
+     * @param exceptionHandlers {@link ExceptionHandler}s
+     */
     public ExceptionConverter(
             List<ExceptionHandler<? extends Throwable>> exceptionHandlers
     ) {
@@ -38,6 +67,12 @@ public class ExceptionConverter {
                 exceptionHandlers;
     }
 
+    /**
+     * Finds the correct {@link ExceptionHandler} to convert a {@link Throwable} to
+     * a {@link WebException}
+     * @param throwable any {@link Throwable}
+     * @return {@link WebException}
+     */
     public WebException handle(Throwable throwable) {
         WebException result = null;
 

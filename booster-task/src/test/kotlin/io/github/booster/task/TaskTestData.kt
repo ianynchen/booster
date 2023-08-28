@@ -15,13 +15,15 @@ val threadPool = Option.fromNullable(Executors.newFixedThreadPool(3))
 
 val emptyThreadPool = Option.fromNullable(null)
 
-val linearRetrySetting: RetrySetting = RetrySetting.builder()
-    .backOffPolicy(RetrySetting.BackOffPolicy.LINEAR)
-    .initialBackOffMillis(10)
-    .maxAttempts(3)
-    .build()
+fun getLinearRetrySetting(): RetrySetting {
+    val linearRetrySetting: RetrySetting = RetrySetting()
+    linearRetrySetting.backOffPolicy = RetrySetting.BackOffPolicy.LINEAR
+    linearRetrySetting.initialBackOffMillis = 10
+    linearRetrySetting.maxAttempts = 3
+    return linearRetrySetting
+}
 
-val retryConfig = RetryConfig(mapOf("test" to linearRetrySetting))
+val retryConfig = RetryConfig(mapOf("test" to getLinearRetrySetting()))
 
 val circuitBreakerSetting = CircuitBreakerSetting()
 

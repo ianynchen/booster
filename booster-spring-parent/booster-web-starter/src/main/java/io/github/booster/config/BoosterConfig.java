@@ -30,13 +30,25 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class BoosterConfig implements ApplicationContextAware {
 
+    /**
+     * Service tag
+     */
     public static final String NAME = "service";
 
+    /**
+     * Environment tag
+     */
     public static final String PROFILE = "environment";
 
     private static final Logger log = LoggerFactory.getLogger(BoosterConfig.class);
 
     private ApplicationContext applicationContext;
+
+    /**
+     * Default constructor
+     */
+    public BoosterConfig() {
+    }
 
     /**
      * Creates metrics recorder
@@ -54,39 +66,68 @@ public class BoosterConfig implements ApplicationContextAware {
         return new MetricsRegistry(meterRegistry, recordTrace);
     }
 
+    /**
+     * Creates a {@link ThreadPoolConfig} bean
+     * @param registry {@link MetricsRegistry} to record metrics
+     * @return {@link ThreadPoolConfig} bean
+     */
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.threads")
+    @ConfigurationProperties(prefix = "booster.tasks.threads")
     public ThreadPoolConfig threadPoolConfig(
             @Autowired MetricsRegistry registry
     ) {
-        ThreadPoolConfig threadPoolConfig = new ThreadPoolConfig();
-        threadPoolConfig.setMetricsRegistry(registry);
-        return threadPoolConfig;
+        return new ThreadPoolConfig(
+                this.applicationContext,
+                registry
+        );
     }
 
+    /**
+     * Creates a {@link CircuitBreakerConfig} bean
+     * @return {@link CircuitBreakerConfig} bean
+     */
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.circuit-breaker")
+    @ConfigurationProperties(prefix = "booster.tasks.circuit-breakers")
     public CircuitBreakerConfig circuitBreakerConfig() {
         return new CircuitBreakerConfig();
     }
 
+    /**
+     * Creates a {@link HttpClientConnectionConfig} bean
+     * @return {@link HttpClientConnectionConfig} bean
+     */
     @Bean
-    @ConfigurationProperties(prefix = "booster.http.client.connection")
+    @ConfigurationProperties(prefix = "booster.http.clients.connections")
     public HttpClientConnectionConfig httpClientConnectionConfig() {
         return new HttpClientConnectionConfig(this.applicationContext);
     }
 
+    /**
+     * Creates a {@link WebClientExchangeTagsProvider} bean
+     * @return {@link WebClientExchangeTagsProvider} bean
+     */
     @Bean
     public WebClientExchangeTagsProvider clientRequestObservationConvention() {
         return new CustomWebClientExchangeTagsProvider();
     }
 
+    /**
+     * Creates a {@link RetryConfig} bean
+     * @return {@link RetryConfig} bean
+     */
     @Bean
-    @ConfigurationProperties(prefix = "booster.task.retry")
+    @ConfigurationProperties(prefix = "booster.tasks.retries")
     public RetryConfig retryConfig() {
         return new RetryConfig();
     }
 
+    /**
+     * Creates {@link HttpClientFactory} bean
+     * @param config {@link HttpClientConnectionConfig}
+     * @param webClientBuilder {@link WebClient.Builder} for trace injection
+     * @param mapper {@link ObjectMapper} for serialization and deserialization of requests/responses
+     * @return {@link HttpClientFactory} bean
+     */
     @Bean
     public HttpClientFactory httpClientFactory(
             @Autowired HttpClientConnectionConfig config,
@@ -96,6 +137,15 @@ public class BoosterConfig implements ApplicationContextAware {
         return new HttpClientFactory(config, webClientBuilder, mapper);
     }
 
+    /**
+     * Creates {@link TaskFactory} bean
+     * @param threadPoolConfig {@link ThreadPoolConfig} for {@link io.github.booster.task.Task}
+     * @param retryConfig {@link RetryConfig} for {@link io.github.booster.task.Task}
+     * @param circuitBreakerConfig {@link CircuitBreakerConfig} for {@link io.github.booster.task.Task}
+     * @param httpClientFactory {@link HttpClientFactory} to create HTTP {@link io.github.booster.task.Task}
+     * @param registry {@link MetricsRegistry} to record metrics
+     * @return {@link TaskFactory} bean
+     */
     @Bean
     public TaskFactory TaskFactory(
             @Autowired ThreadPoolConfig threadPoolConfig,
@@ -113,6 +163,12 @@ public class BoosterConfig implements ApplicationContextAware {
         );
     }
 
+    /**
+     * Creates {@link MeterRegistryCustomizer} bean to inject common tags on metrics
+     * @param serviceName name of service
+     * @param activeProfile name of environment
+     * @return {@link MeterRegistryCustomizer} bean
+     */
     @Bean
     public MeterRegistryCustomizer<MeterRegistry> metricsCommonTags(
             @Value("${spring.application.name:default}") String serviceName,
@@ -124,6 +180,11 @@ public class BoosterConfig implements ApplicationContextAware {
         );
     }
 
+    /**
+     * Sets application context
+     * @param applicationContext the ApplicationContext object to be used by this object
+     * @throws BeansException throws {@link BeansException}
+     */
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;

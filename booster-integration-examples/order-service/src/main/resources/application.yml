@@ -1,0 +1,60 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: order
+  cloud:
+    gcp:
+      trace:
+        pubsub:
+          enabled: true
+  zipkin:
+    enabled: true
+    sender:
+      type: otlp
+      otlp:
+        endpoint: http://tempo:55681
+logging:
+  level:
+    root: INFO
+  com:
+    ld:
+      booster:
+        example: DEBUG
+booster:
+  gcp:
+    pubsub:
+      create: false
+      endpoint: localhost:8538
+      projectId: order-project
+      topic: orders
+      subscription: order-subscription
+  tasks:
+    threads:
+      settings:
+        inventory:
+          coreSize: 10
+          maxSize: 20
+          queueSize: 100
+          prefix: inventory-tp-
+        fulfillment:
+          coreSize: 10
+          maxSize: 20
+          queueSize: 100
+          prefix: fulfillment-tp-
+        order:
+          coreSize: 10
+          maxSize: 20
+          queueSize: 100
+          prefix: order-tp-
+  http:
+    clients:
+      connections:
+        settings:
+          inventory:
+            baseUrl: http://localhost:8082
+            connectionTimeoutMillis: 1000
+            readTimeoutMillis: 1000
+            useSSL: false
+            pool:
+              maxConnections: 50

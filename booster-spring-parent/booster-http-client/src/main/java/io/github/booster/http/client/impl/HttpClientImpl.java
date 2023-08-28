@@ -22,6 +22,8 @@ import java.util.Map;
 
 /**
  * Internal HttpClient class that wraps functionality over {@link WebClient}
+ * @param <Request> request body type
+ * @param <Response> response body type
  */
 public class HttpClientImpl<Request, Response> implements HttpClient<Request, Response> {
 
@@ -35,6 +37,8 @@ public class HttpClientImpl<Request, Response> implements HttpClient<Request, Re
 
     /**
      * Construct HttpClient from {@link HttpClientConnectionConfig}
+     * @param webClientBuilder {@link WebClient.Builder} used to create {@link WebClient}
+     *                         this field is needed to keep trace
      * @param name name of the setting to use
      * @param httpClientConnectionConfig {@link HttpClientConnectionConfig} object to create client from.
      */
@@ -48,6 +52,8 @@ public class HttpClientImpl<Request, Response> implements HttpClient<Request, Re
 
     /**
      * Construct HttpClient from {@link HttpClientConnectionConfig}
+     * @param webClientBuilder {@link WebClient.Builder} used to create {@link WebClient}
+     *                         this field is needed to keep trace
      * @param name name of the setting to use
      * @param httpClientConnectionConfig {@link HttpClientConnectionConfig} object to create client from.
      * @param mapper {@link ObjectMapper} used to log request and response objects.

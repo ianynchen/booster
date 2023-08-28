@@ -6,7 +6,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 
 /**
- * Converts a java {@link Exception} to {@link WebException}
+ * Converts a java {@link Throwable} to {@link WebException}
+ * @param <T> type of {@link Throwable}
  */
 public interface ExceptionHandler<T extends Throwable> {
 
@@ -29,6 +30,14 @@ public interface ExceptionHandler<T extends Throwable> {
      */
     WebException handle(@NonNull T throwable);
 
+    /**
+     * Determines if a particular instance of {@link Throwable} can be handled.
+     * A {@link Throwable} can be handled by an {@link ExceptionHandler} instance if
+     * the {@link Throwable} is of the exact type or subclass of type T.
+     * @param t {@link Throwable} to be checked
+     * @return true if the {@link Throwable} is of the exact same type or subclass of
+     *         the type specified by the {@link ExceptionHandler}, false otherwise.
+     */
     default boolean canHandle(Throwable t) {
         return this.handles().isAssignableFrom(t.getClass());
     }
@@ -53,5 +62,9 @@ public interface ExceptionHandler<T extends Throwable> {
         );
     }
 
+    /**
+     * Returns the type of {@link Throwable} an {@link ExceptionHandler} handles
+     * @return {@link Class} of {@link Throwable} the handler handles.
+     */
     Class<T> handles();
 }
