@@ -13,6 +13,12 @@ import lombok.ToString;
 public class KafkaSubscriberSetting {
 
     /**
+     * Default constructor that does nothing.
+     */
+    public KafkaSubscriberSetting() {
+    }
+
+    /**
      * message queue size, at least 1
      */
     private int queueSize = 1;

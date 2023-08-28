@@ -28,15 +28,39 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+/**
+ * AWS SQS subscriber
+ */
 public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscriberFlow<Message> {
 
+    /**
+     * Retrieves trace from AWS SQS message attributes
+     */
     public static class AwsSqsTextMapGetter implements TextMapGetter<Message> {
 
+        /**
+         * Default constructor
+         */
+        public AwsSqsTextMapGetter() {
+            super();
+        }
+
+        /**
+         * Gets all keys for message attributes
+         * @param carrier carrier of propagation fields, such as an http request.
+         * @return returns {@link Iterable} of keys
+         */
         @Override
         public Iterable<String> keys(Message carrier) {
             return carrier.messageAttributes().keySet();
         }
 
+        /**
+         * Gets trace from message attributes
+         * @param carrier carrier of propagation fields, such as an http request.
+         * @param key the key of the field.
+         * @return value of the key in interest
+         */
         @Nullable
         @Override
         public String get(@Nullable Message carrier, String key) {
@@ -47,6 +71,9 @@ public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscribe
 
     private static final Logger log = LoggerFactory.getLogger(AwsSqsSubscriber.class);
 
+    /**
+     * Gets the trace from messages
+     */
     public static final AwsSqsTextMapGetter GETTER = new AwsSqsTextMapGetter();
 
     private final boolean manuallyInjectTrace;
@@ -65,6 +92,17 @@ public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscribe
 
     private final AwsSqsSetting sqsSetting;
 
+    /**
+     * Constructs a subscriber
+     * @param name name of the subscriber. This is used
+     *             to retrieve corresponding thread pool and
+     *             SQS configuration setting
+     * @param awsSqsConfig {@link AwsSqsConfig}
+     * @param threadPoolConfig {@link ThreadPoolConfig} for thread pool
+     * @param registry {@link MetricsRegistry} to record metrics
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} to record trace
+     * @param manuallyInjectTrace whether to manually inject trace or to rely on OTEL instrumentation
+     */
     public AwsSqsSubscriber(
             String name,
             AwsSqsConfig awsSqsConfig,
@@ -159,11 +197,19 @@ public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscribe
         ).filter(entry -> entry != null && !CollectionUtils.isEmpty(entry));
     }
 
+    /**
+     * Stops the subscriber by shutting down
+     * its thread pool
+     */
     public void stop() {
         this.stopped = true;
         this.executorService.shutdown();
     }
 
+    /**
+     * Generates messages received as a {@link Flux}
+     * @return {@link Flux} of messages in batches
+     */
     @Override
     public Flux<List<Message>> flux() {
         return this.generateFlux()
@@ -175,11 +221,19 @@ public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscribe
                 });
     }
 
+    /**
+     * Gets name of subscriber
+     * @return name of subscriber
+     */
     @Override
     public String getName() {
         return this.name;
     }
 
+    /**
+     * Generates a {@link Flux} with all messages flattened out
+     * @return {@link Flux} with all messages flattened out
+     */
     @Override
     public Flux<Message> flatFlux() {
         return this.generateFlux()
@@ -192,6 +246,10 @@ public class AwsSqsSubscriber implements SubscriberFlow<Message>, BatchSubscribe
                 });
     }
 
+    /**
+     * Queue URL the subscriber pulls from
+     * @return Queue URL the subscriber pulls from
+     */
     public String getQueueUrl() {
         return this.sqsSetting.getQueueUrl();
     }

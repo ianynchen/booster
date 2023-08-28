@@ -1,17 +1,14 @@
 package io.github.booster.http.client.request;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
@@ -23,11 +20,11 @@ class HttpClientRequestContextTest {
     @Test
     void shouldNotAllowNullMethod() {
         assertThrows(
-                NullPointerException.class,
+                IllegalArgumentException.class,
                 () -> HttpClientRequestContext.builder().build()
         );
         assertThrows(
-                NullPointerException.class,
+                IllegalArgumentException.class,
                 () -> HttpClientRequestContext.builder().requestMethod(null).build()
         );
     }
@@ -55,31 +52,12 @@ class HttpClientRequestContextTest {
                 .path("abc")
                 .pathVariables(Map.of("var1", "value1"))
                 .queryParameters(Map.of("query", List.of("value1", "value2")))
-                .userContext(
-                        UserContext.builder()
-                                .businessAgent("promo")
-                                .tenant("JOE_FRESH")
-                                .deviceType("WEB")
-                                .acceptLanguage("en")
-                                .build()
-                ).build();
+                .build();
 
         assertThat(context, notNullValue());
         assertThat(context.getRequest(), nullValue());
         assertThat(context.getHeaders(), notNullValue());
-        assertThat(context.getHeaders().entrySet(), hasSize(4));
-        assertThat(context.getHeaders().keySet(), Matchers.containsInAnyOrder(
-                UserContext.ACCEPT_LANGUAGE_HEADER,
-                UserContext.BUSINESS_AGENT_HEADER,
-                UserContext.TENANT_HEADER,
-                UserContext.DEVICE_TYPE_HEADER
-        ));
-        assertThat(context.getHeaders().values().stream().flatMap(values -> values.stream()).collect(Collectors.toSet()), containsInAnyOrder(
-                "promo",
-                "JOE_FRESH",
-                "WEB",
-                "en"
-        ));
+        assertThat(context.getHeaders().entrySet(), hasSize(0));
         assertThat(context.getPath(), equalTo("abc"));
         assertThat(context.getPathVariables().size(), equalTo(1));
 

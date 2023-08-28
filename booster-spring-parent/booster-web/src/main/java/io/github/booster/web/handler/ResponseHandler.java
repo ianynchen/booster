@@ -46,6 +46,12 @@ public class ResponseHandler extends ResponseEntityResultHandler {
         return null;
     }
 
+    /**
+     * Constructor for {@link ResponseHandler}
+     * @param writers List of {@link HttpMessageWriter}
+     * @param resolver {@link RequestedContentTypeResolver}
+     * @param exceptionConverter {@link ExceptionConverter} used to handle exceptions
+     */
     public ResponseHandler(
             List<HttpMessageWriter<?>> writers,
             RequestedContentTypeResolver resolver,

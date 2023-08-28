@@ -23,6 +23,9 @@ import software.amazon.awssdk.services.sqs.model.Message;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * {@link AbstractBatchProcessor} for AWS SQS
+ */
 public class AwsSqsBatchProcessor extends AbstractBatchProcessor<Message> {
 
     private static final Logger log = LoggerFactory.getLogger(AwsSqsBatchProcessor.class);
@@ -35,6 +38,7 @@ public class AwsSqsBatchProcessor extends AbstractBatchProcessor<Message> {
      * Constructor
      *
      * @param subscriberFlow      {@link BatchSubscriberFlow} to listen to.
+     * @param awsSqsConfig        {@link AwsSqsConfig} to create {@link SqsClient} from
      * @param processTask         {@link Task} used to process events.
      * @param openTelemetryConfig {@link OpenTelemetryConfig} OpenTelemetry configuration.
      * @param registry            metrics recording.

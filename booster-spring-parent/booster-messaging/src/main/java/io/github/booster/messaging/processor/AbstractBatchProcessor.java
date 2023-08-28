@@ -105,10 +105,20 @@ abstract public class AbstractBatchProcessor<T> {
      */
     abstract protected Context createContext(List<T> records);
 
+    /**
+     * Creates a {@link Span} from {@link Context}
+     * @param context {@link Context} to be used to create {@link Span}
+     * @return {@link Span}
+     */
     protected Span createSpan(Context context) {
         return TraceHelper.createSpan(this.openTelemetryConfig, context);
     }
 
+    /**
+     * Creates a {@link Scope} for the {@link Span}
+     * @param childSpan {@link Span} to be used as current span
+     * @return {@link Scope} of the current span.
+     */
     protected Scope createScope(Span childSpan) {
         return childSpan.makeCurrent();
     }
@@ -286,6 +296,11 @@ abstract public class AbstractBatchProcessor<T> {
                 });
     }
 
+    /**
+     * Gets name of processor. The name is used to get thread pool for
+     * the processor.
+     * @return name of processor
+     */
     protected String getName() {
         return this.subscriberFlow.getName();
     }

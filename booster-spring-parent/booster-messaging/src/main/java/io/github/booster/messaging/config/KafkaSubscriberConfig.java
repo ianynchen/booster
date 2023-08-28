@@ -11,8 +11,14 @@ public class KafkaSubscriberConfig {
     private Map<String, KafkaSubscriberSetting> settings = new HashMap<>();
 
     /**
+     * Default constructor
+     */
+    public KafkaSubscriberConfig() {
+    }
+
+    /**
      * Get all settings.
-     * @return a list of subscriber setting identified by name of subscriber.
+     * @return a map of subscriber setting identified by name of subscriber.
      */
     public Map<String, KafkaSubscriberSetting> getSettings() {
         return settings;

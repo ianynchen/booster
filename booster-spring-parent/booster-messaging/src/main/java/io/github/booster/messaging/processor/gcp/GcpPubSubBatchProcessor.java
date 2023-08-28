@@ -28,7 +28,9 @@ public class GcpPubSubBatchProcessor extends AbstractBatchProcessor<Acknowledgea
      * Constructs a {@link GcpPubSubBatchProcessor}
      * @param subscriberFlow {@link BatchSubscriberFlow} to listen to.
      * @param processTask {@link Task} used to process GCP pub/sub events
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for metrics
      * @param registry metrics recording.
+     * @param manuallyInjectTrace whether to manually inject trace or rely upon OTEL instrumentation
      */
     public GcpPubSubBatchProcessor(
             BatchSubscriberFlow<AcknowledgeablePubsubMessage> subscriberFlow,

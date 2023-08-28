@@ -21,13 +21,34 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * AWS SQS record to be sent
+ * @param <T> type of payload
+ */
 @Getter
 @EqualsAndHashCode
 @ToString
 public class SqsRecord<T> {
 
+    /**
+     * {@link TextMapSetter} to inject trace
+     */
     public static class SQSTextMapperSetter implements TextMapSetter<Map<String, String>> {
 
+        /**
+         * Default constructor
+         */
+        public SQSTextMapperSetter() {
+            super();
+        }
+
+        /**
+         * Sets trace to carrier
+         * @param carrier holds propagation fields. For example, an outgoing message or http request. To
+         *     facilitate implementations as java lambdas, this parameter may be null.
+         * @param key the key of the field.
+         * @param value the value of the field.
+         */
         @Override
         public void set(@Nullable Map<String, String> carrier, String key, String value) {
             if (carrier != null && key != null) {
@@ -48,6 +69,11 @@ public class SqsRecord<T> {
 
     private final T body;
 
+    /**
+     * Constructs a {@link SqsRecord}
+     * @param headers headers to be sent
+     * @param body payload to be sent
+     */
     protected SqsRecord(
             Map<String, String> headers,
             T body
@@ -55,6 +81,13 @@ public class SqsRecord<T> {
         this(null, null, headers, body);
     }
 
+    /**
+     * Constructs a {@link SqsRecord}
+     * @param groupId group ID to be used
+     * @param deduplicationId deduplication ID
+     * @param headers headers
+     * @param body payload to be sent
+     */
     protected SqsRecord(
             String groupId,
             String deduplicationId,
@@ -79,6 +112,13 @@ public class SqsRecord<T> {
         this.traces = new HashMap<>();
     }
 
+    /**
+     * Creates a {@link SqsRecord} object
+     * @param headers headers
+     * @param body payload
+     * @return {@link SqsRecord}
+     * @param <T> type of payload
+     */
     public static <T> SqsRecord<T> createMessage(
             Map<String, String> headers,
             T body
@@ -91,6 +131,15 @@ public class SqsRecord<T> {
         );
     }
 
+    /**
+     * Creates a {@link SqsRecord} object
+     * @param groupId group ID to be used
+     * @param deduplicationId deduplication ID
+     * @param headers headers
+     * @param body payload
+     * @return {@link SqsRecord}
+     * @param <T> type of payload
+     */
     public static <T> SqsRecord<T> createMessage(
             String groupId,
             String deduplicationId,
@@ -100,6 +149,14 @@ public class SqsRecord<T> {
         return new SqsRecord<>(groupId, deduplicationId, headers, body);
     }
 
+    /**
+     * Creates {@link SendMessageRequest} to be sent to SQS
+     * @param queueUrl queue URL to bet sent to
+     * @param mapper used to serialize the payload
+     * @param openTelemetryConfig used to inject trace
+     * @param manuallyInjectTrace whether to inject trace or leave it to OTEL instrumentation
+     * @return {@link Either} {@link Throwable} or {@link SendMessageRequest}
+     */
     public Either<Throwable, SendMessageRequest> createSendMessageRequest(
             String queueUrl,
             ObjectMapper mapper,

@@ -22,6 +22,8 @@ import java.util.Map;
 
 /**
  * Internal HttpClient class that wraps functionality over {@link WebClient}
+ * @param <Request> request body type
+ * @param <Response> response body type
  */
 public class HttpClientImpl<Request, Response> implements HttpClient<Request, Response> {
 

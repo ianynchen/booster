@@ -24,7 +24,9 @@ public class KafkaProcessor<T> extends AbstractProcessor<SubscriberRecord<T>> {
      * Constructs a {@link KafkaProcessor}
      * @param subscriberFlow {@link SubscriberFlow} to listen to.
      * @param processTask {@link Task} used to process Kafka events
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for trace
      * @param registry metrics recording.
+     * @param manuallyInjectTrace whether to manually inject trace or leave it to OTEL instrumentation
      */
     public KafkaProcessor(
             SubscriberFlow<SubscriberRecord<T>> subscriberFlow,

@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ErrorResponseTest {
@@ -33,19 +34,12 @@ class ErrorResponseTest {
         WebException exception = new WebException(
                 HttpStatus.ALREADY_REPORTED,
                 HttpStatus.ALREADY_REPORTED.toString(),
-                "details",
-                "stack",
                 new IllegalArgumentException("error")
         );
 
         Tuple2<ErrorResponse, HttpStatus> response = ErrorResponse.builder().buildFromThrowable(exception, converter);
         assertThat(response._1().getErrorCode(), equalTo(HttpStatus.ALREADY_REPORTED.toString()));
-        assertThat(response._1().getDetailedReason(), equalTo("details"));
-        assertThat(response._1().getStackTrace(), equalTo("stack"));
-
-        response = ErrorResponse.builder().buildFromThrowable(exception, converter);
-        assertThat(response._1().getErrorCode(), equalTo(HttpStatus.ALREADY_REPORTED.toString()));
-        assertThat(response._1().getDetailedReason(), equalTo("details"));
-        assertThat(response._1().getStackTrace(), equalTo("stack"));
+        assertThat(response._1().getDetailedReason(), equalTo("error"));
+        assertThat(response._1().getStackTrace(), startsWith("java.lang.IllegalArgumentException: error"));
     }
 }

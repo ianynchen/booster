@@ -21,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
+/**
+ * Generates {@link Task}
+ */
 public class TaskFactory {
 
     private static final Logger log = LoggerFactory.getLogger(TaskFactory.class);
@@ -35,6 +38,14 @@ public class TaskFactory {
 
     private final MetricsRegistry registry;
 
+    /**
+     * Constructs a {@link TaskFactory}
+     * @param threadPoolConfig {@link ThreadPoolConfig} for {@link Task}
+     * @param retryConfig {@link RetryConfig} for {@link Task}
+     * @param circuitBreakerConfig {@link CircuitBreakerConfig} for {@link Task}
+     * @param httpClientFactory {@link HttpClientFactory} to create HTTP client {@link Task}
+     * @param registry {@link MetricsRegistry} to record metrics.
+     */
     public TaskFactory(
             ThreadPoolConfig threadPoolConfig,
             RetryConfig retryConfig,
