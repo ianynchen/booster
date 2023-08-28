@@ -7,8 +7,19 @@ import io.github.booster.messaging.MessagingMetricsConstants;
 import io.micrometer.core.instrument.Timer;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Helper methods to record metrics
+ */
 public interface MetricsHelper {
 
+    /**
+     * Records processing time.
+     * @param registry {@link MetricsRegistry} to be used to record metric
+     * @param sample {@link Timer.Sample} where the sample was taken
+     * @param timerName name of the timer
+     * @param messageType type of message
+     * @param name key of the metric message type tag
+     */
     static void recordProcessingTime(
             MetricsRegistry registry,
             Option<Timer.Sample> sample,
@@ -30,6 +41,16 @@ public interface MetricsHelper {
         );
     }
 
+    /**
+     * Records message subscriber count
+     * @param registry {@link MetricsRegistry} to record metric
+     * @param counterName name of the counter
+     * @param count value of the count to increase by
+     * @param messageType type of message
+     * @param name value of the metric name tag
+     * @param status status of the metric tag to indicate success or failure
+     * @param reason reason of the metric tag to indicate either success or failure reason
+     */
     static void recordMessageSubscribeCount(
             MetricsRegistry registry,
             String counterName,
@@ -58,6 +79,15 @@ public interface MetricsHelper {
     }
 
 
+    /**
+     * Records message subscriber count increment by 1
+     * @param registry {@link MetricsRegistry} to record metric
+     * @param counterName name of the counter
+     * @param messageType type of message
+     * @param name value of the metric name tag
+     * @param status status of the metric tag to indicate success or failure
+     * @param reason reason of the metric tag to indicate either success or failure reason
+     */
     static void recordMessageSubscribeCount(
             MetricsRegistry registry,
             String counterName,
@@ -77,6 +107,16 @@ public interface MetricsHelper {
         );
     }
 
+    /**
+     * Records publish count
+     * @param registry {@link MetricsRegistry} to record metric
+     * @param counterName name of the counter
+     * @param messageType type of message
+     * @param name value of the metric name tag
+     * @param topic topic it publishes to
+     * @param status status of the metric tag to indicate success or failure
+     * @param reason reason of the metric tag to indicate either success or failure reason
+     */
     static void recordMessagePublishCount(
             MetricsRegistry registry,
             String counterName,

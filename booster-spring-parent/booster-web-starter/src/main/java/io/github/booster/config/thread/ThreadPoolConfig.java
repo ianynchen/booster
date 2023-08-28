@@ -37,6 +37,11 @@ public class ThreadPoolConfig
 
     private final ApplicationContext applicationContext;
 
+    /**
+     * Constructs a {@link ThreadPoolConfig} object
+     * @param applicationContext {@link ApplicationContext} to create {@link LazyTraceThreadPoolTaskExecutor}
+     * @param registry {@link MetricsRegistry} to record metrics
+     */
     public ThreadPoolConfig(
             ApplicationContext applicationContext,
             MetricsRegistry registry
@@ -66,6 +71,9 @@ public class ThreadPoolConfig
         return null;
     }
 
+    /**
+     * Shuts down all threads when application closes.
+     */
     @PreDestroy
     public void destroy() {
         this.cache.getKeys()
@@ -77,6 +85,14 @@ public class ThreadPoolConfig
                 });
     }
 
+    /**
+     * Creates an {@link ExecutorService}. {@link ExecutorService} created will
+     * be instrumented by micrometer for metrics reporting if {@link io.micrometer.core.instrument.MeterRegistry}
+     * instance is available.
+     * @param key key of the thread pool to be created.
+     * @return {@link ExecutorService} instance created, or null if no {@link ThreadPoolSetting} with
+     *         the specified key can be found.
+     */
     @Nullable
     @Override
     public ExecutorService create(String key) {
@@ -123,12 +139,21 @@ public class ThreadPoolConfig
         return null;
     }
 
+    /**
+     * Retrieves all the keys for created thread pools
+     * @return {@link Set} of keys for all created thread pools.
+     */
     @NotNull
     @Override
     public Set<String> getKeys() {
         return this.cache.getKeys();
     }
 
+    /**
+     * Retrieves an {@link ExecutorService} instance
+     * @param key key of the thread pool
+     * @return an {@link ExecutorService} instance or null if one cannot be created.
+     */
     @Nullable
     @Override
     public ExecutorService get(String key) {
@@ -138,6 +163,12 @@ public class ThreadPoolConfig
         return null;
     }
 
+    /**
+     * Try get a thread pool
+     * @param key key for the thread pool. The same key will return the same thread pool instance
+     *            if exists.
+     * @return {@link Option} of {@link ExecutorService}
+     */
     @NotNull
     @Override
     public Option<ExecutorService> tryGet(String key) {

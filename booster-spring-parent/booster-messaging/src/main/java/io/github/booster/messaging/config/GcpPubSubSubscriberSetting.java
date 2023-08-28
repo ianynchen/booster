@@ -20,6 +20,12 @@ public class GcpPubSubSubscriberSetting {
     private int maxRecords;
 
     /**
+     * Default constructor
+     */
+    public GcpPubSubSubscriberSetting() {
+    }
+
+    /**
      * Sets subscription the subscriber needs to pull from
      * @param subscription pub/sub subscription
      */

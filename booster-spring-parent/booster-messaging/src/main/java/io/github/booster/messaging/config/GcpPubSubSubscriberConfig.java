@@ -11,6 +11,12 @@ public class GcpPubSubSubscriberConfig {
     private Map<String, GcpPubSubSubscriberSetting> settings = new HashMap<>();
 
     /**
+     * Default constructor
+     */
+    public GcpPubSubSubscriberConfig() {
+    }
+
+    /**
      * Allows auto-configuration injection
      * @param settings a map of name and setting pair for each subscriber. Key is the name of subscriber
      */

@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public interface FutureHelper {
 
+    /**
+     * {@link Logger} to generate logs.
+     */
     Logger log = LoggerFactory.getLogger(FutureHelper.class);
 
     /**
@@ -39,6 +42,11 @@ public interface FutureHelper {
         });
     }
 
+    /**
+     * Converts {@link ListenableFuture} to boolean value
+     * @param future to listen to
+     * @return true if success, false if not
+     */
     static boolean fromListenableFutureToBoolean(ListenableFuture<Void> future) {
 
         AtomicBoolean result = new AtomicBoolean(true);

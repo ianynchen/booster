@@ -180,27 +180,6 @@ internal class ParallelTaskTest {
     }
 
     @Test
-    fun `should run with custom aggregator`() {
-        val task = parallelTask {
-            name("parallel")
-            registry(io.github.booster.task.registry)
-            requestErrorHandler { throw it }
-            task(
-                syncTask<String, Int> {
-                    name("length")
-                    registry(io.github.booster.task.registry)
-                    retryOption(Option.fromNullable(retryConfig.get("abc")))
-                    circuitBreakerOption(Option.fromNullable(circuitBreakerConfig.get("abc")))
-                    executorOption(emptyThreadPool)
-                    processor {
-                        Option.fromNullable(it.length)
-                    }
-                }.build()
-            )
-        }.build()
-    }
-
-    @Test
     fun `should fail create task`() {
         assertThrows(
             IllegalArgumentException::class.java

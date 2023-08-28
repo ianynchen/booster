@@ -38,13 +38,18 @@ public class WebResponse<T> {
      * Builder class for {@link WebResponse}
      * @param <T> type of actual response body
      */
-    @NoArgsConstructor
     @JsonPOJOBuilder(withPrefix = "")
     public static class WebResponseBuilder<T> {
 
         private T response;
 
         private ErrorResponse error;
+
+        /**
+         * Default constructor that does nothing.
+         */
+        protected WebResponseBuilder() {
+        }
 
         /**
          * Sets response object
@@ -82,6 +87,11 @@ public class WebResponse<T> {
 
     private final ErrorResponse error;
 
+    /**
+     * Constructor for {@link WebResponse}
+     * @param response response body
+     * @param error error response
+     */
     protected WebResponse(
             T response,
             ErrorResponse error

@@ -20,6 +20,9 @@ import software.amazon.awssdk.services.sqs.model.Message;
 
 import java.util.List;
 
+/**
+ * Processor for AWS SQS messages
+ */
 public class AwsSqsProcessor extends AbstractProcessor<Message> {
 
     private static final Logger log = LoggerFactory.getLogger(AwsSqsProcessor.class);
@@ -32,10 +35,11 @@ public class AwsSqsProcessor extends AbstractProcessor<Message> {
      * Constructor
      *
      * @param subscriberFlow      the {@link SubscriberFlow} to listen to
+     * @param awsSqsConfig        {@link AwsSqsConfig} where {@link SqsClient} is created
      * @param processTask         processor {@link Task} to process events coming from {@link SubscriberFlow}
-     * @param openTelemetryConfig
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for tracing
      * @param registry            metrics recording.
-     * @param manuallyInjectTrace
+     * @param manuallyInjectTrace whether to inject tract manually or use OTEL instrumentation
      */
     public AwsSqsProcessor(
             SubscriberFlow<Message> subscriberFlow,

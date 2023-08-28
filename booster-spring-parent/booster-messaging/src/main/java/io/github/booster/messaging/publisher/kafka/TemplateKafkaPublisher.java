@@ -66,6 +66,8 @@ public class TemplateKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @param kafkaTemplate {@link KafkaTemplate} to actually send messages.
      * @param threadPoolConfig thread pool to provide threads for send. the named thread pool must be present.
      * @param registry to record metrics
+     * @param openTelemetryConfig used to inject trace
+     * @param manuallyInjectTrace whether to manually inject trace or leave it to OTEL instrumentation
      */
     public TemplateKafkaPublisher(
             String name,

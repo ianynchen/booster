@@ -66,6 +66,8 @@ public class ReactiveKafkaPublisher<T> implements MessagePublisher<KafkaRecord<T
      * @param kafkaSender {@link KafkaSender} to actually send messages.
      * @param threadPoolConfig thread pool to provide threads for send. the named thread pool must be present.
      * @param registry to record metrics
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param manuallyInjectTrace whether to manually inject traces
      */
     public ReactiveKafkaPublisher(
             String name,

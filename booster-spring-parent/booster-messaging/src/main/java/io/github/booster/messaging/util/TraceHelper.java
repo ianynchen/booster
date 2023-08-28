@@ -19,13 +19,29 @@ import software.amazon.awssdk.services.sqs.model.Message;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Helper methods to inject trace
+ */
 public interface TraceHelper {
 
+    /**
+     * {@link ContextKey}
+     */
     ContextKey<SpanContext> CONSUMER_CONTEXT_KEY =
             ContextKey.named("consumer_context");
 
+    /**
+     * {@link Logger} for logs
+     */
     Logger log = LoggerFactory.getLogger(TraceHelper.class);
 
+    /**
+     * Creates a {@link Context} on pub/sub consumer side from records received
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param records records to retrieve the context from
+     * @param getter {@link GcpPubSubPullSubscriber.GcpPubSubTextMapGetter} to extract trace
+     * @return {@link Context}
+     */
     static Context createContext(
             OpenTelemetryConfig openTelemetryConfig,
             List<AcknowledgeablePubsubMessage> records,
@@ -41,6 +57,13 @@ public interface TraceHelper {
                 .extract(Context.current(), last.getPubsubMessage(), getter);
     }
 
+    /**
+     * Creates a {@link Context} on SQS consumer side from records received
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param records records to retrieve the context from
+     * @param getter {@link AwsSqsSubscriber.AwsSqsTextMapGetter} to extract trace
+     * @return {@link Context}
+     */
     static Context createContext(
             OpenTelemetryConfig openTelemetryConfig,
             List<Message> records,
@@ -56,6 +79,15 @@ public interface TraceHelper {
                 .extract(Context.current(), last, getter);
     }
 
+    /**
+     * Generate {@link Context} from a list of GCP pub/sub message, the
+     * trace is extracted from the last message in the list, all
+     * previous trace info will be lost.
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param records GCP pub/sub records
+     * @param getter {@link GcpPubSubPullSubscriber.GcpPubSubTextMapGetter}
+     * @return GCP pub/sub messages with last trace extracted
+     */
     static Mono<List<AcknowledgeablePubsubMessage>> generateContextForList(
             OpenTelemetryConfig openTelemetryConfig,
             List<AcknowledgeablePubsubMessage> records,
@@ -84,6 +116,13 @@ public interface TraceHelper {
         }
     }
 
+    /**
+     * Generate {@link Context} from a single GCP pub/sub message
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param record GCP pub/sub record
+     * @param getter {@link GcpPubSubPullSubscriber.GcpPubSubTextMapGetter}
+     * @return GCP pub/sub message with trace extracted
+     */
     static Mono<AcknowledgeablePubsubMessage> generateContextForItem(
             OpenTelemetryConfig openTelemetryConfig,
             AcknowledgeablePubsubMessage record,
@@ -118,6 +157,15 @@ public interface TraceHelper {
         }
     }
 
+    /**
+     * Generate {@link Context} from a list of AWS SQS message, the
+     * trace is extracted from the last message in the list, all
+     * previous trace info will be lost.
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param records AWS SQS records
+     * @param getter {@link AwsSqsSubscriber.AwsSqsTextMapGetter}
+     * @return SQS messages with last trace extracted
+     */
     static Mono<List<Message>> generateContextForList(
             OpenTelemetryConfig openTelemetryConfig,
             List<Message> records,
@@ -146,6 +194,13 @@ public interface TraceHelper {
         }
     }
 
+    /**
+     * Generate {@link Context} from a single AWS SQS message
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param record AWS SQS record
+     * @param getter {@link AwsSqsSubscriber.AwsSqsTextMapGetter}
+     * @return SQS message with trace extracted
+     */
     static Mono<Message> generateContextForItem(
             OpenTelemetryConfig openTelemetryConfig,
             Message record,
@@ -180,6 +235,11 @@ public interface TraceHelper {
         }
     }
 
+    /**
+     * Releases {@link Span} and {@link Scope}
+     * @param scopeReference {@link AtomicReference} of {@link Scope}
+     * @param spanReference {@link AtomicReference} of {@link Span}
+     */
     static void releaseSpanAndScope(
             AtomicReference<Scope> scopeReference,
             AtomicReference<Span> spanReference
@@ -197,6 +257,12 @@ public interface TraceHelper {
         }
     }
 
+    /**
+     * Creates {@link Context} from a pub/sub message
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param record GCP pub/sub message
+     * @return a new {@link Context} or current context
+     */
     static Context createContext(
             OpenTelemetryConfig openTelemetryConfig,
             AcknowledgeablePubsubMessage record
@@ -210,6 +276,12 @@ public interface TraceHelper {
                 .extract(Context.current(), record.getPubsubMessage(), GcpPubSubPullSubscriber.GETTER);
     }
 
+    /**
+     * Creates {@link Span} from {@link Context}
+     * @param openTelemetryConfig {@link OpenTelemetryConfig}
+     * @param context {@link Context}
+     * @return new {@link Span} from {@link Context} or current span
+     */
     static Span createSpan(
             OpenTelemetryConfig openTelemetryConfig,
             Context context

@@ -15,6 +15,12 @@ import org.springframework.context.annotation.Configuration;
 public class BoosterMessagingConfig {
 
     /**
+     * Default constructor
+     */
+    public BoosterMessagingConfig() {
+    }
+
+    /**
      * GCP pub/sub configuration bean
      * @return {@link GcpPubSubSubscriberConfig}
      */
@@ -34,6 +40,12 @@ public class BoosterMessagingConfig {
         return new KafkaSubscriberConfig();
     }
 
+    /**
+     * Creates an {@link OpenTelemetryConfig} bean
+     * @param openTelemetry nullable {@link OpenTelemetry} object
+     * @param serviceName name of the service to be used
+     * @return {@link OpenTelemetryConfig} bean
+     */
     @Bean
     public OpenTelemetryConfig openTelemetryConfig(
             @Autowired(required = false)

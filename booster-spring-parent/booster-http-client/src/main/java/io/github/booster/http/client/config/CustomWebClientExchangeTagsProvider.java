@@ -8,10 +8,32 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 
 import static java.util.Arrays.asList;
 
+/**
+ * Adds custom tags for {@link org.springframework.web.reactive.function.client.WebClient}
+ */
 public class CustomWebClientExchangeTagsProvider extends DefaultWebClientExchangeTagsProvider {
+    /**
+     * URI tags
+     */
     public static final String URI_ATTRIBUTE = "custom.webclient.uri";
+    /**
+     * client name tags
+     */
     public static final String CLIENT_NAME_ATTRIBUTE = "custom.client.name";
 
+    /**
+     * Default constructor
+     */
+    public CustomWebClientExchangeTagsProvider() {
+    }
+
+    /**
+     * Gets {@link Tag}s for a request/response pair
+     * @param request the client request
+     * @param response the server response (may be {@code null})
+     * @param throwable the exception (may be {@code null})
+     * @return a list available tags
+     */
     @Override
     public Iterable<Tag> tags(ClientRequest request, ClientResponse response, Throwable throwable) {
         Tag method = WebClientExchangeTags.method(request);

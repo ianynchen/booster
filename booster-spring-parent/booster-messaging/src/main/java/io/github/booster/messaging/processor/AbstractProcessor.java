@@ -36,18 +36,37 @@ import java.util.concurrent.atomic.AtomicReference;
 abstract public class AbstractProcessor<T> {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractProcessor.class);
+
+    /**
+     * acknowledgement failure metric
+     */
     public static final String ACK_FAILURE = "ack_failure";
 
     private final String type;
 
+    /**
+     * {@link OpenTelemetryConfig} for tracing
+     */
     protected final OpenTelemetryConfig openTelemetryConfig;
 
+    /**
+     * {@link SubscriberFlow} to listen to
+     */
     protected final SubscriberFlow<T> subscriberFlow;
 
+    /**
+     * processor {@link Task} to process events coming from {@link SubscriberFlow}
+     */
     private final Task<T, T> processTask;
 
+    /**
+     * metrics recording.
+     */
     protected final MetricsRegistry registry;
 
+    /**
+     * whether to inject trace manually or rely on OTEl instrumentation
+     */
     protected final boolean manuallyInjectTrace;
 
     /**
@@ -55,7 +74,9 @@ abstract public class AbstractProcessor<T> {
      * @param type type name for processor, either Kafka or GCP pub/sub
      * @param subscriberFlow the {@link SubscriberFlow} to listen to
      * @param processTask processor {@link Task} to process events coming from {@link SubscriberFlow}
+     * @param openTelemetryConfig {@link OpenTelemetryConfig} for tracing
      * @param registry metrics recording.
+     * @param manuallyInjectTrace whether to inject trace manually or rely on OTEl instrumentation
      */
     public AbstractProcessor(
             String type,
@@ -80,21 +101,40 @@ abstract public class AbstractProcessor<T> {
     /**
      * Acknowledges a record after successful processing.
      * @param record record to be acknowledged.
+     * @return true if record acknowledged, false otherwise
      */
     abstract protected boolean acknowledge(T record);
 
+    /**
+     * Creates a context from record
+     * @param record record to process
+     * @return {@link Context}
+     */
     abstract protected Context createContext(T record);
 
+    /**
+     * Creates a {@link Span} from {@link Context}
+     * @param context {@link Context} to be used to create {@link Span}
+     * @return {@link Span}
+     */
     protected Span createSpan(Context context) {
         return TraceHelper.createSpan(this.openTelemetryConfig, context);
     }
 
+    /**
+     * Creates a {@link Scope} for the {@link Span}
+     * @param childSpan {@link Span} to be used as current span
+     * @return {@link Scope} of the current span.
+     */
     protected Scope createScope(Span childSpan) {
         return childSpan.makeCurrent();
     }
 
     /**
      * Start listening to {@link SubscriberFlow}
+     * @return a {@link Flux} of {@link Either} {@link Throwable} or {@link Option} of
+     *         {@link ProcessResult}. If processing fails, {@link Either.Left} is returned
+     *         otherwise, {@link Option} of {@link ProcessResult} is returned
      */
     public Flux<Either<Throwable, Option<ProcessResult<T>>>> process() {
         AtomicReference<Span> spanReference = new AtomicReference<>();
@@ -211,6 +251,11 @@ abstract public class AbstractProcessor<T> {
         );
     }
 
+    /**
+     * Gets name of processor. The name is used to get thread pool for
+     * the processor.
+     * @return name of processor
+     */
     protected String getName() {
         return this.subscriberFlow.getName();
     }
