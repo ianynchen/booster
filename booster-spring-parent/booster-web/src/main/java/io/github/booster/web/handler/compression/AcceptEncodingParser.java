@@ -1,4 +1,4 @@
-package io.github.booster.web.handler;
+package io.github.booster.web.handler.compression;
 
 import arrow.core.Option;
 import io.github.booster.commons.compression.CompressionAlgorithm;
@@ -7,9 +7,7 @@ import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;

@@ -3,7 +3,7 @@ package io.github.booster.commons.compression
 enum class CompressionAlgorithm(val algorithm: String) {
     DEFLATE("deflate"),
     COMPRESS("compress"),
-    GZIP("gz"),
+    GZIP("gzip"),
     BROTLI("br"),
     NONE("");
 

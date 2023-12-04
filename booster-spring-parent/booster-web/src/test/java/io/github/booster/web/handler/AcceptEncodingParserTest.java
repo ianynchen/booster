@@ -2,6 +2,7 @@ package io.github.booster.web.handler;
 
 import arrow.core.Option;
 import io.github.booster.commons.compression.CompressionAlgorithm;
+import io.github.booster.web.handler.compression.AcceptEncodingParser;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -43,23 +44,23 @@ class AcceptEncodingParserTest {
     @Test
     void shouldParseSingleEntry() {
         assertThat(
-                AcceptEncodingParser.findCompressionAlgorithm(null, Set.of("", "br", "gz")),
+                AcceptEncodingParser.findCompressionAlgorithm(null, Set.of("", "br", "gzip")),
                 equalTo(CompressionAlgorithm.NONE)
         );
         assertThat(
-                AcceptEncodingParser.findCompressionAlgorithm("", Set.of("", "br", "gz")),
+                AcceptEncodingParser.findCompressionAlgorithm("", Set.of("", "br", "gzip")),
                 equalTo(CompressionAlgorithm.NONE)
         );
         assertThat(
-                AcceptEncodingParser.findCompressionAlgorithm(null, Set.of("*", "br", "gz")),
+                AcceptEncodingParser.findCompressionAlgorithm(null, Set.of("*", "br", "gzip")),
                 equalTo(CompressionAlgorithm.NONE)
         );
         assertThat(
-                AcceptEncodingParser.findCompressionAlgorithm("deflate", Set.of("*", "br", "gz")),
+                AcceptEncodingParser.findCompressionAlgorithm("deflate", Set.of("*", "br", "gzip")),
                 equalTo(CompressionAlgorithm.NONE)
         );
         assertThat(
-                AcceptEncodingParser.findCompressionAlgorithm("gz ; q = 0.8", Set.of("*", "br", "gz")),
+                AcceptEncodingParser.findCompressionAlgorithm("gzip ; q = 0.8", Set.of("*", "br", "gzip")),
                 equalTo(CompressionAlgorithm.GZIP)
         );
     }
@@ -67,11 +68,11 @@ class AcceptEncodingParserTest {
     @Test
     void shouldParseMultipleEntry() {
         assertThat(
-                AcceptEncodingParser.findCompressionAlgorithm("gz;q=0.8,deflate;q=1.0", Set.of("", "br", "gz")),
+                AcceptEncodingParser.findCompressionAlgorithm("gzip;q=0.8,deflate;q=1.0", Set.of("", "br", "gzip")),
                 equalTo(CompressionAlgorithm.GZIP)
         );
         assertThat(
-                AcceptEncodingParser.findCompressionAlgorithm("gz;q=0.8,deflate;q=1.0", Set.of("", "br", "gz", "deflate")),
+                AcceptEncodingParser.findCompressionAlgorithm("gzip;q=0.8,deflate;q=1.0", Set.of("", "br", "gzip", "deflate")),
                 equalTo(CompressionAlgorithm.DEFLATE)
         );
     }

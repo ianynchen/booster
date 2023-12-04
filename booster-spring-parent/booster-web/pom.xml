@@ -16,6 +16,7 @@
 	<packaging>jar</packaging>
 
 	<properties>
+		<booster-commons.version>2.1.0</booster-commons.version>
 		<classmate.version>1.5.1</classmate.version>
 		<springfox.version>3.0.0</springfox.version>
 		<servlet-api.version>4.0.1</servlet-api.version>

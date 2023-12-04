@@ -17,7 +17,7 @@
 	<properties>
 		<booster-http-client.version>2.0.0</booster-http-client.version>
 		<booster-task.version>2.0.0</booster-task.version>
-		<booster-web.version>2.0.0</booster-web.version>
+		<booster-web.version>2.1.0</booster-web.version>
 	</properties>
 
 	<dependencies>

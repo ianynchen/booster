@@ -1,7 +1,6 @@
 package io.github.booster.web.handler.compression;
 
 import io.github.booster.commons.compression.CompressionAlgorithm;
-import io.github.booster.web.handler.AcceptEncodingParser;
 import io.github.booster.web.handler.compression.request.wrappers.BrotliRequestWrapper;
 import io.github.booster.web.handler.compression.request.wrappers.CompressRequestWrapper;
 import io.github.booster.web.handler.compression.request.wrappers.DeflateRequestWrapper;
@@ -20,13 +19,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DecompressionFilter extends OncePerRequestFilter {
+public class CompressionFilter extends OncePerRequestFilter {
 
     private final static Set<String> allowedEncodings =
             Set.of(

@@ -6,6 +6,7 @@ import com.fasterxml.classmate.TypeResolver;
 import io.github.booster.web.handler.ExceptionConverter;
 import io.github.booster.web.handler.ExceptionHandler;
 import io.github.booster.web.handler.ResponseHandler;
+import io.github.booster.web.handler.compression.CompressionFilter;
 import io.github.booster.web.handler.response.WebResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +35,16 @@ public class BoosterWebConfig {
      * Default constructor
      */
     public BoosterWebConfig() {
+    }
+
+    /**
+     * Filter that allows decompression of incoming requests and
+     * compresses responses based on client side Accept-Encoding header.
+     * @return {@link CompressionFilter}
+     */
+    @Bean
+    public CompressionFilter decompressionFilter() {
+        return new CompressionFilter();
     }
 
     /**

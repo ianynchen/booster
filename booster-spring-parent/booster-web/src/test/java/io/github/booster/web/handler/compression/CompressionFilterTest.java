@@ -25,7 +25,7 @@ import static io.github.booster.web.handler.compression.CompressionTestData.getU
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-class DecompressionFilterTest {
+class CompressionFilterTest {
 
     public static class VerifyingFilterChain implements FilterChain {
 
@@ -87,7 +87,7 @@ class DecompressionFilterTest {
     void shouldHandleOriginal() throws ServletException, IOException {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         mockRequest.setContent(getUTF8Bytes(TEXT_TO_COMPRESS));
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         filter.doFilter(mockRequest, new MockHttpServletResponse(), new MockFilterChain());
 
         byte[] bytes = mockRequest.getInputStream().readAllBytes();
@@ -98,9 +98,9 @@ class DecompressionFilterTest {
     @Test
     void shouldUncompressGZip() throws ServletException, IOException {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
-        mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "gz");
+        mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "gzip");
         mockRequest.setContent(Base64.getDecoder().decode(getUTF8Bytes(GZIP_COMPRESSED)));
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         FilterChain chain = new VerifyingFilterChain(null, true, null);
         filter.doFilter(mockRequest, new MockHttpServletResponse(), chain);
     }
@@ -110,7 +110,7 @@ class DecompressionFilterTest {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "deflate");
         mockRequest.setContent(Base64.getDecoder().decode(getUTF8Bytes(DEFLATE_COMPRESSED)));
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         FilterChain chain = new VerifyingFilterChain(null, true, null);
         filter.doFilter(mockRequest, new MockHttpServletResponse(), chain);
     }
@@ -120,7 +120,7 @@ class DecompressionFilterTest {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "br");
         mockRequest.setContent(Base64.getDecoder().decode(getUTF8Bytes(BROTLI_COMPRESSED)));
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         FilterChain chain = new VerifyingFilterChain(null, true, null);
         filter.doFilter(mockRequest, new MockHttpServletResponse(), chain);
     }
@@ -137,9 +137,9 @@ class DecompressionFilterTest {
 
         byte[] compressedContent = byteArrayOutputStream.toByteArray();
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
-        mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "deflate,gz");
+        mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "deflate,gzip");
         mockRequest.setContent(compressedContent);
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         FilterChain chain = new VerifyingFilterChain(null, true, null);
         filter.doFilter(mockRequest, new MockHttpServletResponse(), chain);
     }
@@ -156,9 +156,9 @@ class DecompressionFilterTest {
 
         byte[] compressedContent = byteArrayOutputStream.toByteArray();
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
-        mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "br,deflate,gz");
+        mockRequest.addHeader(HttpHeaders.CONTENT_ENCODING, "br,deflate,gzip");
         mockRequest.setContent(compressedContent);
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         FilterChain chain = new VerifyingFilterChain(null, true, null);
         filter.doFilter(mockRequest, new MockHttpServletResponse(), chain);
     }
@@ -167,7 +167,7 @@ class DecompressionFilterTest {
     void shouldHandleOriginalResponse() throws IOException, ServletException {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         MockHttpServletResponse mockResponse = new MockHttpServletResponse();
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         filter.doFilter(
                 mockRequest,
                 mockResponse,
@@ -182,9 +182,9 @@ class DecompressionFilterTest {
     @Test
     void shouldHandleGzipResponse() throws ServletException, IOException {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
-        mockRequest.addHeader(HttpHeaders.ACCEPT_ENCODING, "gz");
+        mockRequest.addHeader(HttpHeaders.ACCEPT_ENCODING, "gzip");
         MockHttpServletResponse mockResponse = new MockHttpServletResponse();
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         filter.doFilter(
                 mockRequest,
                 mockResponse,
@@ -201,7 +201,7 @@ class DecompressionFilterTest {
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         mockRequest.addHeader(HttpHeaders.ACCEPT_ENCODING, "deflate");
         MockHttpServletResponse mockResponse = new MockHttpServletResponse();
-        DecompressionFilter filter = new DecompressionFilter();
+        CompressionFilter filter = new CompressionFilter();
         filter.doFilter(
                 mockRequest,
                 mockResponse,
