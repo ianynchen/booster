@@ -12,15 +12,29 @@
     </parent>
 
     <artifactId>booster-commons</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
     <description>Common Utilities for Booster Projects</description>
     <packaging>jar</packaging>
 
     <properties>
         <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
+
+        <apache-commons-compress.version>1.24.0</apache-commons-compress.version>
+        <brotli.version>0.1.2</brotli.version>
     </properties>
 
     <dependencies>
+        <!-- compression -->
+        <dependency>
+            <groupId>org.brotli</groupId>
+            <artifactId>dec</artifactId>
+            <version>${brotli.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${apache-commons-compress.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

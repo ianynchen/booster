@@ -114,6 +114,7 @@ public class HttpClientConnectionConfig {
         HttpClient httpClient = HttpClient.create(createConnectionProvider(name, setting.getPool()))
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_KEEPALIVE, true)
+                .metrics(setting.isEnableMetrics(), uri -> name + "::" + setting.getBaseUrl())
                 .doOnConnected(con -> {
                     if (setting.getReadTimeoutMillis() > 0) {
                         con.addHandlerLast(new ReadTimeoutHandler(setting.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));

@@ -12,12 +12,12 @@
     </parent>
 
     <artifactId>booster-spring-parent-pom</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>pom</packaging>
 
     <properties>
         <booster-base-pom.version>1.0.0</booster-base-pom.version>
-        <booster-commons.version>2.0.0</booster-commons.version>
+        <booster-commons.version>2.1.0</booster-commons.version>
     </properties>
 
     <dependencies>

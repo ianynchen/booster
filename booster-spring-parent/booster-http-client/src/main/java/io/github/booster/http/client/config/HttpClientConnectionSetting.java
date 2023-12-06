@@ -223,6 +223,10 @@ public class HttpClientConnectionSetting {
     @Setter
     private Long responseTimeoutInMillis;
 
+    @Getter
+    @Setter
+    private boolean enableMetrics;
+
     private ConnectionPoolSetting pool = new ConnectionPoolSetting();
 
     /**
