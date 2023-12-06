@@ -38,16 +38,6 @@ public class BoosterWebConfig {
     }
 
     /**
-     * Filter that allows decompression of incoming requests and
-     * compresses responses based on client side Accept-Encoding header.
-     * @return {@link CompressionFilter}
-     */
-    @Bean
-    public CompressionFilter decompressionFilter() {
-        return new CompressionFilter();
-    }
-
-    /**
      * Creates {@link ExceptionConverter} to handle exceptions
      * @param handlers {@link List} of {@link ExceptionHandler}s to handle specific {@link Throwable}
      * @return {@link ExceptionConverter} instance
